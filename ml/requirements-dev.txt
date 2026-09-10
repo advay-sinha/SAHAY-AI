@@ -1,0 +1,11 @@
+# SAHAY-AI ml/ development dependencies.
+#
+# STATUS: EXT-001 APPROVED and installed 2026-09-10 into ml/.venv.
+#
+# Note: the current ml/ test suite is written against the standard library
+# `unittest` and runs today with no install at all:
+#     python -m unittest discover -s ml/tests -t .
+# pytest is requested for parity with the backend suite and for the richer
+# assertion output the team will want as the detector tests grow.
+
+pytest==8.3.4

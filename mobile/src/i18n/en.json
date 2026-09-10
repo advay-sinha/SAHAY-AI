@@ -1,0 +1,48 @@
+{
+  "language.title": "Choose your language",
+  "language.hindi": "हिंदी",
+  "language.english": "English",
+
+  "consent.title": "Before we begin",
+  "consent.ai_disclosure": "You are speaking with an AI assistant, not a person.",
+  "consent.human_review": "A human officer reads everything you say.",
+  "consent.right_to_human": "You can ask to speak to a person at any time.",
+  "consent.what_we_record": "We record what you say so an officer can act on it.",
+  "consent.accept": "I understand, continue",
+  "consent.decline": "I do not agree",
+  "consent.declined_note": "That is fine. Your request will still go to a person.",
+
+  "home.talk": "Talk",
+  "home.chat": "Type instead",
+  "home.my_requests": "My requests",
+
+  "talk.listening": "Listening",
+  "talk.speaking": "Speaking",
+  "talk.tap_to_speak": "Tap to speak",
+  "talk.tap_to_send": "Tap when you have finished speaking",
+
+  "chat.placeholder": "Type what happened",
+  "chat.send": "Send",
+
+  "human.button": "Talk to a person",
+  "human.requested": "We are connecting you to a person. Please stay.",
+  "human.joined": "A person has joined and can hear you now.",
+
+  "timeline.title": "Your request",
+  "timeline.reference": "Reference number",
+  "timeline.request_received": "Request received",
+  "timeline.recorded": "Your account has been recorded",
+  "timeline.under_review": "Under review",
+  "timeline.officer_assigned": "An officer has been assigned",
+  "timeline.officer_speaking": "An officer is speaking with you",
+  "timeline.closed": "Closed",
+
+  "offline.title": "No connection",
+  "offline.body": "What you say is being saved and will be sent when the connection returns.",
+
+  "error.title": "Something went wrong",
+  "error.body": "Please try again. You can also ask to speak to a person.",
+  "error.retry": "Try again",
+
+  "disclosure.persistent": "AI assistant · a person reviews everything"
+}

@@ -1,0 +1,73 @@
+# secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# media & models — keep in shared storage, commit the manifest only
+*.wav
+*.mp3
+*.m4a
+*.flac
+*.ogg
+*.webm
+*.mp4
+*.pt
+*.bin
+*.safetensors
+*.ckpt
+*.onnx
+data/audio/
+# Anchored with a leading slash. Unanchored `models/` matches ANY directory of
+# that name at any depth, which silently excluded backend/app/models/ — the
+# SQLAlchemy table definitions. Model weights live under DATA_ROOT, outside this
+# repository, so this rule only ever needs to cover a stray top-level dir.
+/models/
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# node
+node_modules/
+dist/
+build/
+.expo/
+*.tsbuildinfo
+
+# os / editor
+.DS_Store
+.idea/
+.vscode/
+
+# local MVP runtime
+# Ignore everything the runtime writes, but keep the directory skeleton in Git
+# so a fresh clone has somewhere to write to. The negation must come after the
+# directory rule, and the directory itself must not be excluded outright, or
+# Git will never descend far enough to see the .gitkeep files.
+runtime/*
+!runtime/*/
+runtime/*/*
+!runtime/*/.gitkeep
+*.db
+*.db-journal
+*.db-shm
+*.db-wal
+*.npy
+
+# Working notes, not project instructions.
+START_HERE.md
+prompt.txt
+design/
+.claude/
+CLAUDE.md
+
+# CLAUDE.md is deliberately NOT ignored. The root file and every
+# directory-level file are the project's operating instructions and must be
+# committed and reviewed like any other source. See CLAUDE.md section 7.

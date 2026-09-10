@@ -1,0 +1,41 @@
+# SAHAY-AI backend runtime dependencies.
+#
+# STATUS: EXT-001 APPROVED and installed 2026-09-10 into backend/.venv.
+# Changing any pin, or adding a package, needs a new decision in
+# docs/EXTERNAL_DECISIONS.md.
+#
+# Target interpreter: CPython 3.11.9 (EXT-114).
+# Every direct dependency is pinned to an exact version. Transitive versions
+# are resolved by pip at install time; there is no Python lockfile yet.
+
+# --- Web framework and server ------------------------------------------------
+# FastAPI: the REST + WebSocket gateway named in CONTRACTS.md sections 1 and 4.
+fastapi==0.115.6
+# ASGI server. [standard] adds uvloop/httptools/websockets/watchfiles; the
+# websockets implementation is required for WSS /ws/session/{id}.
+uvicorn[standard]==0.34.0
+# Multipart body parsing for POST /sessions/{id}/audio (whole-utterance upload).
+python-multipart==0.0.20
+
+# --- Persistence -------------------------------------------------------------
+# SQLAlchemy keeps persistence behind an ORM so PostgreSQL can be added later
+# without a rewrite (root CLAUDE.md section 5).
+SQLAlchemy==2.0.36
+# Async SQLite driver for sqlite+aiosqlite.
+aiosqlite==0.20.0
+# Migrations from day one so a later PostgreSQL move is controlled.
+alembic==1.14.0
+
+# --- Validation and configuration -------------------------------------------
+# Pydantic v2 models mirror the frozen contracts; extra="forbid" on the
+# victim-facing schemas is a second line of defence against assessment leakage.
+pydantic==2.10.4
+# Reads .env. No secret is committed; values live in a local .env only.
+pydantic-settings==2.7.0
+
+# --- Auth --------------------------------------------------------------------
+# PyJWT for the session/console tokens. The role claim is what the WebSocket
+# fan-out trusts, so this is on the safety path.
+PyJWT==2.10.1
+# Argon2 password hashing. pwdlib is the maintained successor to passlib.
+pwdlib[argon2]==0.2.1

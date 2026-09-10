@@ -1,0 +1,29 @@
+# Planned items are not approved. See docs/EXTERNAL_DECISIONS.md.
+datasets:
+  - id: common_voice_hi
+    status: proposed
+    release: null
+    scope: hindi_evaluation_splits_only
+    purpose: asr_wer_cer
+    source: https://datacollective.mozillafoundation.org/
+    license: null
+    checksum: null
+    limitations: [read_speech, domain_mismatch]
+  - id: ravdess_audio_speech
+    status: proposed
+    release: "1.0"
+    scope: Audio_Speech_Actors_01-24.zip
+    purpose: auxiliary_ser_baseline
+    source: https://zenodo.org/records/1188976
+    license: CC-BY-NC-SA-4.0
+    checksum: null
+    limitations: [english_only, acted_emotion, non_clinical]
+  - id: own_scenario_corpus
+    status: local_creation
+    release: v1
+    scope: 10_scenarios_x_3_language_modes_x_2_conditions
+    purpose: workflow_and_safety_evaluation
+    source: fictional_team_authored
+    license: internal_project
+    checksum: null
+    limitations: [scripted, synthetic_scenarios, non_clinical]

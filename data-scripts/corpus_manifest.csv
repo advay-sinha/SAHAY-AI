@@ -1,0 +1,1 @@
+session_id,scenario_id,speaker_id,language,condition,turn_index,speaker,text,audio_path,crisis,threat,medical,coercion,expected_state,expected_band,split

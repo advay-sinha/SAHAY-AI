@@ -1,0 +1,16 @@
+# SAHAY-AI ml/ runtime dependencies.
+#
+# DELIBERATELY EMPTY.
+#
+# dialogue, guardrails and svi are pure: standard library only, no I/O, no
+# network, no model loading (root CLAUDE.md section 6). The backend imports
+# them without any ML dependency, and ml/tests/test_pure_modules.py fails if
+# anyone adds one.
+#
+# Per the EXT-001 instruction, no ML package is added while the pure modules
+# are being built. ASR, VAD, TTS, acoustics and classifier dependencies arrive
+# only with their own approvals:
+#   EXT-004  faster-whisper small        PROPOSED
+#   EXT-005  Silero VAD                  PROPOSED
+#   EXT-103  TTS model/voice             PROPOSED
+#   EXT-106  MuRIL/IndicBERT/XLM-R       PROPOSED, P2

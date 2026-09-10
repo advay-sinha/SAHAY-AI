@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "SAHAY",
+    "slug": "sahay-ai",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "scheme": "sahay",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "android": {
+      "package": "in.gov.msje.sahay",
+      "permissions": ["RECORD_AUDIO", "MODIFY_AUDIO_SETTINGS"]
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "SAHAY needs the microphone so you can speak instead of typing."
+        }
+      ]
+    ]
+  }
+}

@@ -1,0 +1,13 @@
+# Auto-assigns reviewers. Replace handles with real GitHub usernames on Day 1.
+
+/backend/          @be-lead
+/infra/            @be-lead
+/ml/               @ai-lead
+/data-scripts/     @ai-lead
+/frontend/         @fe-lead
+/mobile/           @fe-lead
+
+# Contracts require all three leads — this is the rule that saves week two
+/docs/contracts/   @ai-lead @be-lead @fe-lead
+/ml/svi/           @ai-lead @be-lead
+/.github/          @be-lead
