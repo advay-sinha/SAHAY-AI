@@ -1,21 +1,34 @@
 /**
- * Shared REST client. Shapes come from ../types/contracts, never from inference.
+ * Shared REST client. Shapes come from ../types, never from inference.
  *
  * Authentication: the session token is attached as `Authorization: Bearer`.
  * It never goes into a URL. A 401 from any call means the session is no longer
  * valid: `onUnauthorized` clears it and sends the user to /login.
  *
- * Errors carry the HTTP status only. Server response bodies are never surfaced
- * to the UI, so a backend fault cannot leak internals onto the screen.
+ * Errors carry the HTTP status and, for 400/409, the server's short fixed
+ * message (e.g. "claim the case before acting on it"), which the backend
+ * guarantees contains no stack trace, secret or case text. Other bodies are
+ * never surfaced.
  */
 
-import type { DecisionRequest, OverrideRequest, VictimTimeline } from "../types/contracts";
+import type {
+  AlertAckResponse,
+  Band,
+  DecisionKind,
+  Lang,
+  OfficerMessageResponse,
+  VictimTimeline,
+} from "../types/contracts";
+import type { AuditEntry, CasePacket, QueueItem } from "../types/packet";
 
 export const API_BASE: string = import.meta.env.VITE_API_URL ?? "/api";
 
 export class ApiError extends Error {
-  constructor(public readonly status: number) {
-    super(status === 0 ? "network error" : `request failed (${status})`);
+  constructor(
+    public readonly status: number,
+    public readonly detail: string | null = null,
+  ) {
+    super(detail ?? (status === 0 ? "network error" : `request failed (${status})`));
     this.name = "ApiError";
   }
 }
@@ -28,6 +41,8 @@ export interface ApiDeps {
   onUnauthorized: () => void;
   base?: string;
 }
+
+const SAFE_DETAIL_STATUSES = new Set([400, 403, 404, 409]);
 
 export function createApiClient({ fetchFn, getToken, onUnauthorized, base = API_BASE }: ApiDeps) {
   async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -49,33 +64,45 @@ export function createApiClient({ fetchFn, getToken, onUnauthorized, base = API_
       onUnauthorized();
       throw new ApiError(401);
     }
-    if (!response.ok) throw new ApiError(response.status);
+    if (!response.ok) {
+      let detail: string | null = null;
+      if (SAFE_DETAIL_STATUSES.has(response.status)) {
+        try {
+          const body = (await response.json()) as { detail?: unknown };
+          if (typeof body.detail === "string" && body.detail.length <= 200) detail = body.detail;
+        } catch {
+          /* no usable detail */
+        }
+      }
+      throw new ApiError(response.status, detail);
+    }
     return (await response.json()) as T;
   }
 
+  const post = <T>(path: string, body?: unknown) =>
+    request<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+  const id = encodeURIComponent;
+
   return {
     request,
-    health: () => request<{ status: string; llm_provider: string; assessment_runner: string; fixed_scripts_ready: boolean }>("/health"),
-    queue: () => request<unknown[]>("/queue"),
-    case: (caseId: string) => request<unknown>(`/cases/${encodeURIComponent(caseId)}`),
-    claim: (caseId: string) =>
-      request<unknown>(`/cases/${encodeURIComponent(caseId)}/claim`, { method: "POST" }),
-    decide: (caseId: string, body: DecisionRequest) =>
-      request<unknown>(`/cases/${encodeURIComponent(caseId)}/decisions`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-    /** reason is required by contract; the server refuses a blank one. */
-    override: (caseId: string, body: OverrideRequest) =>
-      request<unknown>(`/cases/${encodeURIComponent(caseId)}/override`, {
-        method: "POST",
-        body: JSON.stringify(body),
-      }),
-    takeover: (caseId: string) =>
-      request<unknown>(`/cases/${encodeURIComponent(caseId)}/takeover`, { method: "POST" }),
-    timeline: (caseId: string) =>
-      request<VictimTimeline>(`/cases/${encodeURIComponent(caseId)}/timeline`),
-    audit: (caseId: string) => request<unknown[]>(`/cases/${encodeURIComponent(caseId)}/audit`),
+    health: () =>
+      request<{ status: string; llm_provider: string; assessment_runner: string; fixed_scripts_ready: boolean }>("/health"),
+    queue: () => request<QueueItem[]>("/queue"),
+    case: (caseId: string) => request<CasePacket>(`/cases/${id(caseId)}`),
+    claim: (caseId: string) => post<{ case_id: string; status: string }>(`/cases/${id(caseId)}/claim`),
+    acknowledge: (caseId: string, alertId: string) =>
+      post<AlertAckResponse>(`/cases/${id(caseId)}/alerts/${id(alertId)}/ack`),
+    decide: (caseId: string, actionId: string, decision: DecisionKind, rationale: string) =>
+      post<{ decision_id: string }>(`/cases/${id(caseId)}/decisions`, { action_id: actionId, decision, rationale }),
+    /** reason is required by contract; the server refuses a blank one with 400. */
+    override: (caseId: string, band: Band, reason: string) =>
+      post<{ to_band: Band }>(`/cases/${id(caseId)}/override`, { band, reason }),
+    takeover: (caseId: string) => post<{ status: string }>(`/cases/${id(caseId)}/takeover`),
+    /** PC-07: only after takeover (409 before). The officer's own words. */
+    message: (caseId: string, text: string, lang?: Lang) =>
+      post<OfficerMessageResponse>(`/cases/${id(caseId)}/messages`, { text, lang }),
+    timeline: (caseId: string) => request<VictimTimeline>(`/cases/${id(caseId)}/timeline`),
+    audit: (caseId: string) => request<AuditEntry[]>(`/cases/${id(caseId)}/audit`),
   };
 }
 

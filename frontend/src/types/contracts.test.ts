@@ -23,9 +23,10 @@ import {
 } from "./contracts";
 
 describe("event allowlists", () => {
-  it("has exactly the four victim events from CONTRACTS.md section 2", () => {
+  it("has exactly the five victim events from CONTRACTS.md section 2 (PC-07 adds officer.message)", () => {
     expect([...VICTIM_ALLOWED_EVENTS].sort()).toEqual([
       "assistant.turn",
+      "officer.message",
       "session.status",
       "timeline.update",
       "transcript.line",

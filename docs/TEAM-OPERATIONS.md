@@ -2,11 +2,18 @@
 
 ## Ownership
 
-- AI/ML: `ml/`, `data-scripts/`
-- Backend: `backend/`
-- Frontend/Mobile: `frontend/`, `mobile/`
-- Integration owner: `scripts/`, merges and demo reset
-- All leads: contracts, dialogue states and safety rules
+Four leads (D-11, lead decision 2026-09-11). They approve every contract and dialogue change together:
+
+| Lead | Owns |
+|---|---|
+| AI/ML and Safety | `ml/`, `data-scripts/`, safety invariants, guardrails, SVI |
+| Backend | `backend/`, `scripts/`, the event allowlist |
+| Executive Web | `frontend/` (the executive console) |
+| Mobile / Victim Experience | `mobile/` (the victim app) |
+
+- Integration owner: merges into `dev` and resets the demo.
+- All four leads: `docs/contracts/`, `docs/dialogue/`, safety rules and the shared Claude setup (`CLAUDE.md`, `.claude/`).
+- GitHub usernames for the four roles are **not yet recorded**. `.github/CODEOWNERS` holds explicit `@TODO-...` placeholders until each lead's username is filled in.
 
 ## Daily rhythm
 

@@ -28,7 +28,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from sqlalchemy import delete, select  # noqa: E402
 
 from backend.app.core.config import get_settings  # noqa: E402
-from backend.app.core.db import SessionLocal  # noqa: E402
+from backend.app.core.db import session_factory  # noqa: E402
 from backend.app.core.security import hash_password  # noqa: E402
 from backend.app.models import PolicyChunk, User  # noqa: E402
 
@@ -47,35 +47,39 @@ USERS = (
     {"username": "sup1", "role": "supervisor", "display_name": "Supervisor One"},
 )
 
-#: Minimal local retrieval corpus so the keyword retriever has something to
-#: return. These are neutral process descriptions written for this project.
-#: They are NOT quotations from any statute, and they carry no citation to one:
-#: an official policy corpus is EXT-108 and still PROPOSED.
+#: Local retrieval corpus for the recommendation pathways.
+#:
+#: DEMO PLACEHOLDER CONTENT. These are neutral process notes written for this
+#: project. They are NOT official policy, NOT quotations from any statute, rule
+#: or scheme, and carry no real legal citation. An official policy corpus is
+#: EXT-108 and still PROPOSED. Each note's `citation` is an internal
+#: placeholder id so the console can show where a suggestion came from.
+_PLACEHOLDER = "[DEMO PLACEHOLDER - not official policy] "
 POLICY_CHUNKS = (
-    {
-        "key": "process-complaint",
-        "source": "project-placeholder",
-        "citation": "PLACEHOLDER-01",
-        "text": "A complaint recorded through the helpline is reviewed by a helpline "
-                "executive before any action is assigned.",
-        "keywords": ["complaint", "review", "executive", "record"],
-    },
-    {
-        "key": "process-escalation",
-        "source": "project-placeholder",
-        "citation": "PLACEHOLDER-02",
-        "text": "A case marked for immediate attention is placed at the top of the "
-                "queue and requires acknowledgement by a named officer.",
-        "keywords": ["escalation", "queue", "acknowledgement", "officer"],
-    },
-    {
-        "key": "process-handoff",
-        "source": "project-placeholder",
-        "citation": "PLACEHOLDER-03",
-        "text": "A request to speak with a person is honoured at any point and does "
-                "not depend on the state of the intake.",
-        "keywords": ["human", "handoff", "request", "person"],
-    },
+    {"key": "emergency", "source": "demo-placeholder", "citation": "DEMO-POLICY-01",
+     "text": _PLACEHOLDER + "When a caller describes immediate danger, an officer considers "
+             "emergency support first and records what was arranged.",
+     "keywords": ["emergency", "immediate", "danger"]},
+    {"key": "police", "source": "demo-placeholder", "citation": "DEMO-POLICY-02",
+     "text": _PLACEHOLDER + "Where threats or intimidation are described, an officer considers "
+             "whether police intervention is appropriate, with the caller's safety first.",
+     "keywords": ["police", "threat", "intervention"]},
+    {"key": "witness_protection", "source": "demo-placeholder", "citation": "DEMO-POLICY-03",
+     "text": _PLACEHOLDER + "Where threats follow a complaint, an officer considers whether "
+             "protective measures for the complainant or witnesses apply.",
+     "keywords": ["witness", "protection", "complaint", "threat"]},
+    {"key": "medical", "source": "demo-placeholder", "citation": "DEMO-POLICY-04",
+     "text": _PLACEHOLDER + "Where someone is injured or needs treatment, an officer considers "
+             "arranging medical assistance.",
+     "keywords": ["medical", "injury", "treatment"]},
+    {"key": "legal_aid", "source": "demo-placeholder", "citation": "DEMO-POLICY-05",
+     "text": _PLACEHOLDER + "Where a complaint or FIR is involved, an officer considers whether "
+             "free legal aid would help the caller.",
+     "keywords": ["legal", "aid", "complaint", "fir"]},
+    {"key": "counselling", "source": "demo-placeholder", "citation": "DEMO-POLICY-06",
+     "text": _PLACEHOLDER + "Where a caller describes fear or ongoing distress, an officer "
+             "considers offering counselling support.",
+     "keywords": ["counselling", "support", "distress"]},
 )
 
 
@@ -83,7 +87,7 @@ async def seed(reset: bool, password: str) -> int:
     settings = get_settings()
     settings.ensure_runtime_dirs()
 
-    async with SessionLocal() as session:
+    async with session_factory()() as session:
         if reset:
             # Only the rows this script owns. It never drops tables and never
             # touches session, turn, case or audit data.

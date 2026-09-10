@@ -73,6 +73,20 @@ def require_roles(*roles: str) -> Callable[..., Principal]:
     return _dependency
 
 
+def ensure_session_access(principal: Principal, session_id: str) -> None:
+    """A victim token reaches only its own session; staff reach any.
+
+    Without this, a victim holding a valid token for session A could read the
+    transcript and timeline of session B.
+    """
+    if principal.role == ROLE_VICTIM and principal.session_id != session_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=_FORBIDDEN)
+
+
+require_any = require_roles(ROLE_VICTIM, ROLE_EXECUTIVE, ROLE_SUPERVISOR)
 require_console = require_roles(*CONSOLE_ROLES)
+#: Console writes (claim, ack, decide, override, takeover, message). PC-06:
+#: the supervisor view is read-only, so a supervisor token gets 403 here.
+require_executive = require_roles(ROLE_EXECUTIVE)
 require_supervisor = require_roles(ROLE_SUPERVISOR)
 require_timeline_reader = require_roles(*TIMELINE_ROLES)
