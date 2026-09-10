@@ -139,10 +139,25 @@ def score_dimension(dimension: str, victim_turns: Iterable[Mapping[str, Any]]) -
 def score_crisis(victim_turns: Iterable[Mapping[str, Any]], crisis_check) -> Dict[str, Any]:
     """D2 from the synchronous crisis pre-check, applied to every victim turn."""
     turns = list(victim_turns)
-    evidence = [str(t["id"]) for t in turns if crisis_check(str(t.get("text", "")))["crisis"]]
+    evidence: List[str] = []
+    attributed: List[str] = []
+    terms: set = set()
+    for t in turns:
+        result = crisis_check(str(t.get("text", "")))
+        if not result["crisis"]:
+            continue
+        evidence.append(str(t["id"]))
+        terms.update(m["term"] for m in result["matches"])
+        if all(m.get("context") == "attributed_to_third_party" for m in result["matches"]):
+            attributed.append(str(t["id"]))
     if evidence:
+        # Recall first: an attributed match still routes to a person. But the
+        # record says it was attributed, so it never reads as a first-person
+        # claim when it was someone else's words.
         return {"dimension": "D2", "score": 100.0, "confidence": MAX_CONFIDENCE,
-                "evidence_turn_ids": evidence, "matched_terms": [], "basis": "crisis_precheck"}
+                "evidence_turn_ids": evidence, "matched_terms": sorted(terms),
+                "attributed_turn_ids": attributed,
+                "basis": "crisis_precheck_attributed" if len(attributed) == len(evidence) else "crisis_precheck"}
     if len(turns) >= ABSENCE_MIN_TURNS:
         return {"dimension": "D2", "score": 0.0, "confidence": 0.60,
                 "evidence_turn_ids": [], "matched_terms": [], "basis": "crisis_precheck_clear"}
