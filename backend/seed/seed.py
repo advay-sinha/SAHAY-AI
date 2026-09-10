@@ -20,20 +20,88 @@ import asyncio
 import os
 import secrets
 import sys
+import tempfile
 import uuid
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 
 from sqlalchemy import delete, select  # noqa: E402
+from sqlalchemy.engine import make_url  # noqa: E402
+from sqlalchemy.exc import ArgumentError  # noqa: E402
 
-from backend.app.core.config import get_settings  # noqa: E402
-from backend.app.core.db import session_factory  # noqa: E402
+from backend.app.core.config import REPO_ROOT, get_settings  # noqa: E402
 from backend.app.core.security import hash_password  # noqa: E402
-from backend.app.models import PolicyChunk, User  # noqa: E402
 
 #: Fixed namespace so ids are stable across machines and runs.
 NAMESPACE = uuid.uuid5(uuid.NAMESPACE_DNS, "sahay-ai.local.seed")
+SAFE_LOCAL_DATABASE_ROOT = (REPO_ROOT / "runtime" / "db").resolve()
+SAFE_TEMP_ROOT = Path(tempfile.gettempdir()).resolve()
+_SAFE_DATABASE_SUFFIXES = frozenset({".db", ".sqlite", ".sqlite3"})
+_UNSAFE_TARGET_MESSAGE = (
+    "seed refused: database target is not an approved local SQLite database"
+)
+
+
+class UnsafeSeedTarget(ValueError):
+    """A fixed-message refusal that never carries the configured DSN."""
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def validate_seed_target(database_url: str) -> str:
+    """Return a safe display label or reject before database initialization.
+
+    Normal development databases live under ``runtime/db``. Existing backend
+    tests create their databases in a unique ``TemporaryDirectory`` beneath
+    the operating-system temp root, so only nested temp paths are accepted.
+    """
+    try:
+        url = make_url(database_url)
+    except (ArgumentError, TypeError, ValueError):
+        raise UnsafeSeedTarget(_UNSAFE_TARGET_MESSAGE) from None
+
+    if (
+        url.drivername != "sqlite+aiosqlite"
+        or url.username is not None
+        or url.password is not None
+        or url.host is not None
+        or url.port is not None
+        or bool(url.query)
+    ):
+        raise UnsafeSeedTarget(_UNSAFE_TARGET_MESSAGE)
+
+    if url.database == ":memory:":
+        return "local SQLite (memory)"
+    if not url.database:
+        raise UnsafeSeedTarget(_UNSAFE_TARGET_MESSAGE)
+
+    target = Path(url.database).resolve()
+    if target.suffix.casefold() not in _SAFE_DATABASE_SUFFIXES:
+        raise UnsafeSeedTarget(_UNSAFE_TARGET_MESSAGE)
+
+    in_local_runtime = _is_within(target, SAFE_LOCAL_DATABASE_ROOT)
+    in_disposable_test_dir = False
+    if _is_within(target, SAFE_TEMP_ROOT):
+        relative = target.relative_to(SAFE_TEMP_ROOT)
+        in_disposable_test_dir = len(relative.parts) >= 2
+    if not (in_local_runtime or in_disposable_test_dir):
+        raise UnsafeSeedTarget(_UNSAFE_TARGET_MESSAGE)
+    return f"local SQLite ({target.name})"
+
+
+def _open_session_factory():
+    # Importing core.db constructs the configured engine. Keep that import
+    # behind validate_seed_target so unsafe URLs are refused first.
+    from backend.app.core.db import session_factory
+
+    return session_factory()()
 
 
 def sid(kind: str, key: str) -> str:
@@ -85,9 +153,14 @@ POLICY_CHUNKS = (
 
 async def seed(reset: bool, password: str) -> int:
     settings = get_settings()
+    database_label = validate_seed_target(settings.DATABASE_URL)
     settings.ensure_runtime_dirs()
 
-    async with session_factory()() as session:
+    # Models import Base from core.db, so this must also remain after target
+    # validation to avoid initializing a remote engine on an unsafe command.
+    from backend.app.models import PolicyChunk, User
+
+    async with _open_session_factory() as session:
         if reset:
             # Only the rows this script owns. It never drops tables and never
             # touches session, turn, case or audit data.
@@ -130,7 +203,7 @@ async def seed(reset: bool, password: str) -> int:
 
         await session.commit()
 
-    print(f"database:       {settings.DATABASE_URL}")
+    print(f"database:       {database_label}")
     print(f"users created:  {created or 'none (already present)'}")
     print(f"policy chunks:  {chunks or 'none (already present)'}")
     print("no victim, session, case or assessment data is seeded")
@@ -148,7 +221,11 @@ def main(argv=None) -> int:
     if generated:
         password = secrets.token_urlsafe(12)
 
-    code = asyncio.run(seed(args.reset, password))
+    try:
+        code = asyncio.run(seed(args.reset, password))
+    except UnsafeSeedTarget:
+        print(_UNSAFE_TARGET_MESSAGE, file=sys.stderr)
+        return 2
 
     if generated:
         print()

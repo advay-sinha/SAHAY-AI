@@ -13,6 +13,7 @@ input such as a rationale.
 """
 
 from datetime import datetime, timezone
+from collections.abc import Mapping
 from typing import Any, Dict, Optional
 from uuid import uuid4
 
@@ -25,7 +26,85 @@ from ..models import AuditLog, TimelineEvent
 ACTOR_SYSTEM = "system"
 ACTOR_HUMAN = "human"
 
-__all__ = ["record", "timeline", "timeline_payload", "now", "TIMELINE_LABELS", "ACTOR_SYSTEM", "ACTOR_HUMAN"]
+__all__ = [
+    "record",
+    "timeline",
+    "timeline_payload",
+    "now",
+    "TIMELINE_LABELS",
+    "ACTOR_SYSTEM",
+    "ACTOR_HUMAN",
+    "UnsafeAuditDetail",
+]
+
+
+class UnsafeAuditDetail(ValueError):
+    """Raised without echoing a rejected audit key or value."""
+
+
+# Keys are normalized with separators removed before comparison. Keep this
+# list limited to raw narrative and authentication/configuration material;
+# structured ids, codes, counts, timestamps and fixed reason codes are valid
+# accountability metadata.
+_PROHIBITED_DETAIL_KEYS = frozenset(
+    {
+        "accesstoken",
+        "apikey",
+        "auth",
+        "authentication",
+        "authorization",
+        "authheader",
+        "bearer",
+        "connectionstring",
+        "cookie",
+        "credential",
+        "credentials",
+        "databaseurl",
+        "dsn",
+        "jwt",
+        "llmapikey",
+        "message",
+        "messagetext",
+        "narrative",
+        "officermessage",
+        "officernarrative",
+        "password",
+        "passwordhash",
+        "passphrase",
+        "rawinput",
+        "rawmessage",
+        "rawtext",
+        "refreshtoken",
+        "requestbody",
+        "responsebody",
+        "rationale",
+        "secret",
+        "secretkey",
+        "sessiontoken",
+        "text",
+        "token",
+        "transcript",
+        "utterance",
+        "victimmessage",
+        "victimnarrative",
+        "victimtext",
+    }
+)
+
+
+def _normalized_detail_key(key: object) -> str:
+    return "".join(character for character in str(key).casefold() if character.isalnum())
+
+
+def _validate_detail(value: object) -> None:
+    if isinstance(value, Mapping):
+        for key, nested in value.items():
+            if _normalized_detail_key(key) in _PROHIBITED_DETAIL_KEYS:
+                raise UnsafeAuditDetail("audit detail contains prohibited data")
+            _validate_detail(nested)
+    elif isinstance(value, (list, tuple)):
+        for nested in value:
+            _validate_detail(nested)
 
 
 def now() -> datetime:
@@ -43,6 +122,7 @@ async def record(
     dedupe_key: Optional[str] = None,
 ) -> bool:
     """Append one audit event. Returns False if `dedupe_key` already exists."""
+    _validate_detail(detail or {})
     entry = AuditLog(
         id=str(uuid4()),
         case_id=case_id,
