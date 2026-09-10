@@ -250,6 +250,14 @@ async def submit_turn(
     turns.append(victim)
     out.add("transcript.line", transcript_payload(victim))
 
+    # Consent and a completed human takeover both mute every AI path. The
+    # victim turn remains available to the officer under the existing
+    # retention rules, but nothing below this boundary may inspect it.
+    if consent != CONSENT_GRANTED or session.human_joined:
+        case.updated_at = audit.now()
+        out.add("session.status", status_payload(session, consent))
+        return out
+
     # 2. synchronous crisis pre-check, before policy
     pre = crisis_check(text)
 
@@ -275,10 +283,6 @@ async def submit_turn(
         next_state, intent = decision["next_state"], decision["intent"]
         await audit.record(db, "fixed_script.unavailable", case_id=case.id,
                            detail={"state": next_state, "turn_id": victim.id})
-
-    # An officer has taken over: the assistant is muted.
-    if session.human_joined:
-        assistant_text = None
 
     session.state = next_state
 

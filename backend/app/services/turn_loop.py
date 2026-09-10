@@ -18,6 +18,7 @@ carries no ML dependency.
 from typing import Any, Dict, Mapping, Optional
 
 from ml.dialogue import next as dialogue_next
+from ml.dialogue.intents import is_speakable
 from ml.guardrails import crisis_check, validate
 
 from ..adapters.llm import LLMProvider
@@ -94,6 +95,11 @@ def plan_turn(
                 f"{decision['lang']}, and none is recorded"
             )
         result["text"] = decision["fallback_text"]
+        return result
+
+    # Normal intent text is victim-facing only after its language review is
+    # approved. This gate precedes both model phrasing and raw fallback use.
+    if not is_speakable(decision["lang"]):
         return result
 
     fallback = decision["fallback_text"]
