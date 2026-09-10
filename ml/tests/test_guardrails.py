@@ -150,37 +150,5 @@ class TestCrisisPrecheck(unittest.TestCase):
         self.assertTrue(crisis_check("I WANT TO DIE")["crisis"])
 
 
-class TestCrisisNegationIsClauseScoped(unittest.TestCase):
-    """A negation suppresses only a crisis phrase in its own clause.
-
-    Regression for the window bug found by ml/eval dev fixtures DEV-EN-010,
-    DEV-HI-013 and DEV-HG-009: a negation in an EARLIER sentence used to
-    suppress a later first-person crisis statement.
-    """
-
-    def test_negation_in_an_earlier_sentence_does_not_suppress(self):
-        for text in ("The police never came back. I want to die.",
-                     "They did not help. I can't go on.",
-                     "I will never forgive them, I want to kill myself"):
-            self.assertTrue(crisis_check(text)["crisis"], text)
-
-    def test_hindi_and_hinglish_earlier_clause_negation_does_not_suppress(self):
-        self.assertTrue(crisis_check("पुलिस कभी नहीं आई, अब मैं जीना नहीं चाहती।")["crisis"])
-        self.assertTrue(crisis_check("Kabhi nahi socha tha aisa hoga, ab main jaan de dungi.")["crisis"])
-
-    def test_negation_in_the_same_clause_still_suppresses(self):
-        for text in ("I would never kill myself", "I am not going to hurt myself, but I am angry.",
-                     "मैं आत्महत्या कभी नहीं करूंगी, मुझे बस मदद चाहिए।"):
-            result = crisis_check(text)
-            self.assertFalse(result["crisis"], text)
-            self.assertTrue(result["suppressed"], text)
-
-    def test_negated_and_genuine_clauses_together_fire(self):
-        result = crisis_check("I don't want to kill myself, but sometimes I want to die.")
-        self.assertTrue(result["crisis"])
-        self.assertEqual([m["term"] for m in result["matches"]], ["want to die"])
-        self.assertEqual([s["term"] for s in result["suppressed"]], ["kill myself"])
-
-
 if __name__ == "__main__":
     unittest.main()

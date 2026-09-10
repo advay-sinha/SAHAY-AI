@@ -62,12 +62,7 @@ def filter_event(role: str, event_type: str, payload: Mapping[str, Any]) -> Opti
                 f"event {event_type!r} bound for a victim contains assessment fields: {leaks}"
             )
 
-    # The envelope ALWAYS wins. A payload key named "type" must never rename the
-    # event: the frozen alert.safety shape has a `type` field of its own
-    # ("crisis" | "threat" | ...), which previously overwrote "alert.safety"
-    # on the wire. Publishers now send the alert kind as `alert_type`; the
-    # field-name collision is recorded in docs/contracts/PROPOSED_CHANGES.md.
-    return {**dict(payload), "type": event_type}
+    return {"type": event_type, **dict(payload)}
 
 
 def fan_out(

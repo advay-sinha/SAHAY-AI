@@ -38,7 +38,6 @@ export function App() {
             <Route path={PATHS.queue} element={<QueuePage />} />
             <Route path="/cases/:caseId" element={<CasePage />} />
             <Route path={PATHS.audit} element={<AuditPage />} />
-            <Route path="/audit/:caseId" element={<AuditPage />} />
             <Route path={PATHS.supervisor} element={<SupervisorPage />} />
           </Route>
           <Route path="/" element={<RootRedirect />} />

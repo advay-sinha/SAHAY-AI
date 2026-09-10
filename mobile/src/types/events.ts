@@ -7,9 +7,6 @@
  * There is deliberately no import from the console's contract mirror here. The
  * victim app defines the four events it is allowed to receive and nothing else,
  * so an assessment type cannot arrive by autocomplete.
- *
- * Mirrors backend/app/ws/events.py VICTIM_ALLOWED and CONTRACTS.md section 2
- * (backend/tests/test_contract_mirror.py checks all three agree).
  */
 
 export type Lang = "hi" | "en";
@@ -43,30 +40,15 @@ export interface TimelineUpdate {
   ts: string;
 }
 
-/**
- * PC-07: a message typed by the human officer who took over the conversation.
- * Show it as coming from a person ("Officer"), never as the assistant. It
- * carries no assessment field.
- */
-export interface OfficerMessage {
-  turn_id: string;
-  text: string;
-  lang: Lang;
-  ts: string;
-  origin: "human_officer";
-}
-
 export type VictimEvent =
   | ({ type: "assistant.turn" } & AssistantTurn)
   | ({ type: "transcript.line" } & TranscriptLine)
   | ({ type: "session.status" } & SessionStatus)
-  | ({ type: "timeline.update" } & TimelineUpdate)
-  | ({ type: "officer.message" } & OfficerMessage);
+  | ({ type: "timeline.update" } & TimelineUpdate);
 
 export const ALLOWED_EVENT_TYPES = [
   "assistant.turn",
   "transcript.line",
   "session.status",
   "timeline.update",
-  "officer.message",
 ] as const;

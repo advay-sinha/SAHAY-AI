@@ -9,26 +9,9 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from ..core.enums import (
-    ALERT_SEVERITIES,
-    ALERT_TYPES,
-    BANDS,
-    CONSENT_STATUSES,
-    DECISIONS,
-    SESSION_CHANNELS,
-    TIMELINE_STAGES,
-)
-
-# Literal types are built from the frozen enums in core/enums.py (CONTRACTS.md
-# section 9), so there is one list per enum, not a second copy here.
 Lang = Literal["hi", "en"]
-Band = Literal[BANDS]
-Decision = Literal[DECISIONS]
-Channel = Literal[SESSION_CHANNELS]
-ConsentStatus = Literal[CONSENT_STATUSES]
-AlertType = Literal[ALERT_TYPES]
-AlertSeverity = Literal[ALERT_SEVERITIES]
-TimelineStage = Literal[TIMELINE_STAGES]
+Band = Literal["Low", "Moderate", "High", "Critical"]
+Decision = Literal["confirm", "modify", "reject"]
 
 
 class VictimSafeModel(BaseModel):
@@ -63,21 +46,8 @@ class SessionStatus(VictimSafeModel):
     human_joined: bool
 
 
-class OfficerMessage(VictimSafeModel):
-    """PC-07: written by the human officer who took over. No assessment field.
-
-    `origin` is always "human_officer" so the victim app can show plainly that
-    a person, not the assistant, is speaking."""
-
-    turn_id: str
-    text: str
-    lang: Lang
-    ts: str
-    origin: Literal["human_officer"]
-
-
 class TimelineUpdate(VictimSafeModel):
-    stage: TimelineStage
+    stage: str
     label: str
     ts: str
 
@@ -107,11 +77,8 @@ class DimensionUpdate(BaseModel):
 
 
 class SafetyAlert(BaseModel):
-    """alert.safety payload (PC-02). The alert's kind is `alert_type`; the
-    envelope's `type` is always the event name and is never overwritten."""
-
-    alert_type: AlertType
-    severity: AlertSeverity
+    type: Literal["crisis", "threat", "medical", "coercion"]
+    severity: str
     evidence_turn_ids: List[str] = Field(default_factory=list)
     requires_ack: bool = True
 
@@ -155,39 +122,18 @@ class LoginResponse(BaseModel):
 
 
 class CreateSessionRequest(BaseModel):
-    channel: Channel = "mobile_chat"
-    consent: ConsentStatus = "pending"
+    channel: Literal["voice", "chat"] = "voice"
+    consent: Literal["granted", "declined", "pending"] = "pending"
     lang: Lang = "hi"
 
 
 class CreateSessionResponse(VictimSafeModel):
-    """POST /sessions response, FROZEN by PC-09 (lead decision 2026-09-11).
-
-    session_token  the VICTIM credential. Scoped to this one session (role
-                   victim, session_id claim). It never authorises a console
-                   route or another session. It is not an executive token;
-                   executive tokens come only from POST /auth/login.
-    ws_url         path only, `/ws/session/{session_id}`. It carries NO token,
-                   so it is safe to log. Connecting (PC-05): the target
-                   protocol sends `{"type":"auth","token":...}` as the first
-                   frame; the text-first slice temporarily still accepts
-                   `?token=<session_token>` appended by the client.
-    """
-
     session_id: str
-    case_id: str
-    reference_no: str
-    session_token: str
-    ws_url: str
+    state: str
+    consent: str
     lang: Lang
-    consent: ConsentStatus
     ai_disclosure: str
     human_request_available: bool
-
-
-class EndSessionResponse(VictimSafeModel):
-    case_id: str
-    reference_no: str
 
 
 class ChatMessage(BaseModel):
@@ -203,46 +149,14 @@ class RequestHuman(BaseModel):
 class DecisionRequest(BaseModel):
     action_id: str
     decision: Decision
-    # Required (non-blank) for modify and reject; enforced server-side with 400.
-    rationale: Optional[str] = ""
-    # Must equal the signed-in officer; the server never trusts it on its own.
-    officer_id: Optional[str] = None
-
-
-class AlertAckResponse(BaseModel):
-    """POST /cases/{id}/alerts/{alert_id}/ack, FROZEN by PC-01. Idempotent:
-    a repeat returns the first acknowledgement unchanged."""
-
-    model_config = ConfigDict(extra="forbid")
-
-    alert_id: str
-    case_id: str
-    acknowledged_by: str
-    acknowledged_at: str
-
-
-class OfficerMessageRequest(BaseModel):
-    """POST /cases/{id}/messages (PC-07). Blank or over-long text is a 400
-    from the service, not a generic 422."""
-
-    text: str = ""
-    lang: Optional[Lang] = None
-
-
-class OfficerMessageResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    turn_id: str
-    case_id: str
-    origin: Literal["human_officer"]
-    ts: str
+    rationale: str
+    officer_id: str
 
 
 class OverrideRequest(BaseModel):
     band: Band
-    # REQUIRED by contract. Optional here only so a missing or blank reason is
-    # refused by the service with 400 (HANDOVER.md 12.4), not a generic 422.
-    reason: Optional[str] = None
+    # Required by contract. A blank reason is refused server-side.
+    reason: str = Field(min_length=1)
 
 
 class HealthResponse(BaseModel):

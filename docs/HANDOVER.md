@@ -399,8 +399,7 @@ cases(id, reference_no, session_id, status, band, svi, needs_human,
 
 assessments(id, case_id, cycle_index, svi, band, needs_human,
             dims_json /* D1..D9: {score, conf, evidence_turn_ids[]} */,
-            overrides_applied_json, confidence_agg, quality_json,
-            scoring_version, normalization_json /* PC-08 */, created_at)
+            overrides_applied_json, confidence_agg, quality_json, created_at)
 
 alerts(id, case_id, type /* crisis|threat|medical|coercion */, severity,
        evidence_turn_ids_json, requires_ack, acked_by, acked_at, created_at)
@@ -419,7 +418,7 @@ decisions_human(id, case_id, recommendation_id, officer_id,
 overrides(id, case_id, officer_id, from_band, to_band, reason /* REQUIRED */,
           created_at)
 
-timeline_events(id, case_id, stage, label, ts)   -- victim-safe only; authoritative timeline
+timeline_events(id, case_id, stage, label, ts)   -- victim-safe only
 
 audit_log(id, case_id, actor_type /* system|human */, actor_id, event,
           detail_json, ts)           -- append-only; nobody may delete
@@ -431,19 +430,11 @@ latency_metrics(id, session_id, turn_index, stage, ms, created_at)
 
 **Invariants:** `decisions_ai` and `decisions_human` are never joined into one table or one view that hides which is which. `audit_log` is append-only. `overrides.reason` is `NOT NULL` and enforced at the endpoint.
 
-**Lead decisions of 2026-09-11 (`docs/contracts/PROPOSED_CHANGES.md`).**
-
-- **PC-03.** `overrides` and `timeline_events` are the authoritative stores for band overrides and victim-safe stages. `audit_log` also records each write for accountability, but it is not the timeline. The local build has 15 tables: the 15 above, with `policy_chunks` using keyword retrieval instead of an embedding column.
-- **PC-07.** An officer turn (`speaker = officer`) exists only after takeover, when `sessions.human_joined_at` is set.
-- **PC-08.** `assessments.scoring_version` and `assessments.normalization` record how each score was produced.
-- **PC-10.** Enumerations are frozen in `docs/contracts/CONTRACTS.md` section 9.
-
 ## 12. API specification
 
 ### 12.1 Transport
 ```
-WSS /ws/session/{session_id}                       (PC-05 target: first frame {"type":"auth","token":...})
-WSS /ws/session/{session_id}?token=<jwt>           (transitional, text-first web slice only)
+WSS /ws/session/{session_id}?token=<jwt>
 UP    binary  16 kHz mono PCM16 · 500 ms frames · 8-byte header (uint32 seq | uint32 ms)
       text    {"type":"chat.message","text":...,"lang":...}
               {"type":"request_human"}
@@ -452,15 +443,6 @@ DOWN  binary  assistant TTS chunks, prefixed with turn_id header
 FALLBACK      POST /sessions/{id}/audio  — whole-utterance upload, always available
 RECONNECT     client resumes from last acknowledged seq; server de-duplicates
 ```
-**PC-05, approved in principle and phased.** The target is:
-- no JWT in the socket URL;
-- an auth frame sent immediately after connecting;
-- no session or assessment data before authentication succeeds;
-- a short authentication timeout;
-- an invalid or expired token closes the connection;
-- tokens are never logged.
-
-The query-token form stays temporarily for the text-first web slice. Backend and Executive Web own the implementation. See CONTRACTS.md section 1.
 
 ### 12.2 Events — victim client MAY receive
 ```
@@ -468,14 +450,13 @@ assistant.turn   {turn_id, text, lang, intent, audio:"streaming"|"prerecorded"}
 transcript.line  {turn_id, speaker:"victim"|"assistant", text, lang, ts}
 session.status   {state, consent, lang, human_joined}
 timeline.update  {stage, label, ts}
-officer.message  {turn_id, text, lang, ts, origin:"human_officer"}   (PC-07, only after takeover)
 ```
 
 ### 12.3 Events — EXECUTIVE CONSOLE ONLY (server-enforced by role)
 ```
 dimension.update   {dims:{D1..D9:{score, conf, evidence_turn_ids[]}},
                     svi, band, needs_human, overrides_applied[]}
-alert.safety       {alert_type, severity, evidence_turn_ids[], requires_ack:true}   (PC-02)
+alert.safety       {type, severity, evidence_turn_ids[], requires_ack:true}
 case.structured    {incident, timeline[], persons[], threats[], safety_now,
                     medical_need, legal_status, isolation, requested_support}
 action.recommended {action_id, action_type, rationale, policy_citations[], confidence}
@@ -485,10 +466,8 @@ escalation.packet  {case_id, band, alerts[], summary, ready:true}
 
 ### 12.4 REST
 ```
-POST /auth/login                → {token, role, display_name}
-POST /sessions                  {channel, consent, lang} → {session_id, case_id, reference_no,
-                                  session_token, ws_url, lang, consent, ai_disclosure,
-                                  human_request_available}          (PC-09; ws_url has no token)
+POST /auth/login                → {token, role}
+POST /sessions                  {channel, consent, lang} → {session_id, ws_url}
 POST /sessions/{id}/audio       whole-utterance fallback
 POST /sessions/{id}/end         → {case_id, reference_no}
 GET  /queue                     → band-ranked case summaries
@@ -497,12 +476,9 @@ POST /cases/{id}/claim
 POST /cases/{id}/decisions      {action_id, decision, rationale, officer_id}
 POST /cases/{id}/override       {band, reason}     # reason REQUIRED (400 if absent)
 POST /cases/{id}/takeover
-POST /cases/{id}/alerts/{alert_id}/ack   → {alert_id, case_id, acknowledged_by, acknowledged_at}  (PC-01)
-POST /cases/{id}/messages       {text, lang?}  officer text after takeover only (PC-07)
 GET  /cases/{id}/timeline       victim-safe view — must contain no assessment field
 GET  /cases/{id}/audit
 ```
-Console writes are executive-only. The supervisor view is read-only until PC-06 is taken up. Queue push (PC-04) is deferred and the console polls `/queue`. The frozen shapes are in CONTRACTS.md sections 4 and 9.
 
 ### 12.5 Pure module interfaces
 ```python
@@ -531,15 +507,6 @@ No I/O, no network, no model loading. This is a deliberate architectural propert
 
 `SVI = Σ(weight_i × score_i)`, each score 0–100.
 **Bands:** 0–29 Low · 30–54 Moderate · 55–74 High · 75–100 Critical.
-
-**Renormalisation (PC-08).** Weights are rescaled only for a dimension that is *structurally* unavailable on the channel: D4 on a typed channel.
-
-`normalized_svi = weighted_sum_available / sum_of_available_weights`. With only D4 absent the denominator is 0.88.
-
-- The scoring version, available and unavailable dimensions, and normalisation factor are stored with every assessment.
-- D4 is shown as unavailable, never measured and never zero.
-- Poor audio, runtime failure or low confidence never rescale; they abstain.
-- Hard overrides apply independently. Band thresholds apply to the normalised value, using lower bounds 0/30/55/75.
 
 **Hard overrides:** confirmed D1 or D2 above threshold ⇒ Critical regardless of the weighted sum. Confidence < 0.45, poor audio quality, or low language confidence ⇒ `needs_human: true`, no score. Consent declined ⇒ scoring suppressed entirely.
 

@@ -10,14 +10,20 @@ Standard library only, so the leakage test runs with no installed dependency.
 
 from typing import Any, Dict, Iterable, List, Mapping
 
-from ..core.enums import TIMELINE_STAGES
-
 #: The only keys a timeline entry may contain. CONTRACTS.md section 2,
 #: timeline.update {stage, label, ts}.
 TIMELINE_ENTRY_KEYS = ("stage", "label", "ts")
 
-#: Stages a victim sees: the canonical enum, defined once in core/enums.py.
-STAGES = TIMELINE_STAGES
+#: Stages a victim sees. Deliberately about process, not about assessment:
+#: "you are heard, this is your reference number, this is what happens next".
+STAGES = (
+    "request_received",
+    "recorded",
+    "under_review",
+    "officer_assigned",
+    "officer_speaking",
+    "closed",
+)
 
 
 def timeline_entry(stage: str, label: str, ts: str) -> Dict[str, Any]:
