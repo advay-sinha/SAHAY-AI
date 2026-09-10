@@ -33,8 +33,6 @@ export function isConsoleRole(value: unknown): value is ConsoleRole {
 export interface Session {
   token: string;
   role: ConsoleRole;
-  /** The officer id (token `sub`). Used to tell "assigned to me" apart. */
-  subject: string;
   displayName: string;
   /** Milliseconds since epoch, taken from the token's `exp`. */
   expiresAt: number;
@@ -87,7 +85,6 @@ export function toSession(
   return {
     token: token as string,
     role,
-    subject: claims.sub,
     displayName: typeof displayName === "string" ? displayName : "",
     expiresAt,
   };

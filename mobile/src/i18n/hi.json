@@ -31,10 +31,10 @@
   "timeline.title": "आपकी शिकायत",
   "timeline.reference": "संदर्भ संख्या",
   "timeline.request_received": "शिकायत प्राप्त हुई",
+  "timeline.recorded": "आपकी बात दर्ज कर ली गई है",
   "timeline.under_review": "समीक्षा जारी है",
   "timeline.officer_assigned": "एक अधिकारी नियुक्त किया गया है",
-  "timeline.action_taken": "एक अधिकारी ने आपके अनुरोध पर कार्रवाई की है",
-  "timeline.follow_up_scheduled": "आगे की बातचीत का समय तय किया गया है",
+  "timeline.officer_speaking": "एक अधिकारी आपसे बात कर रहा है",
   "timeline.closed": "बंद",
 
   "offline.title": "कोई कनेक्शन नहीं",

@@ -1,40 +1,13 @@
-# Code owners — D-11 (lead decision 2026-09-11): four leads.
-#
-# PLACEHOLDERS. Every @TODO-... handle below is an explicit placeholder, not a
-# GitHub account. Replace each with the real username of that lead. Do not
-# guess: the role-to-person mapping has not been recorded anywhere in the repo.
-# Collaborators currently on github.com/advay-sinha/SAHAY-AI (read 2026-09-11):
-#   advay-sinha, Ameya5006, ArnavRocks7, bulanihimanshu
-#
-#   @advay-sinha     AI/ML and Safety lead
-#   @Ameya5006         Backend lead
-#   @bulanihimanshu   Executive Web lead
-#   @ArnavRocks7   Mobile / Victim Experience lead
-#
-# Later rules override earlier ones for the same path.
+# Auto-assigns reviewers. Replace handles with real GitHub usernames on Day 1.
 
-/ml/                 @advay-sinha
-/data-scripts/       @advay-sinha
-/backend/            @Ameya5006
-/scripts/            @Ameya5006
-/frontend/           @bulanihimanshu
-/mobile/             @ArnavRocks7
+/backend/          @be-lead
+/infra/            @be-lead
+/ml/               @ai-lead
+/data-scripts/     @ai-lead
+/frontend/         @fe-lead
+/mobile/           @fe-lead
 
-# Safety-critical code: the owning lead plus AI/ML and Safety.
-/ml/svi/                         @advay-sinha @Ameya5006
-/ml/guardrails/                  @advay-sinha
-/backend/app/ws/events.py        @Ameya5006 @advay-sinha @ArnavRocks7
-/backend/app/ws/fanout.py        @Ameya5006 @advay-sinha
-/mobile/src/types/events.ts      @ArnavRocks7 @Ameya5006 @advay-sinha
-/frontend/src/types/contracts.ts @bulanihimanshu @Ameya5006
-
-# Contracts and dialogue require all four leads.
-/docs/contracts/     @advay-sinha @Ameya5006 @bulanihimanshu @ArnavRocks7
-/docs/dialogue/      @advay-sinha @Ameya5006 @bulanihimanshu @ArnavRocks7
-/CLAUDE.md           @advay-sinha @Ameya5006 @bulanihimanshu @ArnavRocks7
-/.claude/            @advay-sinha @Ameya5006 @bulanihimanshu @ArnavRocks7
-/.github/            @Ameya5006
-
-# Design references are non-authoritative; their owners review changes.
-/frontend/design/    @bulanihimanshu
-/mobile/design/      @ArnavRocks7
+# Contracts require all three leads — this is the rule that saves week two
+/docs/contracts/   @ai-lead @be-lead @fe-lead
+/ml/svi/           @ai-lead @be-lead
+/.github/          @be-lead

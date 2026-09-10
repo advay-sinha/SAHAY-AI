@@ -295,10 +295,8 @@ class TestRbac(AuthTestBase):
                 self.assertEqual(r.json(), {"detail": "Not permitted for this role"})
 
     def test_a_victim_token_may_reach_the_victim_safe_timeline(self):
-        # Past the role check (not 401/403); the case simply does not exist here.
-        # Own-case scoping is covered in test_vertical_slice.py.
         r = self.client.get("/cases/c1/timeline", headers=self.bearer(self.victim_token()))
-        self.assertEqual(r.status_code, 404)
+        self.assertEqual(r.status_code, 501)  # past auth; the route itself lands in P2
 
     def test_protected_routes_reject_anonymous_callers_before_validating_bodies(self):
         r = self.client.post("/cases/c1/override", json={"band": "Critical", "reason": ""})

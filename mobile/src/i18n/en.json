@@ -31,10 +31,10 @@
   "timeline.title": "Your request",
   "timeline.reference": "Reference number",
   "timeline.request_received": "Request received",
+  "timeline.recorded": "Your account has been recorded",
   "timeline.under_review": "Under review",
   "timeline.officer_assigned": "An officer has been assigned",
-  "timeline.action_taken": "An officer has taken action on your request",
-  "timeline.follow_up_scheduled": "A follow-up has been scheduled",
+  "timeline.officer_speaking": "An officer is speaking with you",
   "timeline.closed": "Closed",
 
   "offline.title": "No connection",

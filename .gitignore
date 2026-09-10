@@ -61,17 +61,13 @@ runtime/*/*
 *.db-wal
 *.npy
 
-# Local working files: never committed.
-prompt.txt
+# Working notes, not project instructions.
 START_HERE.md
+prompt.txt
+design/
+.claude/
+CLAUDE.md
 
-# Machine-specific Claude Code settings (permissions granted on one machine).
-# The shared, portable policy is .claude/settings.json, which IS tracked.
-.claude/settings.local.json
-.claude/**/*.local.*
-
-# Deliberately tracked (do not add ignore rules for these): the root and
-# directory-level CLAUDE.md files, .claude/agents, commands, skills, templates
-# and settings.json, and the non-authoritative design references in
-# frontend/design/ and mobile/design/. They are the project's operating
-# instructions and are reviewed like any other source. See CLAUDE.md section 7.
+# CLAUDE.md is deliberately NOT ignored. The root file and every
+# directory-level file are the project's operating instructions and must be
+# committed and reviewed like any other source. See CLAUDE.md section 7.

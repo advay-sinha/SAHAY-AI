@@ -7,9 +7,6 @@ cost is that uvicorn writes the full handshake path, query string included,
 into its log -- so without this filter every socket connection would put a
 live bearer token into the log file.
 
-It also pins SQL-logging libraries to WARNING, because they log bound
-parameters -- and a parameter can be a victim's message.
-
 This filter rewrites log records before any handler sees them:
   * `token=` / `access_token=` / `jwt=` query values become `[REDACTED]`
   * anything shaped like a JWT (three base64url segments starting `eyJ`)
@@ -67,19 +64,9 @@ class TokenRedactionFilter(logging.Filter):
 _FILTER = TokenRedactionFilter()
 
 
-#: Libraries that log SQL statements WITH their bound parameters at DEBUG or
-#: INFO. A parameter can be a victim's message (INSERT INTO turns ...), so these
-#: are pinned to WARNING: turning the root logger up to DEBUG for troubleshooting
-#: must never write a narrative to disk.
-DATA_LOGGERS = ("aiosqlite", "sqlalchemy.engine", "sqlalchemy.pool", "sqlalchemy.orm",
-                "sqlalchemy.dialects")
-
-
 def install() -> None:
-    """Attach the redaction filter and quieten data-bearing loggers. Idempotent."""
+    """Attach the filter to every logger that can carry a request path. Idempotent."""
     for name in LOGGERS:
         logger = logging.getLogger(name)
         if _FILTER not in logger.filters:
             logger.addFilter(_FILTER)
-    for name in DATA_LOGGERS:
-        logging.getLogger(name).setLevel(logging.WARNING)
