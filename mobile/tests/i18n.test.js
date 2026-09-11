@@ -53,3 +53,27 @@ test("declining consent still promises a route to a person", () => {
     assert.ok(load(name)["consent.declined_note"], `${name} is missing consent.declined_note`);
   }
 });
+
+test("chat state and origin labels match the approved translations", () => {
+  const expected = {
+    en: {
+      "chat.pending": "Sending",
+      "chat.sent": "Sent",
+      "chat.assistant": "SAHAY-AI Assistant",
+      "chat.human_officer": "Human Support Officer",
+    },
+    hi: {
+      "chat.pending": "भज ज रह ह",
+      "chat.sent": "भज दय गय",
+      "chat.assistant": "SAHAY-AI सहयक",
+      "chat.human_officer": "मनव सहयत अधकर",
+    },
+  };
+
+  for (const language of ["en", "hi"]) {
+    const bundle = load(`${language}.json`);
+    for (const [key, value] of Object.entries(expected[language])) {
+      assert.equal(bundle[key], value, `${language}:${key}`);
+    }
+  }
+});

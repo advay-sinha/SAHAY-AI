@@ -13,32 +13,40 @@ const disabledControlStyle = {
 };
 
 interface HomeScreenProps {
+  onOpenChat: () => void;
   onRequestHuman: () => void;
 }
 
-export function HomeScreen({ onRequestHuman }: HomeScreenProps) {
-  const disabledControls = ["home.chat", "home.my_requests"] as const;
+export function HomeScreen({ onOpenChat, onRequestHuman }: HomeScreenProps) {
+  const chatLabel = t("home.chat");
+  const requestsLabel = t("home.my_requests");
 
   return (
     <View style={{ flex: 1, gap: 16, padding: 16 }}>
       <AiDisclosure />
       <TalkToPersonButton onPress={onRequestHuman} />
-      {disabledControls.map((key) => {
-        const label = t(key);
-
-        return (
-          <Pressable
-            accessibilityLabel={label}
-            accessibilityRole="button"
-            accessibilityState={{ disabled: true }}
-            disabled
-            key={key}
-            style={disabledControlStyle}
-          >
-            <Text style={{ color: "#25313a", fontSize: 18 }}>{label}</Text>
-          </Pressable>
-        );
-      })}
+      <Pressable
+        accessibilityLabel={chatLabel}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: false }}
+        onPress={onOpenChat}
+        style={{ ...disabledControlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+      >
+        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
+          {chatLabel}
+        </Text>
+      </Pressable>
+      <Pressable
+        accessibilityLabel={requestsLabel}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: true }}
+        disabled
+        style={disabledControlStyle}
+      >
+        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
+          {requestsLabel}
+        </Text>
+      </Pressable>
     </View>
   );
 }

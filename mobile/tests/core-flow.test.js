@@ -41,17 +41,18 @@ test("consent starts unselected and only accept invokes onAccept", () => {
   assert.match(source, /minHeight:\s*48/);
 });
 
-test("home enables the human request while chat and requests remain disabled", () => {
+test("home enables chat and the human request while requests remain disabled", () => {
   const source = readScreen("HomeScreen.tsx");
+  assert.match(source, /onOpenChat:\s*\(\)\s*=>\s*void/);
   assert.match(source, /onRequestHuman:\s*\(\)\s*=>\s*void/);
   assert.match(source, /<TalkToPersonButton\s+onPress=\{onRequestHuman\}\s*\/>/);
-  for (const key of ["home.chat", "home.my_requests"]) {
-    assert.ok(source.includes(`"${key}"`), `${key} is missing`);
-  }
-  assert.doesNotMatch(source, /"home\.talk"/);
-  assert.match(source, /accessibilityRole="button"/);
-  assert.match(source, /accessibilityLabel=\{label\}/);
+  assert.match(source, /t\(["']home\.chat["']\)/);
+  assert.match(source, /onPress=\{onOpenChat\}/);
+  assert.match(source, /accessibilityState=\{\{\s*disabled:\s*false\s*\}\}/);
+  assert.match(source, /t\(["']home\.my_requests["']\)/);
   assert.match(source, /accessibilityState=\{\{\s*disabled:\s*true\s*\}\}/);
   assert.match(source, /\sdisabled\s/);
+  assert.doesNotMatch(source, /"home\.talk"/);
+  assert.match(source, /accessibilityRole="button"/);
   assert.match(source, /minHeight:\s*48/);
 });

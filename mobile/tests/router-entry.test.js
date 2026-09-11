@@ -36,7 +36,20 @@ test("declined consent can continue to the handoff route", () => {
 
 test("home sends human requests to the handoff route", () => {
   const source = read("app", "home.tsx");
-  assert.match(source, /<HomeScreen\s+onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}\s*\/>/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+});
+
+test("home opens the chat route", () => {
+  const source = read("app", "home.tsx");
+  assert.match(source, /onOpenChat=\{\(\)\s*=>\s*router\.push\(["']\/chat["']\)\}/);
+});
+
+test("the chat route cannot simulate successful delivery", () => {
+  const source = read("app", "chat.tsx");
+  assert.match(source, /async function unavailableSend\(_text:\s*string\):\s*Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
+  assert.match(source, /onSend=\{unavailableSend\}/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+  assert.doesNotMatch(source, /Promise\.resolve|status=["']sent["']/);
 });
 
 test("the handoff route injects an unavailable callback rather than simulated success", () => {

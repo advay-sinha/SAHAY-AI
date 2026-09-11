@@ -23,6 +23,10 @@
 
   "chat.placeholder": "जो हुआ वह लिखें",
   "chat.send": "भेजें",
+  "chat.pending": "भज ज रह ह",
+  "chat.sent": "भज दय गय",
+  "chat.assistant": "SAHAY-AI सहयक",
+  "chat.human_officer": "मनव सहयत अधकर",
 
   "human.button": "किसी व्यक्ति से बात करें",
   "human.requested": "हम आपको एक व्यक्ति से जोड़ रहे हैं। कृपया रुकें।",
