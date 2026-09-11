@@ -38,6 +38,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ml.dialogue.states import State
 
+from ..adapters.assessment_runner import runner
 from ..core.errors import BadRequest, Conflict, Forbidden, NotFound
 from ..models import Alert, Case, DecisionHuman, Override, Recommendation, Session, Turn
 from . import audit
@@ -193,22 +194,31 @@ async def takeover(db: AsyncSession, case_id: str, officer_id: str) -> Tuple[Cas
     out = Outbound()
     case = await _case(db, case_id)
     _require_owner(case, officer_id)
-    if case.status == "taken_over":
-        return case, out  # idempotent
-    if case.status != "claimed":
-        raise Conflict("this case cannot be taken over in its current state")
     session = await db.get(Session, case.session_id)
-    now = audit.now()
-    case.status, case.taken_over_at, case.updated_at = "taken_over", now, now
-    session.human_joined = True
-    session.human_joined_at = now
-    if session.state != State.SX_CRISIS.value:
-        session.state = State.SH_HUMAN_HANDOFF.value
-    await audit.record(db, "case.taken_over", case_id=case_id, actor_id=officer_id,
-                       actor_kind=audit.ACTOR_HUMAN)
-    # The victim learns a person has joined from session.status.human_joined
-    # (and from officer messages, PC-07); takeover is not a timeline stage.
-    out.add("session.status", status_payload(session, await consent_for(db, case.session_id)))
+    async with runner.session_lock(session.id):
+        await db.refresh(case)
+        await db.refresh(session)
+        _require_owner(case, officer_id)
+        if case.status == "taken_over":
+            runner.mute_session(session.id)
+            return case, out  # idempotent
+        if case.status != "claimed":
+            raise Conflict("this case cannot be taken over in its current state")
+
+        # The marker closes the service-return/route-commit interval for the
+        # local runner. The persisted fields remain the authoritative state.
+        runner.mute_session(session.id)
+        now = audit.now()
+        case.status, case.taken_over_at, case.updated_at = "taken_over", now, now
+        session.human_joined = True
+        session.human_joined_at = now
+        if session.state != State.SX_CRISIS.value:
+            session.state = State.SH_HUMAN_HANDOFF.value
+        await audit.record(db, "case.taken_over", case_id=case_id, actor_id=officer_id,
+                           actor_kind=audit.ACTOR_HUMAN)
+        # The victim learns a person has joined from session.status.human_joined
+        # (and from officer messages, PC-07); takeover is not a timeline stage.
+        out.add("session.status", status_payload(session, await consent_for(db, case.session_id)))
     return case, out
 
 

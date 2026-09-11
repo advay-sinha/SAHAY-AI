@@ -90,16 +90,16 @@ async def _unhandled(_: Request, exc: Exception) -> JSONResponse:
 
 @app.get("/health", response_model=HealthResponse, tags=["ops"])
 async def health() -> HealthResponse:
-    """Liveness and configuration check for the P0 gate."""
+    """Liveness/readiness response without exposing configured values."""
     from ml.dialogue.scripts import unwritten
 
     outstanding = unwritten()
     return HealthResponse(
         status="ok",
-        app_env=settings.APP_ENV,
-        llm_provider=settings.LLM_PROVIDER,
-        assessment_runner=settings.ASSESSMENT_RUNNER,
-        database=settings.DATABASE_URL.split("///")[-1],
+        app_env="ready",
+        llm_provider="ready",
+        assessment_runner="ready",
+        database="ready",
         fixed_scripts_ready=not outstanding,
         detail={"outstanding_fixed_scripts": sorted(outstanding)},
     )

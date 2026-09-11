@@ -1,0 +1,283 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "sahay-ai/ml/data/registry/schema.json",
+ "title": "SAHAY-AI external dataset registry",
+ "description": "Documentation form of the rules enforced by ml/data/governance.py (the executable validator; no jsonschema dependency is used). Cross-field rules (unresolved licence fields keep a dataset in unregistered, metadata_pending, licence_pending, quarantined or rejected; downloaded datasets need sha256/byte_size/safe relative path, no machine-specific paths, dimension mappings need an approved study) are enforced only in governance.py.",
+ "type": "object",
+ "required": [
+  "schema_version",
+  "datasets"
+ ],
+ "properties": {
+  "schema_version": {
+   "const": "1.0.0"
+  },
+  "description": {
+   "type": "string"
+  },
+  "datasets": {
+   "type": "array",
+   "items": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": [
+     "id",
+     "name",
+     "version",
+     "modality",
+     "primary_language",
+     "additional_languages",
+     "sahay_purpose",
+     "source_page",
+     "download_source",
+     "publisher",
+     "citation",
+     "licence_name",
+     "licence_url",
+     "redistribution",
+     "commercial_use",
+     "research_only_restrictions",
+     "attribution_requirements",
+     "consent_statement",
+     "privacy_risks",
+     "demographics",
+     "label_definitions",
+     "splits",
+     "local_relative_path",
+     "archive_filename",
+     "byte_size",
+     "sha256",
+     "archive_safety_status",
+     "extraction_status",
+     "review_status",
+     "approved_uses",
+     "prohibited_uses",
+     "contamination_risk",
+     "limitations",
+     "date_checked",
+     "evidence_urls",
+     "unresolved_questions",
+     "download_status",
+     "ext_decision",
+     "holdout_status",
+     "sahay_dimension_mappings",
+     "official_locked_test_allowed"
+    ],
+    "properties": {
+     "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9_]{1,63}$"
+     },
+     "name": {
+      "type": "string"
+     },
+     "version": {
+      "type": "string"
+     },
+     "modality": {
+      "enum": [
+       "text",
+       "audio",
+       "audio_text",
+       "multimodal"
+      ]
+     },
+     "primary_language": {
+      "enum": [
+       "en",
+       "hi",
+       "hi-Latn",
+       "mul-IN",
+       "unknown"
+      ]
+     },
+     "additional_languages": {
+      "type": "array",
+      "items": {
+       "enum": [
+        "en",
+        "hi",
+        "hi-Latn",
+        "mul-IN",
+        "unknown"
+       ]
+      }
+     },
+     "sahay_purpose": {
+      "type": "string"
+     },
+     "source_page": {
+      "type": "string"
+     },
+     "download_source": {
+      "type": "string"
+     },
+     "publisher": {
+      "type": "string"
+     },
+     "citation": {
+      "type": "string"
+     },
+     "licence_name": {
+      "type": "string"
+     },
+     "licence_url": {
+      "type": "string"
+     },
+     "redistribution": {
+      "enum": [
+       "permitted",
+       "not_permitted",
+       "unknown"
+      ]
+     },
+     "commercial_use": {
+      "enum": [
+       "permitted",
+       "not_permitted",
+       "unknown"
+      ]
+     },
+     "research_only_restrictions": {
+      "type": "string"
+     },
+     "attribution_requirements": {
+      "type": "string"
+     },
+     "consent_statement": {
+      "type": "string"
+     },
+     "privacy_risks": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "demographics": {
+      "type": "string"
+     },
+     "label_definitions": {
+      "type": "string"
+     },
+     "splits": {
+      "type": "string"
+     },
+     "local_relative_path": {
+      "type": "string"
+     },
+     "archive_filename": {
+      "type": "string"
+     },
+     "byte_size": {
+      "type": [
+       "integer",
+       "null"
+      ],
+      "minimum": 1
+     },
+     "sha256": {
+      "type": [
+       "string",
+       "null"
+      ],
+      "pattern": "^[0-9a-f]{64}$"
+     },
+     "archive_safety_status": {
+      "enum": [
+       "not_checked",
+       "passed",
+       "failed",
+       "not_applicable"
+      ]
+     },
+     "extraction_status": {
+      "enum": [
+       "not_extracted",
+       "extracted",
+       "prohibited",
+       "not_applicable"
+      ]
+     },
+     "review_status": {
+      "enum": [
+       "unregistered",
+       "metadata_pending",
+       "licence_pending",
+       "quarantined",
+       "integrity_verified",
+       "approved_for_research",
+       "approved_for_evaluation",
+       "approved_for_training",
+       "rejected"
+      ]
+     },
+     "approved_uses": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "prohibited_uses": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "contamination_risk": {
+      "type": "string"
+     },
+     "limitations": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "date_checked": {
+      "type": "string",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+     },
+     "evidence_urls": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "unresolved_questions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      }
+     },
+     "download_status": {
+      "enum": [
+       "downloaded",
+       "not_downloaded"
+      ]
+     },
+     "ext_decision": {
+      "type": "string"
+     },
+     "holdout_status": {
+      "enum": [
+       "not_holdout",
+       "external_validation_candidate",
+       "external_test_candidate"
+      ]
+     },
+     "sahay_dimension_mappings": {
+      "type": "object",
+      "additionalProperties": {
+       "type": "object",
+       "required": [
+        "approved_study_id"
+       ]
+      }
+     },
+     "official_locked_test_allowed": {
+      "type": "boolean"
+     }
+    }
+   }
+  }
+ }
+}

@@ -29,6 +29,8 @@ class LocalRunner:
     def __init__(self) -> None:
         self._job: Job | None = None
         self._locks: Dict[str, asyncio.Lock] = {}
+        self._session_locks: Dict[str, asyncio.Lock] = {}
+        self._muted_sessions: Set[str] = set()
         self._tasks: Set["asyncio.Task[None]"] = set()
         self.failures = 0
         self.completed = 0
@@ -40,6 +42,24 @@ class LocalRunner:
         if case_id not in self._locks:
             self._locks[case_id] = asyncio.Lock()
         return self._locks[case_id]
+
+    def session_lock(self, session_id: str) -> asyncio.Lock:
+        """Return the stable local coordination lock for one session.
+
+        Locks are retained for the process lifetime. Removing an apparently
+        idle entry could create a second lock while another task is about to
+        acquire the original one.
+        """
+        if session_id not in self._session_locks:
+            self._session_locks[session_id] = asyncio.Lock()
+        return self._session_locks[session_id]
+
+    def mute_session(self, session_id: str) -> None:
+        """Fail closed for local workers when a validated takeover starts."""
+        self._muted_sessions.add(session_id)
+
+    def is_session_muted(self, session_id: str) -> bool:
+        return session_id in self._muted_sessions
 
     async def _run(self, case_id: str) -> None:
         assert self._job is not None, "runner has no job bound"
