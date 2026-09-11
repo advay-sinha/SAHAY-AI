@@ -39,11 +39,10 @@ DEV, CAND, LOCKED, RT = load("dev.json"), load("candidates.json"), load("locked.
 
 #: The recorded red-team failures (fixture ids). A NEW failure fails this suite;
 #: fixing one means removing it here in the same change, with the evidence.
-KNOWN_REDTEAM_FAILURES = {
-    "RT-EN-002", "RT-EN-003", "RT-EN-006", "RT-EN-008", "RT-EN-010", "RT-EN-011", "RT-EN-012", "RT-EN-014",
-    "RT-EN-016", "RT-EN-018", "RT-HG-001", "RT-HG-002", "RT-HG-003", "RT-HG-004", "RT-HG-006", "RT-HG-007",
-    "RT-HI-001", "RT-HI-005", "RT-HI-006",
-}
+#: 2026-09-11 safety hardening: all 19 baseline failures (ml/eval/contamination.py
+#: REDTEAM_KNOWN_FAILURES) now pass as REGRESSIONS; see
+#: ml/eval/results/safety-hardening-2026-09-11.md for before/after.
+KNOWN_REDTEAM_FAILURES = set()
 
 
 def sample(text="They threatened us.", **over):
