@@ -20,9 +20,10 @@ test("loading, unavailable, failed, and successful empty states stay distinct", 
   assert.deepEqual(selectMyRequestsPresentation("ready"), { kind: "failed" });
 });
 
-test("a valid single timeline preserves server order, labels, and input", () => {
+test("a valid single timeline preserves server order, duplicates, labels, and input", () => {
   const value = payload([
     { stage: "under_review", label: "Later server label", ts: "2026-09-11T11:00:00Z" },
+    { stage: "request_received", label: "Earlier server label", ts: "2026-09-11T10:00:00Z" },
     { stage: "request_received", label: "Earlier server label", ts: "2026-09-11T10:00:00Z" },
     { stage: "action_taken", label: "Human-confirmed server label", ts: "2026-09-11T12:00:00Z" },
   ]);
@@ -34,10 +35,29 @@ test("a valid single timeline preserves server order, labels, and input", () => 
     entries: [
       { stage: "under_review", label: "Later server label" },
       { stage: "request_received", label: "Earlier server label" },
+      { stage: "request_received", label: "Earlier server label" },
       { stage: "action_taken", label: "Human-confirmed server label" },
     ],
   });
   assert.deepEqual(value, before);
+});
+
+test("long timelines retain every entry for the scrollable presentation", () => {
+  const entries = Array.from({ length: 250 }, (_, index) => ({
+    stage: index % 2 === 0 ? "request_received" : "under_review",
+    label: `Server label ${index}`,
+    ts: `Server timestamp ${250 - index}`,
+  }));
+
+  const presentation = selectMyRequestsPresentation("ready", payload(entries));
+
+  assert.equal(presentation.kind, "timeline");
+  assert.equal(presentation.entries.length, entries.length);
+  assert.deepEqual(
+    presentation.entries.map((entry) => entry.label),
+    entries.map((entry) => entry.label),
+  );
+  assert.ok(presentation.entries.every((entry) => !("ts" in entry)));
 });
 
 test("the selector accepts one exact payload, not a list or unexpected data", () => {
@@ -67,7 +87,23 @@ test("action_taken is never synthesized", () => {
   assert.deepEqual(presentation.entries.map((entry) => entry.stage), ["officer_assigned"]);
 });
 
-test("MyRequestsScreen is localized, accessible, scroll-safe, and omits timestamps", () => {
+test("MyRequestsScreen keeps disclosure and handoff outside its scrollable timeline", () => {
+  const source = read("src", "screens", "MyRequestsScreen.tsx");
+  const scrollStart = source.indexOf("<ScrollView");
+  const scrollEnd = source.indexOf("</ScrollView>");
+  const disclosure = source.indexOf("<AiDisclosure />");
+  const entries = source.indexOf("presentation.entries.map");
+  const handoff = source.indexOf("<TalkToPersonButton onPress={onRequestHuman} />");
+
+  assert.ok(scrollStart >= 0 && scrollEnd > scrollStart, "inner timeline ScrollView is missing");
+  assert.ok(disclosure >= 0 && disclosure < scrollStart, "AI disclosure is not persistent");
+  assert.ok(entries > scrollStart && entries < scrollEnd, "long timeline content is not scrollable");
+  assert.ok(handoff > scrollEnd, "human-contact control can be buried by the timeline");
+  assert.match(source, /<View style=\{\{ flex: 1, gap: 16, padding: 16 \}\}>/);
+  assert.match(source, /<ScrollView[\s\S]*style=\{\{ flex: 1 \}\}/);
+});
+
+test("MyRequestsScreen is localized, accessible, and omits timestamps", () => {
   const source = read("src", "screens", "MyRequestsScreen.tsx");
   for (const key of [
     "timeline.title",

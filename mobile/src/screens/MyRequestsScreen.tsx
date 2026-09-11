@@ -23,110 +23,113 @@ export function MyRequestsScreen({
   const presentation = selectMyRequestsPresentation(loadState, payload);
 
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}
-      keyboardShouldPersistTaps="handled"
-    >
+    <View style={{ flex: 1, gap: 16, padding: 16 }}>
       <AiDisclosure />
       <Text accessibilityRole="header" allowFontScaling style={{ fontSize: 24 }}>
         {t("timeline.title")}
       </Text>
 
-      <View style={{ flex: 1, gap: 16 }}>
-        {presentation.kind === "loading" ? (
-          <Text
-            accessibilityLabel={t("timeline.loading")}
-            accessibilityLiveRegion="polite"
-            accessibilityRole="text"
-            allowFontScaling
-            style={{ fontSize: 18 }}
-          >
-            {t("timeline.loading")}
-          </Text>
-        ) : null}
-
-        {presentation.kind === "empty" ? (
-          <Text
-            accessibilityLabel={t("timeline.empty")}
-            accessibilityRole="text"
-            allowFontScaling
-            style={{ fontSize: 18 }}
-          >
-            {t("timeline.empty")}
-          </Text>
-        ) : null}
-
-        {presentation.kind === "unavailable" ? (
-          <Text
-            accessibilityLabel={t("error.title")}
-            accessibilityRole="text"
-            allowFontScaling
-            style={{ fontSize: 18 }}
-          >
-            {t("error.title")}
-          </Text>
-        ) : null}
-
-        {presentation.kind === "failed" ? (
-          <View style={{ gap: 12 }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, gap: 16 }}
+        keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
+      >
+        <View style={{ flex: 1, gap: 16 }}>
+          {presentation.kind === "loading" ? (
             <Text
-              accessibilityLabel={t("error.body")}
+              accessibilityLabel={t("timeline.loading")}
               accessibilityLiveRegion="polite"
               accessibilityRole="text"
               allowFontScaling
               style={{ fontSize: 18 }}
             >
-              {t("error.body")}
+              {t("timeline.loading")}
             </Text>
-            {onRetry ? (
-              <Pressable
-                accessibilityLabel={t("error.retry")}
-                accessibilityRole="button"
-                accessibilityState={{ disabled: false }}
-                onPress={onRetry}
-                style={{ justifyContent: "center", minHeight: 48, paddingHorizontal: 16 }}
-              >
-                <Text allowFontScaling style={{ fontSize: 18 }}>
-                  {t("error.retry")}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-        ) : null}
+          ) : null}
 
-        {presentation.kind === "timeline" ? (
-          <View style={{ gap: 16 }}>
-            <View
-              accessible
-              accessibilityLabel={`${t("timeline.reference")}: ${presentation.reference}`}
+          {presentation.kind === "empty" ? (
+            <Text
+              accessibilityLabel={t("timeline.empty")}
               accessibilityRole="text"
-              style={{ gap: 4 }}
+              allowFontScaling
+              style={{ fontSize: 18 }}
             >
-              <Text allowFontScaling style={{ fontSize: 16 }}>
-                {t("timeline.reference")}
+              {t("timeline.empty")}
+            </Text>
+          ) : null}
+
+          {presentation.kind === "unavailable" ? (
+            <Text
+              accessibilityLabel={t("error.title")}
+              accessibilityRole="text"
+              allowFontScaling
+              style={{ fontSize: 18 }}
+            >
+              {t("error.title")}
+            </Text>
+          ) : null}
+
+          {presentation.kind === "failed" ? (
+            <View style={{ gap: 12 }}>
+              <Text
+                accessibilityLabel={t("error.body")}
+                accessibilityLiveRegion="polite"
+                accessibilityRole="text"
+                allowFontScaling
+                style={{ fontSize: 18 }}
+              >
+                {t("error.body")}
               </Text>
-              <Text allowFontScaling style={{ fontSize: 20 }}>
-                {presentation.reference}
-              </Text>
+              {onRetry ? (
+                <Pressable
+                  accessibilityLabel={t("error.retry")}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: false }}
+                  onPress={onRetry}
+                  style={{ justifyContent: "center", minHeight: 48, paddingHorizontal: 16 }}
+                >
+                  <Text allowFontScaling style={{ fontSize: 18 }}>
+                    {t("error.retry")}
+                  </Text>
+                </Pressable>
+              ) : null}
             </View>
-            {presentation.entries.map((entry, index) => (
+          ) : null}
+
+          {presentation.kind === "timeline" ? (
+            <View style={{ gap: 16 }}>
               <View
                 accessible
-                accessibilityLabel={entry.label}
+                accessibilityLabel={`${t("timeline.reference")}: ${presentation.reference}`}
                 accessibilityRole="text"
-                key={`${entry.stage}:${index}`}
-                style={{ paddingVertical: 8 }}
+                style={{ gap: 4 }}
               >
-                <Text allowFontScaling style={{ fontSize: 18 }}>
-                  {entry.label}
+                <Text allowFontScaling style={{ fontSize: 16 }}>
+                  {t("timeline.reference")}
+                </Text>
+                <Text allowFontScaling style={{ fontSize: 20 }}>
+                  {presentation.reference}
                 </Text>
               </View>
-            ))}
-          </View>
-        ) : null}
-      </View>
+              {presentation.entries.map((entry, index) => (
+                <View
+                  accessible
+                  accessibilityLabel={entry.label}
+                  accessibilityRole="text"
+                  key={`${entry.stage}:${index}`}
+                  style={{ paddingVertical: 8 }}
+                >
+                  <Text allowFontScaling style={{ fontSize: 18 }}>
+                    {entry.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </View>
+      </ScrollView>
 
       <TalkToPersonButton onPress={onRequestHuman} />
-    </ScrollView>
+    </View>
   );
 }
