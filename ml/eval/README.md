@@ -109,6 +109,30 @@ Labels describe what the text **means**, never what the system currently does. T
 
   `TODO-reviewer-N` placeholders never count. The locked set is empty, so **official critical-safety metrics are pending**.
 
+### The independent evaluation set does not exist yet
+
+The five corpora in `corpus/` are all exposed: dev was tuned on, and every candidate and red-team
+outcome was published in `results/`. They remain the regression and development corpora and their
+numbers are regression performance, not evaluation performance.
+
+An independent number needs samples that nobody involved in building the pipeline has seen, which
+means humans must write them. The infrastructure for that is `ml/eval/blind/` plus the two commands
+`python -m ml.eval.blind_corpus` and `python -m ml.eval.blind_evaluation`; read
+**[`BLIND_EVALUATION.md`](BLIND_EVALUATION.md)** first, then `blind/AUTHOR_INSTRUCTIONS.md`,
+`blind/REVIEWER_INSTRUCTIONS.md` and `blind/STAFFING.md`.
+
+The corpus lives outside Git under `SAHAY_EVAL_ROOT`. No module in `blind/` can load a prediction
+module before freeze, and no command authors a sample or fills a human record. The post-freeze
+measurement path is implemented: it verifies the freeze manifest, every file hash and every ledger
+head, then reuses `predict`, `evaluate`, `metrics`, `checks` and `redteam` — nothing is
+re-implemented — and publishes a complete result outside Git. The first run on a corpus is labelled
+`independent_evaluation` and exposes it; every later run needs `--regression` and can never
+overwrite the first.
+
+`blind_evaluation run` still refuses today, with exit code 12, because nothing has been frozen.
+Locked count remains 0 and official metrics remain unavailable until the human authoring and review
+described there is done.
+
 ### Reviewer checklist, to be completed by a person and never by Claude
 
 For each candidate:
