@@ -1,5 +1,7 @@
 # Text pipeline audit — 2026-09-11
 
+> **Historical baseline audit.** It describes the pipeline evaluated in `eval-baseline-2026-09-11`. The later safety-hardening phase changed the guardrail validator, crisis variants and coercion evidence; see `reviews/safety-hardening-review.md` and `results/safety-hardening-2026-09-11.md`. The rows below are kept as published.
+
 Scope: the deterministic Hindi, English and Hinglish text pipeline on the integrated `dev` baseline `cd7031b`, plus the two ML fixes in this change.
 
 Sources:

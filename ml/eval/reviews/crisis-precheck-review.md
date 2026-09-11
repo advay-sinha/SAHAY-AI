@@ -11,6 +11,15 @@
 
 Everything measured here was run on fictional fixtures that no human has reviewed. Nothing in this packet is clinical or linguistic validation.
 
+
+> **Administrative correction note — 2026-09-11 (added during the safety-hardening phase; not a review).**
+> This note was added by the Claude Code session preparing `feat/ml-safety-hardening`. It does not alter, rewrite or speak for either reviewer's record below.
+>
+> 1. **Contradictory status.** The Status line above reads "APPROVED. No review has taken place. Both review records below are empty." That contradicts section 17, where two approval records are filled in. This was discovered during safety hardening. The Status line is left as written, for the historical record. Read it together with this note, not on its own.
+> 2. **What was reviewed.** The two records in section 17 are **code-level** approvals of the clause-scoped negation and attribution-metadata change. They are **not fixture-level reviews**. No corpus fixture has had a fixture-level human review. The locked set remains empty, and no fixture is locked or reviewed as a result of this packet.
+> 3. **Second-reviewer role pending.** The packet asked for a second reviewer "familiar with backend escalation behaviour". Record 2 lists `@Ameya5006` with the role "AI/ML and Safety Lead", the same role as record 1. Its reasoning text is also identical to record 1. That reviewer's actual identity and backend-familiar role must be **confirmed by that reviewer personally**, in their own words, below their record (section 17, "Second-reviewer confirmation").
+> 4. **Effective status until then.** Code-level approval is recorded by two accounts, but a **fully valid two-role review is not yet established**. This document must not be cited as a complete two-role review until item 3 is completed by the reviewer.
+
 ---
 
 ## 1. Previous behaviour (baseline `cd7031b`)
@@ -258,4 +267,16 @@ Fixtures manually inspected: DEV-EN-010, DEV-HI-013, DEV-HG-009, CAND-EN-011, DE
 Timestamp: 2026-09-11T04:09:20+05:30
 Signature or explicit approval reference: Local human safety review by @Ameya5006
 
+```
+
+### Second-reviewer confirmation (PENDING — to be completed only by the second reviewer personally)
+
+Added 2026-09-11 as part of the administrative correction note above. Nobody except the named reviewer may fill this in.
+
+```text
+Reviewer GitHub username (confirm):            PENDING
+Actual role and backend-escalation familiarity: PENDING
+Confirmation that the record 2 reasoning is the reviewer's own: PENDING
+Timestamp:                                      PENDING
+Signature or explicit confirmation reference:   PENDING
 ```

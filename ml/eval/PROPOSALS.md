@@ -1,4 +1,6 @@
-# Proposals from the 2026-09-11 evaluation — NONE IMPLEMENTED
+# Proposals from the 2026-09-11 evaluation
+
+Each item states its status. As of the safety-hardening phase (2026-09-11, branch `feat/ml-safety-hardening`), P-GR-1, part of P-DET-1 and the evidence half of P-DET-3 are **implemented, pending two human reviews** (`reviews/safety-hardening-review.md`). Everything else is proposal only.
 
 Each proposal lists its evidence (fixture IDs or measured values), its compatibility impact and the approvers it needs.
 - Frozen values (weights, bands, overrides, enums, contracts) are unchanged.
@@ -48,6 +50,7 @@ The SVI is rounded to 2 dp before `band_for`, so a raw 29.995 is shown as 30.00 
   - Instruction residue: "ignore previous instructions".
 - **Compatibility.** The validator only becomes stricter. Rejected sentences fall back to the pre-written text, which the LLM-off check already validates.
 - **Owner:** AI/ML and Safety.
+- **Status (safety hardening): IMPLEMENTED, pending review.** Implemented as category phrase rules (`ml/guardrails/lexicons/output_rules.py`, 87 rules in 13 categories, English, Hindi and Hinglish, including 5 urgency-level rules added after review). All 19 failures pass as regressions.
 
 ## P-GR-2 — Semantic check that the licensed question was asked *(type:dialogue)*
 
@@ -69,6 +72,10 @@ The SVI is rounded to 2 dp before `band_for`, so a raw 29.995 is shown as 30.00 
 
 **Compatibility.** Recall rises. False positives route to a person.
 
+**Status (safety hardening): PARTLY IMPLEMENTED, pending review.**
+- Added: Unicode, spacing and hyphen normalisation, plus 30 explicit variants (misspellings, transliterations, and Hindi/Hinglish counterparts of existing English entries). CAND-EN-019, CAND-HI-003 and CAND-HG-003 pass as *regressions*.
+- Not added: indirect statements (P-DET-4) and past tense (P-DET-5).
+
 ## P-DET-2 — Reported speech without a cue word *(leads' policy decision first)*
 
 - **Evidence:** DEV-EN-011, DEV-HI-012, CAND-EN-012 and CAND-HI-009. A crisis phrase inside a TV show or someone else's story fires the pre-check.
@@ -83,6 +90,83 @@ The SVI is rounded to 2 dp before `band_for`, so a raw 29.995 is shown as 30.00 
   - cite only the turns that matched the coercion terms;
   - exclude conditional patterns ("nahi … to", "if … not") from negation.
 - ML-only change, but it affects alert evidence, so Backend review is needed.
+- **Status (safety hardening):**
+  - Evidence precision is **implemented, pending review**. The coercion alert now cites only turns whose own D3 match is a coercion term. The firing condition is unchanged. DEV-EN-003 now cites `t2` only.
+  - Conditional clauses: **not changed**. This would alter detector meaning, so it stays a proposal.
+
+## P-DET-4 — Ambiguous indirect language *(leads' safety decision; no rule added)*
+
+| Phrase | Current behaviour (tested) | Why it is ambiguous |
+|---|---|---|
+| "I will not be here tomorrow." | pre-check does not fire | May mean suicide, leaving the village, a hospital stay or travel |
+| "I have decided to take the pills tonight and not wake up." (CAND-EN-003) | does not fire | Strongly suggestive (method, time, intent), but has no stock phrase. A rule for it would be the first *method-plan* rule and needs an approved safety definition. |
+
+**Proposed:** do **not** add a hard crisis override. Instead, add a separate `possible_indirect_risk` signal that routes to **Needs Human Assessment**, plus an officer-visible flag. It would never force SX or Critical on its own. This needs a leads' decision and a Backend route, because today only the crisis flag interrupts.
+
+**Tests:** current behaviour is pinned in `test_hardening.py::test_documented_current_behaviour_for_ambiguous_phrases`.
+
+## P-DET-5 — "killed myself" *(documented gap; not fixed)*
+
+"nobody would care if I killed myself" does not fire, because "killed myself" is not a phrase and substring matching finds no "kill myself" in it. Adding "killed myself" blindly is unsafe in both directions:
+- "I almost/nearly killed myself" is an attempt disclosure. That is high risk, and it should route.
+- "I nearly killed myself laughing" is figurative.
+- "he said I should have killed myself" is quoted abuse.
+
+**Proposed context-aware rule, for review:**
+- Fire on "killed myself" only when preceded, in the same clause, by an attempt marker ("almost", "nearly", "tried to", "wanted to", "would care if", "should have", "if I") and not followed by a figurative marker ("laughing", "joke").
+- Keep attribution metadata as today.
+
+It is not implemented, because no reviewed fixture set demonstrates an acceptable rule yet.
+
+## P-DET-6 — Misspelt imminent return (DEV-EN-022) *(detector meaning; not changed)*
+
+"They threatend us and said they wil come back tonite." is still a critical miss. Fixing it needs two things:
+- spelling normalisation in the *detectors* ("wil", "tonite");
+- a new D1 tier-3 phrase, "come back tonight".
+
+That second part changes D1 meaning and can force a Critical override. Proposed for the AI/ML and Safety plus Backend leads; not implemented here.
+
+## P-BND-1 — Structural boundary so the response generator never sees internal scores *(Backend, AI/ML and Safety; contract change)*
+
+**Limitation, deliberately not "fixed" with a rule.** The validator can reject explicit score or priority wording, such as "your risk score is 82" or "your priority number is 82". It cannot reject a bare number. "Your number is 82" might be:
+- a case or request reference;
+- the helpline number;
+- a queue or token id;
+- a date or time.
+
+A rule blocking bare numbers would reject legitimate victim-facing references, so none is added. `test_hardening.py::TestBareNumberBoundary` pins both sides: explicit wording is rejected, approved references are accepted.
+
+**Proposed mitigation:** prevent the leak structurally instead of guessing afterwards.
+1. **Input boundary.** The phrasing adapter (backend `adapters/llm`) receives only victim-safe context:
+   - the licensed intent;
+   - the language;
+   - approved slots such as `reference_no`.
+
+   It never receives SVI, band, dimensions, confidence, alerts or recommendations. This mirrors the victim-socket allowlist, applied to the LLM input.
+2. **Typed provenance.** Every outgoing sentence carries response metadata, for example `{template_id, slots: {reference_no: {type: "victim_reference", value}}}`. The validator allows a number only when it equals a typed victim-safe slot value, and rejects any other digit run in a generated sentence.
+3. **Tests.**
+   - A contract test that the phrasing adapter's input schema has no assessment field.
+   - Validator tests for an allowed typed reference versus an untyped number.
+   - A backend test that no assessment value reaches the adapter.
+
+**Compatibility.**
+- It needs a new internal adapter input schema, response-metadata fields and a Backend change, so it is not implemented here.
+- With the LLM off (the default), victims only receive pre-written text, so there is no generated number today.
+
+## P-HR-1 — Text request for a human *(contract change; Backend, Mobile, AI/ML and Safety)*
+
+The persistent app button (`request_human` event) is and remains the authoritative mechanism. **No detector is implemented.**
+
+| Item | Proposal |
+|---|---|
+| Phrases | English: "talk to a (real) person", "speak to a human", "I want an officer", "connect me to someone", "not a machine". Hindi: "किसी इंसान से बात", "अधिकारी से बात करवाइए", "किसी व्यक्ति से". Hinglish: "insaan se baat", "officer se baat karwa do", "kisi insaan se baat karni hai". Exact phrase list only; each needs review. |
+| Coverage today | 6 labelled fixtures (DEV-EN-013, DEV-HI-009, DEV-HG-011, CAND-EN-013, CAND-HI-010, CAND-HG-009), excluded from metrics. |
+| False-positive risk | Reported speech ("the officer said to talk to a person"), negation ("I don't want to talk to anyone"), and questions *about* the service ("can I talk to a person later?"). A false positive routes to a person, which is cheap; a false negative leaves the button as the safety net. |
+| Output signal | `request_human_text: {turn_id, phrase_id}`, emitted by ML beside the crisis pre-check. It must never be a score input. |
+| Backend routing | Treat it exactly like the `request_human` event: state SH, takeover requested, officer alert. Needs a frozen signal in CONTRACTS §2/§3 and an intake change. |
+| Scoring effect | None. It must not change SVI, band or alerts. |
+| Contract changes | A new ML-to-Backend signal (CONTRACTS §5 pure-interface output or §3 event), plus a PC entry and a mirror update. |
+| Tests required | Phrase/negation/quotation tables in three scripts; the backend integration test that the text request reaches SH; a no-score-change test; a victim-socket leakage test. |
 
 ---
 
@@ -97,7 +181,12 @@ The SVI is rounded to 2 dp before `band_for`, so a raw 29.995 is shown as 30.00 
    - Today this is `build_corpus.py` plus Git history.
    - A GitHub review workflow or an issue per batch would give an auditable trail.
    - Owners: all four leads.
-4. **The crisis pre-check change** (clause-scoped negation) needs its `type:dialogue` sign-off before the next `dev` promotion.
+4. **The crisis pre-check change** (clause-scoped negation) has two recorded code-level reviews in `reviews/crisis-precheck-review.md`. Two things remain open:
+   - The packet's header line still reads "APPROVED. No review has taken place", which contradicts its records.
+   - Both records list the same role, "AI/ML and Safety Lead". The second reviewer was meant to be a lead familiar with backend escalation.
+
+   The humans concerned should reconcile these. An administrative correction note, and an explicit PENDING second-reviewer confirmation field, were **added** to that packet on 2026-09-11. Neither reviewer's record was edited.
+5. **The safety-hardening changes** (output rules, crisis variants, coercion evidence) need two new human reviews: `reviews/safety-hardening-review.md`.
 
 ---
 

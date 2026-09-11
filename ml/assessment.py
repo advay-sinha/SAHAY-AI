@@ -27,7 +27,7 @@ from typing import Any, Dict, List, Mapping, Sequence
 
 from .guardrails import crisis_check
 from .nlp import langid
-from .nlp.detectors import TEXT_DIMENSIONS, score_crisis, score_dimension, unavailable
+from .nlp.detectors import TEXT_DIMENSIONS, match_turn, score_crisis, score_dimension, unavailable
 from .nlp.extraction import conflicting_safety, extract
 from .nlp.recommend import recommend
 from .svi import compute
@@ -50,7 +50,8 @@ def _victim(turns: Sequence[Mapping[str, Any]]) -> List[Mapping[str, Any]]:
     return [t for t in turns if t.get("speaker") == "victim" and str(t.get("text", "")).strip()]
 
 
-def _alerts(dims: Mapping[str, Mapping[str, Any]]) -> List[Dict[str, Any]]:
+def _alerts(dims: Mapping[str, Mapping[str, Any]],
+            victim: Sequence[Mapping[str, Any]] = ()) -> List[Dict[str, Any]]:
     def d(k):
         return dims.get(k) or {}
 
@@ -78,7 +79,15 @@ def _alerts(dims: Mapping[str, Mapping[str, Any]]) -> List[Dict[str, Any]]:
     d9 = d("D9").get("score") or 0.0
     coercion_ev = list(d("D9").get("evidence_turn_ids") or [])
     if coercion_terms:
-        coercion_ev += list(d("D3").get("evidence_turn_ids") or [])
+        # Cite only the victim turns whose OWN D3 match is a coercion term (for
+        # example "withdraw the complaint"), not every D3 turn. The firing
+        # condition is unchanged; only the evidence is more precise. If no
+        # turn can be attributed (not expected), keep all D3 evidence rather
+        # than drop any.
+        own = [str(t["id"]) for t in victim
+               if any(any(c in term for c in _COERCION_TERMS)
+                      for term in (match_turn("D3", str(t.get("text", ""))) or (0, []))[1])]
+        coercion_ev += own or list(d("D3").get("evidence_turn_ids") or [])
     if d9 >= 65 or coercion_terms:
         out.append({"type": "coercion", "severity": "high", "evidence_turn_ids": sorted(set(coercion_ev))})
     return out
@@ -160,7 +169,7 @@ def assess(
 
     # Safety alerts fire on evidence alone: a threat stated in turn two must not
     # wait for the aggregate confidence to recover.
-    alerts = _alerts(dims)
+    alerts = _alerts(dims, victim)
     # Pathway suggestions draw on the assessment, so they are withheld while
     # the system itself says it cannot assess -- except emergency support in a
     # crisis, which must never wait.

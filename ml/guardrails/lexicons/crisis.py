@@ -117,3 +117,42 @@ ATTRIBUTION_HI: Tuple[str, ...] = (
 #: How many characters either side of a match are scanned for a negation or
 #: an attribution cue.
 CONTEXT_WINDOW = 40
+
+#: Explicit, bounded variants of phrases ALREADY in the lists above (added
+#: 2026-09-11, safety-hardening phase, pending the type:dialogue review).
+#: Each is a high-confidence misspelling, a common transliteration, or the
+#: Hindi/Hinglish counterpart of an existing English entry. No fuzzy matching:
+#: a variant that is not written here does not match.
+#: (term, lang, reason)
+CRISIS_VARIANTS: Tuple[Tuple[str, str, str], ...] = (
+    ("kil myself", "en", "misspelling of 'kill myself' (CAND-EN-019 regression)"),
+    ("kill my self", "en", "spacing variant of 'kill myself'"),
+    ("kil my self", "en", "misspelling + spacing variant of 'kill myself'"),
+    ("killmyself", "en", "spacing variant of 'kill myself'"),
+    ("hurt my self", "en", "spacing variant of 'hurt myself'"),
+    ("harm my self", "en", "spacing variant of 'harm myself'"),
+    ("sucide", "en", "misspelling of 'suicide'"),
+    ("suicde", "en", "misspelling of 'suicide'"),
+    ("suiside", "en", "misspelling of 'suicide'"),
+    ("sucidal", "en", "misspelling of 'suicidal'"),
+    ("खुद को नुकसान पहुंचा", "hi", "Hindi counterpart of 'harm/hurt myself' (CAND-HI-003 regression)"),
+    ("खुद को चोट पहुंचा", "hi", "Hindi counterpart of 'hurt myself'"),
+    ("atmhatya", "hinglish", "transliteration of 'atmahatya' (CAND-HG-003 regression)"),
+    ("aatmhatya", "hinglish", "transliteration of 'atmahatya'"),
+    ("aatmahatya", "hinglish", "transliteration of 'atmahatya'"),
+    ("khudkhushi", "hinglish", "transliteration of 'khudkushi'"),
+    ("khud khushi", "hinglish", "transliteration of 'khudkushi'"),
+    ("khud kushi", "hinglish", "spacing variant of 'khudkushi'"),
+    ("jaan de doongi", "hinglish", "transliteration of 'jaan de dungi'"),
+    ("jaan de doonga", "hinglish", "transliteration of 'jaan de dunga'"),
+    ("jan de dungi", "hinglish", "transliteration of 'jaan de dungi'"),
+    ("jan de dunga", "hinglish", "transliteration of 'jaan de dunga'"),
+    ("mar jaaungi", "hinglish", "transliteration of 'mar jaungi'"),
+    ("mar jaaunga", "hinglish", "transliteration of 'mar jaunga'"),
+    ("zahar kha", "hinglish", "transliteration of 'zeher kha'"),
+    ("jahar kha", "hinglish", "transliteration of 'zeher kha'"),
+    ("phaansi laga", "hinglish", "transliteration of 'phansi laga'"),
+    ("faansi laga", "hinglish", "transliteration of 'fansi laga'"),
+    ("khud ko nuksan pahuncha", "hinglish", "Hinglish counterpart of 'harm myself'"),
+    ("khud ko nuksaan pahuncha", "hinglish", "Hinglish counterpart of 'harm myself'"),
+)

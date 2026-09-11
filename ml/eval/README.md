@@ -22,6 +22,10 @@ python -m ml.eval.run_eval                       # writes runtime/eval/eval-all.
 python -m ml.eval.run_eval --corpus dev          # one split: dev | candidate | locked
 python -m ml.eval.run_eval --out ml/eval/results --tag baseline-2026-09-11
 
+# Safety-hardening report (baseline, exposed-regression, candidate, locked, remaining failures)
+python -m ml.eval.hardening_report               # writes ml/eval/results/safety-hardening-2026-09-11.{json,md}
+python -m ml.eval.hardening_report --out runtime/eval
+
 # Regenerate the corpora from the authoring tables, or check they are not stale
 python -m ml.eval.build_corpus
 python -m ml.eval.build_corpus --check
@@ -55,7 +59,11 @@ Metric values themselves never change the exit status. A bad number is still rep
 | `checks.py` | Determinism, scenario replay, LLM-off walk, offline/network/import guard |
 | `AUDIT.md` | Capability-by-capability audit of the pipeline |
 | `PROPOSALS.md` | Proposed contract, guardrail and dependency changes. None of them is implemented. |
-| `results/` | Committed baseline report snapshot |
+| `results/` | Committed reports: the baseline (never rewritten) and the safety-hardening report |
+| `CONTAMINATION.md`, `contamination.py` | Ledger and registry of every fixture whose outcome has been published. Results on those fixtures are regression performance only. |
+| `corpus/redteam_hardening.json` | Near-miss and paraphrase cases written by the rule author alongside the output rules. Development evidence, not holdout. |
+| `hardening_report.py` | Before/after report that reads the baseline and never rewrites it |
+| `reviews/` | Human safety-review packets. Review records are filled in only by the reviewers themselves. |
 
 ## Label schema 1.0.0
 

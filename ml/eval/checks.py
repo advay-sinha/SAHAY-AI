@@ -146,6 +146,38 @@ def offline() -> Iterator[Dict[str, Any]]:
         report["ok"] = not attempts and not report["forbidden_modules_loaded"]
 
 
+#: Names that identify the externally downloaded datasets, which the ML path
+#: must never open, extract or read (safety-hardening phase rule).
+EXTERNAL_CORPUS_MARKERS = ("datasets/", "dreaddit", "emoinhindi", "common_voice", "ravdess", "crema", ".zip")
+
+
+@contextlib.contextmanager
+def file_access_log() -> Iterator[List[str]]:
+    """Record every path opened through builtins.open / io.open while active."""
+    import builtins
+    import io as _io
+
+    opened: List[str] = []
+    original_open, original_io_open = builtins.open, _io.open
+
+    def _logging_open(file, *args, **kwargs):
+        opened.append(str(file))
+        return original_open(file, *args, **kwargs)
+
+    builtins.open = _logging_open  # type: ignore[assignment]
+    _io.open = _logging_open  # type: ignore[assignment]
+    try:
+        yield opened
+    finally:
+        builtins.open, _io.open = original_open, original_io_open
+
+
+def external_corpus_access(opened: List[str]) -> List[str]:
+    """Opened paths that look like an external corpus (must always be empty)."""
+    return [p for p in opened
+            if any(m in p.replace("\\", "/").casefold() for m in EXTERNAL_CORPUS_MARKERS)]
+
+
 def static_imports(root: Path) -> Dict[str, Any]:
     """No ML source file on the default path imports a forbidden package."""
     offenders = []

@@ -19,7 +19,16 @@ Clause scoping (2026-09-11, ml/eval dev fixtures DEV-EN-010, DEV-HI-013,
 DEV-HG-009): the negation window used to span sentence boundaries, so a
 negation in an earlier sentence suppressed a later first-person crisis. The
 window is now cut at clause breaks. This can only make the check fire MORE
-often, never less. It is a guardrail change pending the type:dialogue review.
+often, never less. Approved by two human reviewers (review packet
+ml/eval/reviews/crisis-precheck-review.md).
+
+Normalisation and variants (2026-09-11, safety-hardening phase, pending the
+type:dialogue review): the utterance and every lexicon phrase are folded the
+same way (`ml.guardrails.normalize.fold`: NFKC, casefold, zero-width removed,
+nukta removed, chandrabindu -> anusvara, hyphens/dashes -> space, whitespace
+collapsed), and the explicit variants in `lexicons.crisis.CRISIS_VARIANTS`
+are matched. Both can only ADD matches; neither removes a match or adds a
+suppression. There is no fuzzy matching.
 """
 
 import re
@@ -34,18 +43,31 @@ from .lexicons.crisis import (
     CRISIS_HINGLISH,
     NEGATIONS_EN,
     NEGATIONS_HI,
+    CRISIS_VARIANTS,
 )
+from .normalize import fold
 
 __all__ = ["check"]
 
-_ALL_TERMS: Tuple[Tuple[str, str], ...] = tuple(
-    [(term, "en") for term in CRISIS_EN]
-    + [(term, "hi") for term in CRISIS_HI]
-    + [(term, "hinglish") for term in CRISIS_HINGLISH]
-)
+def _terms() -> Tuple[Tuple[str, str, str], ...]:
+    """(original term, lang, folded needle), first occurrence wins when two
+    spellings fold to the same needle (e.g. "ज़हर खा" and "जहर खा")."""
+    seen = set()
+    out = []
+    source = ([(t, "en") for t in CRISIS_EN] + [(t, "hi") for t in CRISIS_HI]
+              + [(t, "hinglish") for t in CRISIS_HINGLISH] + [(t, lang) for t, lang, _ in CRISIS_VARIANTS])
+    for term, lang in source:
+        needle = fold(term)
+        if needle and needle not in seen:
+            seen.add(needle)
+            out.append((term, lang, needle))
+    return tuple(out)
 
-_NEGATIONS = tuple(NEGATIONS_EN) + tuple(NEGATIONS_HI)
-_ATTRIBUTIONS = tuple(ATTRIBUTION_EN) + tuple(ATTRIBUTION_HI)
+
+_ALL_TERMS: Tuple[Tuple[str, str, str], ...] = _terms()
+
+_NEGATIONS = tuple(fold(n) for n in tuple(NEGATIONS_EN) + tuple(NEGATIONS_HI))
+_ATTRIBUTIONS = tuple(fold(a) for a in tuple(ATTRIBUTION_EN) + tuple(ATTRIBUTION_HI))
 
 
 #: Clause boundaries: punctuation (including the danda) and contrastive
@@ -89,21 +111,20 @@ def check(utterance: str) -> Dict[str, Any]:
     if not utterance:
         return result
 
-    haystack = utterance.casefold()
+    haystack = fold(utterance)
     matches: List[Dict[str, str]] = []
     suppressed: List[Dict[str, str]] = []
 
-    for term, lang in _ALL_TERMS:
-        needle = term.casefold()
+    for term, lang, needle in _ALL_TERMS:
         index = haystack.find(needle)
         while index != -1:
             window = _context(haystack, index, index + len(needle))
             entry = {"term": term, "lang": lang}
-            if any(att.casefold() in window for att in _ATTRIBUTIONS):
+            if any(att in window for att in _ATTRIBUTIONS):
                 entry["context"] = "attributed_to_third_party"
 
             clause = _clause(haystack, index, index + len(needle))
-            if any(neg.casefold() in clause for neg in _NEGATIONS):
+            if any(neg in clause for neg in _NEGATIONS):
                 entry["reason"] = "negated"
                 suppressed.append(entry)
             else:
@@ -116,4 +137,4 @@ def check(utterance: str) -> Dict[str, Any]:
     return result
 
 
-LEXICON_VERSION = "crisis-v1.1-unreviewed"
+LEXICON_VERSION = "crisis-v1.2-unreviewed"
