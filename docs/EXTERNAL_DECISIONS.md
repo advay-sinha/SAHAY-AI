@@ -195,3 +195,70 @@ Storage/runtime location:
 Fallback or migration action:
 Decision maker:
 ```
+
+```text
+Date:            2026-09-11
+ID and exact
+  version/release:
+                 EXT-118 — SAHAY local ML model runtime
+                 - google/muril-base-cased at afd9f36c…
+                 - FacebookAI/xlm-roberta-base at e73636d4…
+                 - openai/whisper-small at 973afd24…
+                 - locally converted CTranslate2 Whisper artefact
+                 - Silero VAD 6.2.1, upstream tag commit 7e30209a…
+                 - exact Python package pins in
+                   ml/runtime/requirements-models.txt
+Decision:        APPROVED
+Scope:           Private, local and offline runtime qualification on the
+                 RTX 4060 laptop. MuRIL is the primary text encoder; XLM-R is
+                 comparison-only. Whisper Small is approved for Hindi and
+                 English transcription through the ML-owned gated pipeline.
+                 Local conversion of the exact pinned official OpenAI Whisper
+                 checkpoint into CTranslate2 format is approved; this does not
+                 approve a third-party converted model repository.
+
+                 GatedTranscriber is the only approved future application
+                 entry point. Silero VAD must run before Whisper. Missing or
+                 invalid speech intervals must be refused, and Whisper must be
+                 skipped when VAD reports no speech. The private ungated path
+                 is approved only for explicit synthetic worst-case
+                 benchmarking and must not be exposed to application callers.
+
+                 This approval does not authorize training, fine-tuning,
+                 threshold tuning, backend/mobile integration, victim-facing
+                 deployment, public network listeners, model publication,
+                 redistribution, D4, or allowing model outputs to change the
+                 deterministic crisis pre-check, routing or SVI.
+Reason:          Hardware qualification confirmed that all four approved
+                 models load and run locally with zero network attempts.
+                 MuRIL and Whisper safely coexist within available VRAM.
+                 VAD prevents silence and pure tones from reaching Whisper,
+                 although VAD false positives and Whisper hallucination remain
+                 documented limitations. Real Hindi and English recognition
+                 quality has not yet been measured with approved transcribed
+                 speech.
+Licence/cost
+  confirmed:     Free public access with no token required:
+                 - MuRIL: Apache-2.0
+                 - XLM-R: MIT
+                 - Whisper Small: Apache-2.0
+                 - Silero VAD: MIT
+                 MuRIL's upstream pytorch_model.bin is accepted for this local
+                 qualification because its immutable revision and hash are
+                 verified and it is loaded with restricted weights-only
+                 loading.
+Storage/runtime
+  location:      Models, converted artefacts, caches, environments and private
+                 reports remain beneath operator-configured private roots
+                 outside Git. Executable code uses SAHAY_MODELS_ROOT and has
+                 no machine-specific default.
+Fallback or
+  migration
+  action:        Missing CUDA or model artefacts produce an explicit
+                 unavailable/degraded result. CPU fallback is permitted and
+                 must be labelled degraded. The deterministic pipeline remains
+                 authoritative. No model weights, audio, transcripts or
+                 private reports may be committed.
+Decision maker:  Advay Sinha, acting as Project Owner, Integration Lead and
+                 AI/ML Lead, 2026-09-11.
+```
