@@ -1,0 +1,73 @@
+# SAHAY-AI local model runtime: exact pins for the PRIVATE model environment only.
+#
+# Never install these into the backend environment, ml/.venv or a global Python.
+# The default ML test suite and the deterministic evaluation need none of them.
+#
+# Interpreter: CPython 3.12 (3.11 also resolves; 3.13 is not used for models).
+# Torch and torchaudio come from the official PyTorch CUDA 12.8 wheel index,
+# which bundles the CUDA runtime, cuBLAS 12 and cuDNN 9. No CUDA Toolkit is needed.
+#
+# Why these versions (resolved 2026-09-12):
+#   torch/torchaudio 2.11.0+cu128  newest version with a matching torchaudio build
+#                                  (torchaudio stops at 2.11) and CUDA 12.x, which
+#                                  CTranslate2 >= 4.6.3 targets (built for CUDA 12.8)
+#   ctranslate2 4.8.2              latest; ships cuDNN 9 and uses cuBLAS 12 from torch
+#   faster-whisper 1.2.1           latest; requires ctranslate2 >=4,<5
+#   transformers 5.17.0            latest; requires tokenizers >=0.23.1,<0.24 and
+#                                  huggingface_hub >=1.5,<2
+#   silero-vad 6.2.1               latest official package; bundles the VAD model;
+#                                  wheel sha256 09de93c4d874bb19c53e62a47dd38be5f163cedad2b5599583231f2a84ef79cb
+#
+# Install (from the repository root, inside the private environment):
+#   python -m pip install -r ml/runtime/requirements-models.txt
+# The extra index below is used only for the two +cu128 wheels.
+
+--extra-index-url https://download.pytorch.org/whl/cu128
+
+torch==2.11.0+cu128
+torchaudio==2.11.0+cu128
+transformers==5.17.0
+tokenizers==0.23.2
+huggingface_hub==1.31.0
+hf-xet==1.6.0
+accelerate==1.15.0
+safetensors==0.8.0
+sentencepiece==0.2.2
+faster-whisper==1.2.1
+ctranslate2==4.8.2
+onnxruntime==1.30.0
+av==18.1.0
+silero-vad==6.2.1
+numpy==2.5.3
+psutil==7.2.2
+
+# Transitive pins, exactly as resolved by pip 24.3.1 on 2026-09-12.
+annotated-doc==0.0.5
+anyio==4.15.1
+certifi==2026.7.22
+click==8.5.0
+colorama==0.4.6
+filelock==3.32.3
+flatbuffers==25.12.19
+fsspec==2026.7.0
+h11==0.16.0
+httpcore==1.0.9
+httpx==0.28.1
+idna==3.19
+Jinja2==3.1.6
+markdown-it-py==4.2.0
+MarkupSafe==3.0.3
+mdurl==0.1.2
+mpmath==1.3.0
+networkx==3.6.1
+packaging==26.3
+protobuf==7.36.1
+Pygments==2.21.0
+PyYAML==6.0.3
+regex==2026.9.10
+rich==15.0.0
+shellingham==1.5.4
+sympy==1.14.0
+tqdm==4.70.1
+typer==0.27.2
+typing_extensions==4.16.0
