@@ -82,3 +82,39 @@ test("the handoff route injects an unavailable callback rather than simulated su
   assert.match(source, /<HandoffScreen\s+onRequestHuman=\{unavailableHumanRequest\}\s*\/>/);
   assert.doesNotMatch(source, /initialState/);
 });
+
+test("the error route renders ErrorScreen and sends human contact only to handoff", () => {
+  const source = read("app", "error.tsx");
+  assert.match(source, /<ErrorScreen\b/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+
+  const humanCallback = source.match(/onRequestHuman=\{([\s\S]*?)\}/);
+  assert.ok(humanCallback, "error route human callback is missing");
+  assert.equal((humanCallback[1].match(/router\.(?:push|replace|back)/g) ?? []).length, 1);
+  assert.doesNotMatch(humanCallback[1], /["']\/(?:home|error|offline|talk)["']/);
+});
+
+test("the error route retries with back navigation and a home fallback", () => {
+  const source = read("app", "error.tsx");
+  const retry = source.match(/function retry\(\): void\s*\{([\s\S]*?)\n  \}\n\n  return \(/);
+  assert.ok(retry, "error route retry callback is missing");
+  assert.match(retry[1], /if \(router\.canGoBack\(\)\)\s*\{\s*router\.back\(\);\s*return;/);
+  assert.match(retry[1], /router\.replace\(["']\/home["']\)/);
+  assert.match(source, /onRetry=\{retry\}/);
+  assert.equal((retry[1].match(/router\.back\(\)/g) ?? []).length, 1);
+  assert.equal((retry[1].match(/router\.replace\(["']\/home["']\)/g) ?? []).length, 1);
+  assert.doesNotMatch(retry[1], /router\.push|["']\/(?:handoff|error|offline|talk)["']/);
+});
+
+test("the error route has no fabricated operation behavior", () => {
+  const source = read("app", "error.tsx");
+  assert.doesNotMatch(
+    source,
+    /Promise|setTimeout|setInterval|fetch\(|axios|XMLHttpRequest|WebSocket|AsyncStorage|localStorage|sessionStorage|console\.|success|status|result/i,
+  );
+});
+
+test("offline and talk routes remain absent", () => {
+  assert.equal(fs.existsSync(path.join(MOBILE, "app", "offline.tsx")), false);
+  assert.equal(fs.existsSync(path.join(MOBILE, "app", "talk.tsx")), false);
+});
