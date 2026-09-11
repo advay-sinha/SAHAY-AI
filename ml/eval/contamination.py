@@ -8,7 +8,7 @@ results on it as REGRESSION performance, never as evaluation performance.
 Human-readable ledger: ml/eval/CONTAMINATION.md (the tests keep the two in step).
 """
 
-from typing import Dict, FrozenSet
+from typing import Dict, FrozenSet, List, Optional
 
 #: Exposure event: the baseline report published every candidate and red-team outcome.
 BASELINE_EXPOSURE = {
@@ -88,3 +88,111 @@ def exposed(sample_id: str) -> bool:
     """True if this fixture's outcome is known (any split of corpus 2026.09.11-1)."""
     return (sample_id in CANDIDATE_KNOWN_FAILURES or sample_id in DEV_KNOWN_FAILURES
             or sample_id in REDTEAM_KNOWN_FAILURES or sample_id.startswith(("CAND-", "RT-")))
+
+
+# --- Sample classes, lineage and split-assignment rules (dataset-governance phase) ----------
+#
+# Classes a sample can hold (several may apply at once):
+SAMPLE_CLASSES = (
+    "author_dev",            # author-drafted development fixture (tuning allowed; never holdout)
+    "published_candidate",   # candidate fixture whose outcome was published in a report
+    "published_redteam",     # red-team case whose outcome was published
+    "regression_only",       # its failure was read while designing a fix
+    "locked_independent",    # independently reviewed locked sample (none exist yet)
+    "external_train",        # from an external dataset, assigned to training
+    "external_validation",   # from an external dataset, assigned to validation
+    "external_test",         # from an external dataset, assigned to test
+)
+#: Relations that make a sample DERIVED from another. A derived sample must
+#: carry lineage {"derived_from": <id>, "relation": <one of these>}.
+DERIVATION_RELATIONS = ("translation", "back_translation", "transliteration", "paraphrase", "excerpt", "augmentation")
+_EXTERNAL_SPLITS = {"train": "external_train", "validation": "external_validation", "test": "external_test"}
+TRAINING_SPLITS = ("training", "external_train")
+
+
+class ContaminationError(Exception):
+    pass
+
+
+def classify(sample_id: str) -> Dict[str, object]:
+    """Classes and exposure flags for one sample id.
+
+    External ids look like "EXT:<dataset_id>:<train|validation|test>:<item>".
+    """
+    classes = []
+    viewed = used = False
+    if sample_id.startswith("EXT:"):
+        parts = sample_id.split(":")
+        if len(parts) < 4 or parts[2] not in _EXTERNAL_SPLITS:
+            raise ContaminationError(f"malformed external sample id {sample_id!r}")
+        classes.append(_EXTERNAL_SPLITS[parts[2]])
+    elif sample_id.startswith("DEV-"):
+        classes.append("author_dev")
+        viewed = used = True
+    elif sample_id.startswith("CAND-"):
+        classes.append("published_candidate")
+        used = True
+    elif sample_id.startswith(("RT-", "RTH-", "RTU-")):
+        classes.append("published_redteam")
+        used = True
+        viewed = sample_id.startswith(("RTH-", "RTU-"))  # written alongside the rules
+    elif sample_id.startswith("LOCK-"):
+        classes.append("locked_independent")
+    else:
+        raise ContaminationError(f"unknown sample id family {sample_id!r}")
+    if sample_id in REGRESSION_TARGETS_HARDENING or sample_id in CANDIDATE_KNOWN_FAILURES \
+            or sample_id in REDTEAM_KNOWN_FAILURES or sample_id in DEV_KNOWN_FAILURES:
+        classes.append("regression_only")
+        viewed = True
+    independent = classes == ["locked_independent"] and not viewed and not used
+    return {"id": sample_id, "classes": classes, "viewed_during_rule_development": viewed,
+            "used_in_reports": used, "independent_evidence": independent}
+
+
+def validate_lineage(sample: Dict[str, object]) -> List[str]:
+    """A sample marked derived must name its parent and the relation."""
+    errs = []
+    lineage = sample.get("lineage")
+    if sample.get("derived") and not lineage:
+        errs.append(f"{sample.get('id')}: derived sample without lineage")
+    if lineage:
+        if not isinstance(lineage, dict) or not lineage.get("derived_from"):
+            errs.append(f"{sample.get('id')}: lineage needs derived_from")
+        elif lineage.get("relation") not in DERIVATION_RELATIONS:
+            errs.append(f"{sample.get('id')}: lineage relation must be one of {DERIVATION_RELATIONS}")
+    return errs
+
+
+def _ancestors(sample_id: str, parents: Dict[str, str]) -> List[str]:
+    seen, out, cur = set(), [], parents.get(sample_id)
+    while cur and cur not in seen:
+        seen.add(cur)
+        out.append(cur)
+        cur = parents.get(cur)
+    return out
+
+
+def check_assignments(assignments: Dict[str, List[str]], parents: Optional[Dict[str, str]] = None) -> List[str]:
+    """Violations of the split rules. `assignments` maps a split name
+    ("training", "external_train", "locked", ...) to sample ids; `parents`
+    maps a derived sample id to its parent id (from lineage)."""
+    parents = parents or {}
+    violations = []
+    training = {i for s in TRAINING_SPLITS for i in assignments.get(s, [])}
+    for sid in assignments.get("locked", []):
+        if sid in training:
+            violations.append(f"{sid}: in both training and locked evaluation")
+        if any(a in training for a in _ancestors(sid, parents)):
+            violations.append(f"{sid}: derived (e.g. translated) from a training sample")
+        info = classify(sid) if not sid.startswith("EXT:") else {"classes": ["external"], "independent_evidence": False}
+        if sid.startswith("EXT:"):
+            violations.append(f"{sid}: external data is not holdout merely because the pipeline has not read it")
+        elif not info["independent_evidence"]:
+            violations.append(f"{sid}: exposed or published sample cannot be independent locked evidence")
+    return violations
+
+
+def forbid_tuning(split: str) -> None:
+    """Call before any threshold or rule tuning step."""
+    if split == "locked":
+        raise ContaminationError("threshold or rule tuning on locked data is forbidden")

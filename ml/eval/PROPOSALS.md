@@ -153,6 +153,14 @@ A rule blocking bare numbers would reject legitimate victim-facing references, s
 - It needs a new internal adapter input schema, response-metadata fields and a Backend change, so it is not implemented here.
 - With the LLM off (the default), victims only receive pre-written text, so there is no generated number today.
 
+## P-REV-1 — Fixture-review roles and adjudication cannot be checked by code *(documentation ambiguity; no policy change made)*
+
+- **The rules today.** `ml/eval/schema.py::required_reviews` encodes a count: two real approvals for crisis or immediate-danger fixtures, one otherwise. `ml/eval/README.md` (reviewer checklist, step 5) adds more for crisis and immediate-danger fixtures: two reviewers "from the safety and helpline side, working independently, with any disagreement adjudicated and noted".
+- **Why this is not a conflict.** The two rules don't contradict each other. The documentation is stricter, and code can't verify roles or independence.
+- **What the workflow does.** `ml/eval/review_workflow.py` requires a `reviewer_role` on every record and counts distinct reviewers, as in the schema. It does **not** decide whether a role qualifies. Adjudication shows up as `needs_discussion` or `reject` records, which block completion.
+- **Proposal.** The leads should decide whether qualifying roles and an adjudication record become machine-checked fields. For example, a reviewer allowlist with roles in a lead-owned file, and an `adjudication` record type. Until then, a human must confirm the roles before any fixture is locked.
+- **Current effect.** None. No candidate is lock-eligible, because every candidate in corpus `2026.09.11-1` is exposed (CONTAMINATION.md).
+
 ## P-HR-1 — Text request for a human *(contract change; Backend, Mobile, AI/ML and Safety)*
 
 The persistent app button (`request_human` event) is and remains the authoritative mechanism. **No detector is implemented.**

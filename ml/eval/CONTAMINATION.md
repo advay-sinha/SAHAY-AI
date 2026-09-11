@@ -97,3 +97,27 @@ To estimate how the rules generalise, the hardening phase also adds unexposed **
    - never shown alongside system output before locking;
    - reviewed at fixture level (two real reviewers for critical samples; `ml/eval/schema.py`).
 4. Every report must separate baseline, exposed-regression, unreviewed-candidate and locked-official results, as the hardening report does. The runner marks exposed fixtures using `contamination.exposed()`.
+
+## Sample classes and lineage (dataset-governance phase, 2026-09-11)
+
+`contamination.classify(sample_id)` assigns one or more classes and two exposure flags: `viewed_during_rule_development` and `used_in_reports`.
+
+| Class | Meaning | Can be independent locked evidence? |
+|---|---|---|
+| `author_dev` | Author-drafted development fixture (`DEV-*`) | Never |
+| `published_candidate` | Candidate whose outcome was published (`CAND-*`) | Never, for corpus `2026.09.11-1` |
+| `published_redteam` | Red-team case whose outcome was published (`RT-*`, `RTH-*`, `RTU-*`) | Never |
+| `regression_only` | Its failure was read while designing a fix | Never |
+| `locked_independent` | New, independently reviewed locked sample (`LOCK-*`); none exist | Only if never viewed or published |
+| `external_train` / `external_validation` / `external_test` | From a registered external dataset (`EXT:<dataset>:<split>:<item>`) | Not holdout merely because it is unread. It needs an approved registry state and its own contamination record. |
+
+**Lineage.** A sample that is derived (translated, back-translated, transliterated, paraphrased, excerpted or augmented) must carry `lineage: {derived_from: <id>, relation: <relation>}`. `validate_lineage` rejects a derived sample without it.
+
+**Split rules**, enforced by `contamination.check_assignments` and `forbid_tuning`:
+- No sample may appear in both training and locked evaluation.
+- No sample derived (for example translated) from a training sample may enter locked evaluation, including through a chain of derivations.
+- A published or regression-only sample is never counted as independent evidence, including after it is fixed.
+- External data is never called holdout just because the pipeline has not read it.
+- Tuning thresholds or rules on the locked split raises `ContaminationError`.
+
+The fixture review workflow (`ml/eval/review_workflow.py`) applies these rules when it reports lock eligibility. With the current corpora, **no candidate is lock-eligible**.

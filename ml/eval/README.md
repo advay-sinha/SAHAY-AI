@@ -64,6 +64,7 @@ Metric values themselves never change the exit status. A bad number is still rep
 | `corpus/redteam_hardening.json` | Near-miss and paraphrase cases written by the rule author alongside the output rules. Development evidence, not holdout. |
 | `hardening_report.py` | Before/after report that reads the baseline and never rewrites it |
 | `reviews/` | Human safety-review packets. Review records are filled in only by the reviewers themselves. |
+| `review_workflow.py`, `reviews/fixture_reviews.jsonl` | Fixture-level review: export packets, validate and import human records into the append-only, SHA-256 hash-chained ledger (each record once; `validate-ledger` checks the chain), and report lock eligibility. It never writes `locked.json`. |
 
 ## Label schema 1.0.0
 

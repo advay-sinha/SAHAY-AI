@@ -423,10 +423,14 @@ class TestInvariants(unittest.TestCase):
         self.assertTrue(net["ok"], net)
         self.assertEqual(checks.external_corpus_access(opened), [])
         for path in ML.rglob("*.py"):
-            if "tests" in path.parts:
+            rel = path.relative_to(ML).as_posix()
+            # ml/data is the dataset-governance package (archive audit tooling);
+            # it is never imported by the pipeline, which the check below proves.
+            if "tests" in path.parts or rel.startswith("data/"):
                 continue
             text = path.read_text(encoding="utf-8").casefold()
             self.assertIsNone(re.search(r"^\s*(import|from)\s+(zipfile|tarfile|gzip|shutil)\b", text, re.M), path)
+            self.assertIsNone(re.search(r"^\s*(import|from)\s+(ml\.data|\.\.data|\.data)\b", text, re.M), path)
             if path.name != "checks.py":  # the guard itself lists the names it forbids
                 for marker in ("dreaddit", "emoinhindi"):
                     self.assertNotIn(marker, text, f"{path}: {marker}")
