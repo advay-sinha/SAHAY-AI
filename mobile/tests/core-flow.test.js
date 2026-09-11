@@ -8,6 +8,15 @@ const test = require("node:test");
 const SCREENS = path.join(__dirname, "..", "src", "screens");
 const readScreen = (name) => fs.readFileSync(path.join(SCREENS, name), "utf8");
 
+test("language and home use flexible scroll-safe root layouts", () => {
+  for (const screen of ["LanguageScreen.tsx", "HomeScreen.tsx"]) {
+    const source = readScreen(screen);
+    assert.match(source, /<ScrollView[\s\S]*contentContainerStyle=\{\{\s*flexGrow:\s*1/);
+    assert.match(source, /style=\{\{\s*flex:\s*1\s*\}\}/);
+    assert.doesNotMatch(source, /<View\s+style=\{\{\s*flex:\s*1/);
+  }
+});
+
 test("language offers accessible Hindi and English 48px controls", () => {
   const source = readScreen("LanguageScreen.tsx");
   assert.match(source, /onSelectLanguage:\s*\(lang:\s*Lang\)\s*=>\s*void/);

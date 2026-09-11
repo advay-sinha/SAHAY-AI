@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
 import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
@@ -23,7 +23,10 @@ export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeS
   const requestsLabel = t("home.my_requests");
 
   return (
-    <View style={{ flex: 1, gap: 16, padding: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}
+      style={{ flex: 1 }}
+    >
       <AiDisclosure />
       <TalkToPersonButton onPress={onRequestHuman} />
       <Pressable
@@ -48,6 +51,6 @@ export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeS
           {requestsLabel}
         </Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }

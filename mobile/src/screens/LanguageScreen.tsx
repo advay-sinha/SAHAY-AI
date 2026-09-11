@@ -1,4 +1,4 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
 import { t, type Lang } from "../i18n";
 
@@ -16,7 +16,10 @@ const buttonStyle = {
 
 export function LanguageScreen({ onSelectLanguage }: LanguageScreenProps) {
   return (
-    <View style={{ flex: 1, gap: 16, padding: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}
+      style={{ flex: 1 }}
+    >
       <AiDisclosure />
       <Text accessibilityRole="header" style={{ fontSize: 24, fontWeight: "700" }}>
         {t("language.title")}
@@ -39,6 +42,6 @@ export function LanguageScreen({ onSelectLanguage }: LanguageScreenProps) {
       >
         <Text style={{ color: "#ffffff", fontSize: 18 }}>{t("language.english")}</Text>
       </Pressable>
-    </View>
+    </ScrollView>
   );
 }
