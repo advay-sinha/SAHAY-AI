@@ -43,7 +43,7 @@ Registry id `emoinhindi`. **Status: `licence_pending`. No use is approved.** Che
 
 **Approved uses:** none.
 
-**Permitted handling today:** registry metadata, checksum and ZIP-directory audit only.
+**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, training, tuning or evaluation data.
 
 **Prohibited uses:**
 - training, evaluation or threshold tuning;
@@ -55,3 +55,5 @@ Registry id `emoinhindi`. **Status: `licence_pending`. No use is approved.** Che
 - victim-facing output;
 - uploading to any external service;
 - committing derived text.
+
+**Sensitivity flags:** `personal_names_not_reliably_redacted` (simulated per the paper, not verified). Private research only; never MVP, product or demo data.

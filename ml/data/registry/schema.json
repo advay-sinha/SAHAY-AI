@@ -10,7 +10,7 @@
  ],
  "properties": {
   "schema_version": {
-   "const": "1.0.0"
+   "const": "1.1.0"
   },
   "description": {
    "type": "string"
@@ -61,7 +61,8 @@
      "ext_decision",
      "holdout_status",
      "sahay_dimension_mappings",
-     "official_locked_test_allowed"
+     "official_locked_test_allowed",
+     "sensitivity_flags"
     ],
     "properties": {
      "id": {
@@ -275,6 +276,19 @@
      },
      "official_locked_test_allowed": {
       "type": "boolean"
+     },
+     "sensitivity_flags": {
+      "description": "Schema 1.1.0. Informational flags that tighten handling; invariant 8 is unaffected.",
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+       "enum": [
+        "real_user_generated_text",
+        "potential_victim_narratives",
+        "minors_possible",
+        "personal_names_not_reliably_redacted"
+       ]
+      }
      }
     }
    }
