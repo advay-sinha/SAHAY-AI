@@ -14,10 +14,11 @@ const disabledControlStyle = {
 
 interface HomeScreenProps {
   onOpenChat: () => void;
+  onOpenRequests: () => void;
   onRequestHuman: () => void;
 }
 
-export function HomeScreen({ onOpenChat, onRequestHuman }: HomeScreenProps) {
+export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeScreenProps) {
   const chatLabel = t("home.chat");
   const requestsLabel = t("home.my_requests");
 
@@ -39,9 +40,9 @@ export function HomeScreen({ onOpenChat, onRequestHuman }: HomeScreenProps) {
       <Pressable
         accessibilityLabel={requestsLabel}
         accessibilityRole="button"
-        accessibilityState={{ disabled: true }}
-        disabled
-        style={disabledControlStyle}
+        accessibilityState={{ disabled: false }}
+        onPress={onOpenRequests}
+        style={{ ...disabledControlStyle, backgroundColor: "#ffffff", opacity: 1 }}
       >
         <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
           {requestsLabel}

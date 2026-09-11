@@ -7,6 +7,7 @@ export default function HomeRoute() {
   return (
     <HomeScreen
       onOpenChat={() => router.push("/chat")}
+      onOpenRequests={() => router.push("/requests")}
       onRequestHuman={() => router.push("/handoff")}
     />
   );

@@ -34,6 +34,8 @@
 
   "timeline.title": "आपकी शिकायत",
   "timeline.reference": "संदर्भ संख्या",
+  "timeline.empty": "अभ कई अनरध नह ह",
+  "timeline.loading": "अनरध लड ह रह ह",
   "timeline.request_received": "शिकायत प्राप्त हुई",
   "timeline.under_review": "समीक्षा जारी है",
   "timeline.officer_assigned": "एक अधिकारी नियुक्त किया गया है",

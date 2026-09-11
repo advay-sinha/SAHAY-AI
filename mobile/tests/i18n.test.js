@@ -77,3 +77,23 @@ test("chat state and origin labels match the approved translations", () => {
     }
   }
 });
+
+test("My Requests state labels match the approved translations", () => {
+  const expected = {
+    en: {
+      "timeline.empty": "No requests yet",
+      "timeline.loading": "Loading request",
+    },
+    hi: {
+      "timeline.empty": "अभ कई अनरध नह ह",
+      "timeline.loading": "अनरध लड ह रह ह",
+    },
+  };
+
+  for (const language of ["en", "hi"]) {
+    const bundle = load(`${language}.json`);
+    for (const [key, value] of Object.entries(expected[language])) {
+      assert.equal(bundle[key], value, `${language}:${key}`);
+    }
+  }
+});

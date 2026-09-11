@@ -44,6 +44,19 @@ test("home opens the chat route", () => {
   assert.match(source, /onOpenChat=\{\(\)\s*=>\s*router\.push\(["']\/chat["']\)\}/);
 });
 
+test("home opens the requests route", () => {
+  const source = read("app", "home.tsx");
+  assert.match(source, /onOpenRequests=\{\(\)\s*=>\s*router\.push\(["']\/requests["']\)\}/);
+});
+
+test("the requests route is local, unavailable, and keeps handoff available", () => {
+  const source = read("app", "requests.tsx");
+  assert.match(source, /<MyRequestsScreen/);
+  assert.match(source, /loadState=["']unavailable["']/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+  assert.doesNotMatch(source, /payload=|fetch\(|WebSocket|Promise\.resolve/);
+});
+
 test("the chat route cannot simulate successful delivery", () => {
   const source = read("app", "chat.tsx");
   assert.match(source, /async function unavailableSend\(_text:\s*string\):\s*Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);

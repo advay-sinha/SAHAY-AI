@@ -34,6 +34,8 @@
 
   "timeline.title": "Your request",
   "timeline.reference": "Reference number",
+  "timeline.empty": "No requests yet",
+  "timeline.loading": "Loading request",
   "timeline.request_received": "Request received",
   "timeline.under_review": "Under review",
   "timeline.officer_assigned": "An officer has been assigned",
