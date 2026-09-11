@@ -55,6 +55,15 @@ test("home opens the chat route", () => {
   assert.match(source, /onOpenChat=\{\(\)\s*=>\s*router\.push\(["']\/chat["']\)\}/);
 });
 
+test("home opens the talk route without changing its other destinations", () => {
+  const source = read("app", "home.tsx");
+  assert.match(source, /onOpenTalk=\{\(\)\s*=>\s*router\.push\(["']\/talk["']\)\}/);
+  assert.equal((source.match(/router\.push\(["']\/talk["']\)/g) ?? []).length, 1);
+  assert.match(source, /onOpenChat=\{\(\)\s*=>\s*router\.push\(["']\/chat["']\)\}/);
+  assert.match(source, /onOpenRequests=\{\(\)\s*=>\s*router\.push\(["']\/requests["']\)\}/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+});
+
 test("home opens the requests route", () => {
   const source = read("app", "home.tsx");
   assert.match(source, /onOpenRequests=\{\(\)\s*=>\s*router\.push\(["']\/requests["']\)\}/);
@@ -114,7 +123,25 @@ test("the error route has no fabricated operation behavior", () => {
   );
 });
 
-test("offline and talk routes remain absent", () => {
+test("the talk route renders TalkScreen with strictly separated destinations", () => {
+  const source = read("app", "talk.tsx");
+  assert.match(source, /<TalkScreen\b/);
+  assert.match(source, /onOpenChat=\{\(\)\s*=>\s*router\.push\(["']\/chat["']\)\}/);
+  assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+
+  const chatCallback = source.match(/onOpenChat=\{([\s\S]*?)\}/);
+  const humanCallback = source.match(/onRequestHuman=\{([\s\S]*?)\}/);
+  assert.ok(chatCallback, "talk route chat callback is missing");
+  assert.ok(humanCallback, "talk route human callback is missing");
+  assert.deepEqual(chatCallback[1].match(/router\.push\(["']([^"']+)["']\)/g), ['router.push("/chat")']);
+  assert.deepEqual(humanCallback[1].match(/router\.push\(["']([^"']+)["']\)/g), ['router.push("/handoff")']);
+});
+
+test("the offline route remains absent and is not routed", () => {
   assert.equal(fs.existsSync(path.join(MOBILE, "app", "offline.tsx")), false);
-  assert.equal(fs.existsSync(path.join(MOBILE, "app", "talk.tsx")), false);
+  const routeSources = fs.readdirSync(path.join(MOBILE, "app"))
+    .filter((name) => name.endsWith(".tsx"))
+    .map((name) => read("app", name))
+    .join("\n");
+  assert.doesNotMatch(routeSources, /router\.(?:push|replace)\(["']\/offline["']\)/);
 });

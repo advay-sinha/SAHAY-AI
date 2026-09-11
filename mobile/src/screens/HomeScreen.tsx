@@ -3,7 +3,7 @@ import { AiDisclosure } from "../components/AiDisclosure";
 import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
 
-const disabledControlStyle = {
+const controlStyle = {
   alignItems: "center" as const,
   backgroundColor: "#d7dde2",
   justifyContent: "center" as const,
@@ -15,12 +15,19 @@ const disabledControlStyle = {
 interface HomeScreenProps {
   onOpenChat: () => void;
   onOpenRequests: () => void;
+  onOpenTalk: () => void;
   onRequestHuman: () => void;
 }
 
-export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeScreenProps) {
+export function HomeScreen({
+  onOpenChat,
+  onOpenRequests,
+  onOpenTalk,
+  onRequestHuman,
+}: HomeScreenProps) {
   const chatLabel = t("home.chat");
   const requestsLabel = t("home.my_requests");
+  const talkLabel = t("home.talk");
 
   return (
     <ScrollView
@@ -30,11 +37,22 @@ export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeS
       <AiDisclosure />
       <TalkToPersonButton onPress={onRequestHuman} />
       <Pressable
+        accessibilityLabel={talkLabel}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: false }}
+        onPress={onOpenTalk}
+        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+      >
+        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
+          {talkLabel}
+        </Text>
+      </Pressable>
+      <Pressable
         accessibilityLabel={chatLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled: false }}
         onPress={onOpenChat}
-        style={{ ...disabledControlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
       >
         <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
           {chatLabel}
@@ -45,7 +63,7 @@ export function HomeScreen({ onOpenChat, onOpenRequests, onRequestHuman }: HomeS
         accessibilityRole="button"
         accessibilityState={{ disabled: false }}
         onPress={onOpenRequests}
-        style={{ ...disabledControlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
       >
         <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
           {requestsLabel}
