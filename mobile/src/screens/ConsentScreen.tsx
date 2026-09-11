@@ -1,12 +1,75 @@
-import { Text, View } from "react-native";
+import { useRef, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
+import { TalkToPersonButton } from "../components/TalkToPersonButton";
+import { t } from "../i18n";
 
-/** ConsentScreen. P0 scaffold. Wired in P1 per mobile/CLAUDE.md. */
-export function ConsentScreen() {
+interface ConsentScreenProps {
+  onAccept: () => void;
+  onDecline: () => void;
+}
+
+const buttonStyle = {
+  alignItems: "center" as const,
+  backgroundColor: "#173f5f",
+  justifyContent: "center" as const,
+  minHeight: 48,
+  paddingHorizontal: 20,
+};
+
+export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
+  const [declined, setDeclined] = useState(false);
+  const decisionStarted = useRef(false);
+
+  function acceptConsent(): void {
+    if (decisionStarted.current) return;
+    decisionStarted.current = true;
+    onAccept();
+  }
+
+  function declineConsent(): void {
+    if (decisionStarted.current) return;
+    decisionStarted.current = true;
+    setDeclined(true);
+    onDecline();
+  }
+
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}>
       <AiDisclosure />
-      <Text>ConsentScreen</Text>
-    </View>
+      <Text accessibilityRole="header" style={{ fontSize: 24, fontWeight: "700" }}>
+        {t("consent.title")}
+      </Text>
+      <Text>{t("consent.ai_disclosure")}</Text>
+      <Text>{t("consent.human_review")}</Text>
+      <Text>{t("consent.right_to_human")}</Text>
+      <Text>{t("consent.what_we_record")}</Text>
+      <Pressable
+        accessibilityLabel={t("consent.accept")}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: declined, selected: false }}
+        disabled={declined}
+        onPress={acceptConsent}
+        style={buttonStyle}
+      >
+        <Text style={{ color: "#ffffff", fontSize: 18 }}>{t("consent.accept")}</Text>
+      </Pressable>
+      <Pressable
+        accessibilityLabel={t("consent.decline")}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: declined, selected: declined }}
+        disabled={declined}
+        onPress={declineConsent}
+        style={[buttonStyle, { backgroundColor: "#ffffff", borderColor: "#173f5f", borderWidth: 2 }]}
+      >
+        <Text style={{ color: "#173f5f", fontSize: 18 }}>{t("consent.decline")}</Text>
+      </Pressable>
+      {declined ? (
+        <View style={{ gap: 16 }}>
+          <Text accessibilityRole="text">{t("consent.declined_note")}</Text>
+          <TalkToPersonButton onPress={onDecline} />
+        </View>
+      ) : null}
+    </ScrollView>
   );
 }

@@ -23,6 +23,10 @@
 
   "chat.placeholder": "Type what happened",
   "chat.send": "Send",
+  "chat.pending": "Sending",
+  "chat.sent": "Sent",
+  "chat.assistant": "SAHAY-AI Assistant",
+  "chat.human_officer": "Human Support Officer",
 
   "human.button": "Talk to a person",
   "human.requested": "We are connecting you to a person. Please stay.",
@@ -30,6 +34,8 @@
 
   "timeline.title": "Your request",
   "timeline.reference": "Reference number",
+  "timeline.empty": "No requests yet",
+  "timeline.loading": "Loading request",
   "timeline.request_received": "Request received",
   "timeline.under_review": "Under review",
   "timeline.officer_assigned": "An officer has been assigned",
