@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Pressable, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
+import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
 
 interface ConsentScreenProps {
   onAccept: () => void;
+  onDecline: () => void;
 }
 
 const buttonStyle = {
@@ -15,11 +17,15 @@ const buttonStyle = {
   paddingHorizontal: 20,
 };
 
-export function ConsentScreen({ onAccept }: ConsentScreenProps) {
+export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
   const [declined, setDeclined] = useState(false);
 
+  function declineConsent(): void {
+    setDeclined(true);
+  }
+
   return (
-    <View style={{ flex: 1, gap: 16, padding: 16 }}>
+    <ScrollView contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}>
       <AiDisclosure />
       <Text accessibilityRole="header" style={{ fontSize: 24, fontWeight: "700" }}>
         {t("consent.title")}
@@ -41,14 +47,17 @@ export function ConsentScreen({ onAccept }: ConsentScreenProps) {
         accessibilityLabel={t("consent.decline")}
         accessibilityRole="button"
         accessibilityState={{ disabled: false, selected: declined }}
-        onPress={() => setDeclined(true)}
+        onPress={declineConsent}
         style={[buttonStyle, { backgroundColor: "#ffffff", borderColor: "#173f5f", borderWidth: 2 }]}
       >
         <Text style={{ color: "#173f5f", fontSize: 18 }}>{t("consent.decline")}</Text>
       </Pressable>
       {declined ? (
-        <Text accessibilityRole="text">{t("consent.declined_note")}</Text>
+        <View style={{ gap: 16 }}>
+          <Text accessibilityRole="text">{t("consent.declined_note")}</Text>
+          <TalkToPersonButton onPress={onDecline} />
+        </View>
       ) : null}
-    </View>
+    </ScrollView>
   );
 }

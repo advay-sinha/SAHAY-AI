@@ -26,9 +26,22 @@ test("language selection updates i18n before opening consent", () => {
 
 test("accepting consent replaces the route with home", () => {
   const source = read("app", "consent.tsx");
-  assert.match(source, /<ConsentScreen\s+onAccept=\{\(\)\s*=>\s*router\.replace\(["']\/home["']\)\}/);
+  assert.match(source, /onAccept=\{\(\)\s*=>\s*router\.replace\(["']\/home["']\)\}/);
 });
 
-test("home renders the home screen", () => {
-  assert.match(read("app", "home.tsx"), /return\s+<HomeScreen\s*\/>/);
+test("declined consent can continue to the handoff route", () => {
+  const source = read("app", "consent.tsx");
+  assert.match(source, /onDecline=\{\(\)\s*=>\s*router\.replace\(["']\/handoff["']\)\}/);
+});
+
+test("home sends human requests to the handoff route", () => {
+  const source = read("app", "home.tsx");
+  assert.match(source, /<HomeScreen\s+onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}\s*\/>/);
+});
+
+test("the handoff route injects an unavailable callback rather than simulated success", () => {
+  const source = read("app", "handoff.tsx");
+  assert.match(source, /async function unavailableHumanRequest\(\): Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
+  assert.match(source, /<HandoffScreen\s+onRequestHuman=\{unavailableHumanRequest\}\s*\/>/);
+  assert.doesNotMatch(source, /initialState/);
 });

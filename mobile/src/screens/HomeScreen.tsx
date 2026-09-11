@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
+import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
 
 const disabledControlStyle = {
@@ -11,13 +12,18 @@ const disabledControlStyle = {
   paddingHorizontal: 20,
 };
 
-export function HomeScreen() {
-  const controls = ["home.talk", "home.chat", "home.my_requests"] as const;
+interface HomeScreenProps {
+  onRequestHuman: () => void;
+}
+
+export function HomeScreen({ onRequestHuman }: HomeScreenProps) {
+  const disabledControls = ["home.chat", "home.my_requests"] as const;
 
   return (
     <View style={{ flex: 1, gap: 16, padding: 16 }}>
       <AiDisclosure />
-      {controls.map((key) => {
+      <TalkToPersonButton onPress={onRequestHuman} />
+      {disabledControls.map((key) => {
         const label = t(key);
 
         return (
