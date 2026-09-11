@@ -32,6 +32,17 @@ test("accepting consent replaces the route with home", () => {
 test("declined consent can continue to the handoff route", () => {
   const source = read("app", "consent.tsx");
   assert.match(source, /onDecline=\{\(\)\s*=>\s*router\.replace\(["']\/handoff["']\)\}/);
+  assert.doesNotMatch(source, /onDecline=\{[^}]*\/home/);
+});
+
+test("accept and decline route callbacks remain strictly separated", () => {
+  const source = read("app", "consent.tsx");
+  const accept = source.match(/onAccept=\{\(\)\s*=>\s*router\.replace\(["']([^"']+)["']\)\}/);
+  const decline = source.match(/onDecline=\{\(\)\s*=>\s*router\.replace\(["']([^"']+)["']\)\}/);
+
+  assert.equal(accept?.[1], "/home");
+  assert.equal(decline?.[1], "/handoff");
+  assert.notEqual(accept?.[1], decline?.[1]);
 });
 
 test("home sends human requests to the handoff route", () => {

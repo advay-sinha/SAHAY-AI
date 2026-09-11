@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Pressable, ScrollView, Text, View } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
 import { TalkToPersonButton } from "../components/TalkToPersonButton";
@@ -19,9 +19,19 @@ const buttonStyle = {
 
 export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
   const [declined, setDeclined] = useState(false);
+  const decisionStarted = useRef(false);
+
+  function acceptConsent(): void {
+    if (decisionStarted.current) return;
+    decisionStarted.current = true;
+    onAccept();
+  }
 
   function declineConsent(): void {
+    if (decisionStarted.current) return;
+    decisionStarted.current = true;
     setDeclined(true);
+    onDecline();
   }
 
   return (
@@ -37,8 +47,9 @@ export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
       <Pressable
         accessibilityLabel={t("consent.accept")}
         accessibilityRole="button"
-        accessibilityState={{ disabled: false, selected: false }}
-        onPress={onAccept}
+        accessibilityState={{ disabled: declined, selected: false }}
+        disabled={declined}
+        onPress={acceptConsent}
         style={buttonStyle}
       >
         <Text style={{ color: "#ffffff", fontSize: 18 }}>{t("consent.accept")}</Text>
@@ -46,7 +57,8 @@ export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
       <Pressable
         accessibilityLabel={t("consent.decline")}
         accessibilityRole="button"
-        accessibilityState={{ disabled: false, selected: declined }}
+        accessibilityState={{ disabled: declined, selected: declined }}
+        disabled={declined}
         onPress={declineConsent}
         style={[buttonStyle, { backgroundColor: "#ffffff", borderColor: "#173f5f", borderWidth: 2 }]}
       >
