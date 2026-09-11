@@ -63,17 +63,26 @@ test("chat state and origin labels match the approved translations", () => {
       "chat.human_officer": "Human Support Officer",
     },
     hi: {
-      "chat.pending": "भज ज रह ह",
-      "chat.sent": "भज दय गय",
-      "chat.assistant": "SAHAY-AI सहयक",
-      "chat.human_officer": "मनव सहयत अधकर",
+      "chat.pending": "\u092D\u0947\u091C\u093E \u091C\u093E \u0930\u0939\u093E \u0939\u0948\u2026",
+      "chat.sent": "\u092D\u0947\u091C \u0926\u093F\u092F\u093E \u0917\u092F\u093E",
+      "chat.assistant": "SAHAY-AI \u0938\u0939\u093E\u092F\u0915",
+      "chat.human_officer": "\u092E\u093E\u0928\u0935 \u0938\u0939\u093E\u092F\u0924\u093E \u0905\u0927\u093F\u0915\u093E\u0930\u0940",
     },
+  };
+  const hindiLengths = {
+    "chat.pending": 15,
+    "chat.sent": 12,
+    "chat.assistant": 14,
+    "chat.human_officer": 19,
   };
 
   for (const language of ["en", "hi"]) {
     const bundle = load(`${language}.json`);
     for (const [key, value] of Object.entries(expected[language])) {
       assert.equal(bundle[key], value, `${language}:${key}`);
+      if (language === "hi") {
+        assert.equal(bundle[key].length, hindiLengths[key], `${language}:${key}:length`);
+      }
     }
   }
 });
@@ -85,15 +94,22 @@ test("My Requests state labels match the approved translations", () => {
       "timeline.loading": "Loading request",
     },
     hi: {
-      "timeline.empty": "अभ कई अनरध नह ह",
-      "timeline.loading": "अनरध लड ह रह ह",
+      "timeline.empty": "\u0905\u092D\u0940 \u0915\u094B\u0908 \u0905\u0928\u0941\u0930\u094B\u0927 \u0928\u0939\u0940\u0902 \u0939\u0948",
+      "timeline.loading": "\u0905\u0928\u0941\u0930\u094B\u0927 \u0932\u094B\u0921 \u0939\u094B \u0930\u0939\u093E \u0939\u0948\u2026",
     },
+  };
+  const hindiLengths = {
+    "timeline.empty": 22,
+    "timeline.loading": 21,
   };
 
   for (const language of ["en", "hi"]) {
     const bundle = load(`${language}.json`);
     for (const [key, value] of Object.entries(expected[language])) {
       assert.equal(bundle[key], value, `${language}:${key}`);
+      if (language === "hi") {
+        assert.equal(bundle[key].length, hindiLengths[key], `${language}:${key}:length`);
+      }
     }
   }
 });

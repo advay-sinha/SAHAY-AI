@@ -23,10 +23,10 @@
 
   "chat.placeholder": "जो हुआ वह लिखें",
   "chat.send": "भेजें",
-  "chat.pending": "भज ज रह ह",
-  "chat.sent": "भज दय गय",
-  "chat.assistant": "SAHAY-AI सहयक",
-  "chat.human_officer": "मनव सहयत अधकर",
+  "chat.pending": "\u092D\u0947\u091C\u093E \u091C\u093E \u0930\u0939\u093E \u0939\u0948\u2026",
+  "chat.sent": "\u092D\u0947\u091C \u0926\u093F\u092F\u093E \u0917\u092F\u093E",
+  "chat.assistant": "SAHAY-AI \u0938\u0939\u093E\u092F\u0915",
+  "chat.human_officer": "\u092E\u093E\u0928\u0935 \u0938\u0939\u093E\u092F\u0924\u093E \u0905\u0927\u093F\u0915\u093E\u0930\u0940",
 
   "human.button": "किसी व्यक्ति से बात करें",
   "human.requested": "हम आपको एक व्यक्ति से जोड़ रहे हैं। कृपया रुकें।",
@@ -34,8 +34,8 @@
 
   "timeline.title": "आपकी शिकायत",
   "timeline.reference": "संदर्भ संख्या",
-  "timeline.empty": "अभ कई अनरध नह ह",
-  "timeline.loading": "अनरध लड ह रह ह",
+  "timeline.empty": "\u0905\u092D\u0940 \u0915\u094B\u0908 \u0905\u0928\u0941\u0930\u094B\u0927 \u0928\u0939\u0940\u0902 \u0939\u0948",
+  "timeline.loading": "\u0905\u0928\u0941\u0930\u094B\u0927 \u0932\u094B\u0921 \u0939\u094B \u0930\u0939\u093E \u0939\u0948\u2026",
   "timeline.request_received": "शिकायत प्राप्त हुई",
   "timeline.under_review": "समीक्षा जारी है",
   "timeline.officer_assigned": "एक अधिकारी नियुक्त किया गया है",
