@@ -19,6 +19,7 @@ confined to the dataset root.
 
 import hashlib
 import os
+import shutil
 import stat
 import zipfile
 from pathlib import Path, PurePosixPath
@@ -142,35 +143,54 @@ class UnsafeArchive(Exception):
 def safe_extract(path: Path, destination: Path, *, max_total: int = MAX_TOTAL_UNCOMPRESSED) -> Dict[str, Any]:
     """Extract only if every check passes. `destination` must not exist yet or be empty.
 
-    Members are written one by one, by resolved path checked to stay inside
-    `destination`; the running total is capped at `max_total` regardless of
+    Members are written one by one, by resolved path checked to stay inside the
+    working directory; the running total is capped at `max_total` regardless of
     the sizes the archive declares.
+
+    All-or-nothing: members are written into a temporary sibling directory and
+    moved into `destination` only after the last member succeeds. If anything
+    fails — a member that escapes, a size ceiling crossed mid-stream because
+    the archive under-declared its sizes, an attempted overwrite, an I/O error —
+    the temporary directory is removed and `destination` is left exactly as it
+    was. No partial extraction is ever presented as a result.
     """
     report = inspect_zip(path, max_total=max_total)
     if not report["safe"]:
         raise UnsafeArchive("archive failed safety checks: " + ", ".join(report["findings"]))
     destination = Path(destination)
-    if destination.exists() and any(destination.iterdir()):
+    if destination.exists() and (not destination.is_dir() or any(destination.iterdir())):
         raise UnsafeArchive("destination is not empty")
-    destination.mkdir(parents=True, exist_ok=True)
-    root = destination.resolve()
+    work = destination.with_name(f".{destination.name}.partial-{os.getpid()}")
+    if work.exists():
+        shutil.rmtree(work)
+    work.mkdir(parents=True)
+    root = work.resolve()
     written = 0
-    with zipfile.ZipFile(path) as zf:
-        for info in zf.infolist():
-            target = (root / info.filename.replace("\\", "/")).resolve()
-            if root != target and root not in target.parents:
-                raise UnsafeArchive("member escapes destination")
-            if info.is_dir():
-                target.mkdir(parents=True, exist_ok=True)
-                continue
-            target.parent.mkdir(parents=True, exist_ok=True)
-            with zf.open(info) as src, open(target, "wb") as dst:
-                while True:
-                    block = src.read(1 << 20)
-                    if not block:
-                        break
-                    written += len(block)
-                    if written > max_total:
-                        raise UnsafeArchive("extraction exceeded the size ceiling")
-                    dst.write(block)
+    try:
+        with zipfile.ZipFile(path) as zf:
+            for info in zf.infolist():
+                target = (root / info.filename.replace("\\", "/")).resolve()
+                if root != target and root not in target.parents:
+                    raise UnsafeArchive("member escapes destination")
+                if info.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    continue
+                if target.exists():
+                    raise UnsafeArchive("member would overwrite an existing file")
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(info) as src, open(target, "xb") as dst:
+                    while True:
+                        block = src.read(1 << 20)
+                        if not block:
+                            break
+                        written += len(block)
+                        if written > max_total:
+                            raise UnsafeArchive("extraction exceeded the size ceiling")
+                        dst.write(block)
+        if destination.exists():
+            destination.rmdir()  # empty, checked above
+        os.replace(work, destination)
+    except BaseException:
+        shutil.rmtree(work, ignore_errors=True)
+        raise
     return {"extracted_bytes": written, "members": report["members"]}

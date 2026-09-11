@@ -21,7 +21,7 @@ from typing import Any, Dict, List, Mapping, Optional
 REGISTRY_DIR = Path(__file__).resolve().parent / "registry"
 REGISTRY_PATH = REGISTRY_DIR / "datasets.json"
 ROOT_ENV = "SAHAY_DATASETS_ROOT"
-REGISTRY_SCHEMA_VERSION = "1.0.0"
+REGISTRY_SCHEMA_VERSION = "1.1.0"
 
 REVIEW_STATES = (
     "unregistered", "metadata_pending", "licence_pending", "quarantined", "integrity_verified",
@@ -42,6 +42,15 @@ ARCHIVE_SAFETY = ("not_checked", "passed", "failed", "not_applicable")
 EXTRACTION = ("not_extracted", "extracted", "prohibited", "not_applicable")
 TRISTATE = ("permitted", "not_permitted", "unknown")
 HOLDOUT = ("not_holdout", "external_validation_candidate", "external_test_candidate")
+#: Sensitivity metadata (schema 1.1.0). Informational flags that tighten, never loosen, handling:
+#:   real_user_generated_text             text written by real members of the public
+#:   potential_victim_narratives          may contain authentic accounts of abuse, violence or crisis
+#:   minors_possible                      authors may include children
+#:   personal_names_not_reliably_redacted rule-based redaction cannot remove names or places
+#: Invariant 8 is unaffected by any flag: real or potentially real victim
+#: narratives are never used in the MVP, the product or the demo.
+SENSITIVITY_FLAGS = ("real_user_generated_text", "potential_victim_narratives", "minors_possible",
+                     "personal_names_not_reliably_redacted")
 
 REQUIRED_FIELDS = (
     "id", "name", "version", "modality", "primary_language", "additional_languages", "sahay_purpose",
@@ -52,7 +61,7 @@ REQUIRED_FIELDS = (
     "extraction_status", "review_status", "approved_uses", "prohibited_uses", "contamination_risk",
     "limitations", "date_checked", "evidence_urls", "unresolved_questions",
     "download_status", "ext_decision", "holdout_status", "sahay_dimension_mappings",
-    "official_locked_test_allowed",
+    "official_locked_test_allowed", "sensitivity_flags",
 )
 #: Fields that must be resolved (not "unknown"/empty) before any approval.
 LICENCE_FIELDS = ("licence_name", "licence_url", "redistribution", "commercial_use")
@@ -114,6 +123,17 @@ def validate_record(rec: Mapping[str, Any]) -> List[str]:
         errs.append(f"{rid}: official_locked_test_allowed must be a bool")
     if not isinstance(rec["sahay_dimension_mappings"], dict):
         errs.append(f"{rid}: sahay_dimension_mappings must be an object")
+    flags = rec["sensitivity_flags"]
+    if not isinstance(flags, list):
+        errs.append(f"{rid}: sensitivity_flags must be a list")
+    else:
+        for flag in flags:
+            if flag not in SENSITIVITY_FLAGS:
+                errs.append(f"{rid}: sensitivity flag {flag!r} not in {SENSITIVITY_FLAGS}")
+        if len(set(flags)) != len(flags):
+            errs.append(f"{rid}: duplicate sensitivity flag")
+        if "potential_victim_narratives" in flags and "victim_facing_output" not in rec["prohibited_uses"]:
+            errs.append(f"{rid}: potential_victim_narratives requires victim_facing_output in prohibited_uses")
 
     if rec["download_status"] == "downloaded":
         if not _SHA.match(str(rec["sha256"] or "")):

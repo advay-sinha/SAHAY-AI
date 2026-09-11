@@ -1,5 +1,5 @@
 {
- "schema_version": "1.0.0",
+ "schema_version": "1.1.0",
  "description": "SAHAY-AI external dataset registry. Metadata only: no raw data, no sample text, no machine-specific path. Files live at <SAHAY_DATASETS_ROOT>/<local_relative_path>, outside Git. A downloaded file is never approved automatically; review states change only by a human edit reviewed like any other change.",
  "datasets": [
   {
@@ -38,35 +38,51 @@
    "review_status": "licence_pending",
    "approved_uses": [],
    "prohibited_uses": [
-    "training", "evaluation", "threshold_tuning", "locked_test", "svi_dimension_population", "d4_acoustic_distress",
-    "crisis_or_danger_label_substitution", "diagnosis", "redistribution", "commercial_use",
-    "victim_facing_output", "external_service_upload", "committing_derived_text"
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text"
    ],
    "contamination_risk": "Low overlap with the fictional SAHAY corpora (different domain and language), but any future use must be registered before viewing; once samples are viewed during rule development they cannot be holdout.",
    "limitations": [
     "English Reddit posts, not Hindi or Hinglish helpline speech.",
     "Generic stress, not caste-atrocity victimisation, crisis or danger.",
     "Moderate annotator agreement; crowd labels.",
-    "Not clinically validated."
+    "Not clinically validated.",
+    "The locally present copy is a third-party Kaggle re-upload with an unknown licence, not the authors' archive."
    ],
    "date_checked": "2026-09-11",
    "evidence_urls": [
     "https://aclanthology.org/D19-6213/",
     "https://arxiv.org/abs/1911.00133",
     "https://ar5iv.labs.arxiv.org/html/1911.00133",
-    "https://www.cs.columbia.edu/~eturcan/"
+    "https://www.cs.columbia.edu/~eturcan/",
+    "https://www.kaggle.com/datasets/monishakant/dataset-for-stress-analysis-in-social-media"
    ],
    "unresolved_questions": [
     "What licence or terms, if any, govern the dataset itself? None found in authoritative sources.",
     "Does use and redistribution of Reddit-derived text comply with Reddit's terms for this project?",
     "Were usernames or other identifiers removed from the released CSVs? Not inspected (content not read).",
-    "No approved external decision: EXT-105 is PROPOSED in docs/EXTERNAL_DECISIONS.md, yet a copy was downloaded locally."
+    "No approved external decision: EXT-105 is PROPOSED in docs/EXTERNAL_DECISIONS.md, yet a copy was downloaded locally.",
+    "A second local copy exists: a third-party Kaggle re-upload ('Dataset for Stress Analysis in Social Media', uploader Monisha Kant, version 1, 2023-01-02, licence field 'Unknown') as one loose CSV (685,032 bytes, sha256 568f0c7851a11521cda4eb955e2319de6f875982cbd426b645320d088400f70d). Its header has the 116 columns of the original Dreaddit release; whether its rows, labels and split match the authors' release is not verified. It is a copy of this dataset, not a new dataset, and inherits every restriction above.",
+    "The Kaggle copy carries no train/test split column in its header, so the paper's split cannot be recovered from it.",
+    "The Kaggle copy has exactly 715 data rows, the size of the paper's test split, with labels {1: 369, 0: 346}. It is probably the authors' test split, but no split column says so; records are marked unsplit. Local label-value census (counts of label values only, no text) under the project owner's local exploratory research authorisation, 2026-09-11."
    ],
    "download_status": "downloaded",
    "ext_decision": "EXT-105 PROPOSED",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": ["real_user_generated_text", "potential_victim_narratives", "minors_possible", "personal_names_not_reliably_redacted"]
   },
   {
    "id": "emoinhindi",
@@ -94,7 +110,7 @@
    ],
    "demographics": "Not published for annotators or personas.",
    "label_definitions": "Multi-label, 16 emotion classes (Anticipation, Confident, Hopeful, Anger, Sad, Joy, Compassion, Fear, Disgusted, Annoyed, Grateful, Impressed, Apprehensive, Surprised, Guilty, Neutral) with intensity 0 (neutral) to 3 per utterance. Emotion labels, not vulnerability, crisis or clinical labels.",
-   "splits": "Paper: 1,814 dialogues, 44,247 utterances; 80% train (20% of which used for validation), 20% test. Local archive: one CSV and one Markdown file in an EmoInHindi/ folder; whether the CSV carries a split column is not verified.",
+   "splits": "Paper: 1,814 dialogues, 44,247 utterances; 80% train (20% of which used for validation), 20% test. Local extracted CSV header (header line only, read 2026-09-11): dialogueId, utterance_no, authorRole, utterance, emotions, emoIntensity. There is no split column, so the paper's split is not recoverable from the local file.",
    "local_relative_path": "corpus/text/hindi/emoinhindi/EmoInHindi.zip",
    "archive_filename": "EmoInHindi.zip",
    "byte_size": 1195294,
@@ -104,9 +120,19 @@
    "review_status": "licence_pending",
    "approved_uses": [],
    "prohibited_uses": [
-    "training", "evaluation", "threshold_tuning", "locked_test", "svi_dimension_population", "d4_acoustic_distress",
-    "crisis_or_danger_label_substitution", "diagnosis", "redistribution", "commercial_use",
-    "victim_facing_output", "external_service_upload", "committing_derived_text"
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text"
    ],
    "contamination_risk": "Topical overlap with SAHAY fixtures (crime-victim counselling). Any sample viewed during rule development can no longer be holdout; register the viewing in ml/eval/contamination.py.",
    "limitations": [
@@ -125,15 +151,18 @@
    "unresolved_questions": [
     "Was the local copy obtained through the publisher's request form, accepting the research-only terms? Not recorded.",
     "Is redistribution (including derived text in reports or model artefacts) permitted? Not stated.",
-    "Script of the text (Devanagari, romanised or mixed) is not verified; content was not read.",
     "No external decision (EXT entry) exists for this dataset in docs/EXTERNAL_DECISIONS.md.",
-    "Does 'research purposes only' cover a government helpline prototype? Needs a human licence review."
+    "Does 'research purposes only' cover a government helpline prototype? Needs a human licence review.",
+    "A second local copy exists as an already-extracted CSV and README (CSV 11,730,323 bytes, sha256 05f4f7a1e829cb96a7db338602d86e414e5018df33c5a57c5924f4d7fe99d781). It was extracted outside the governed extraction mechanism, which refuses licence_pending datasets; who extracted it, and from which archive, is not recorded.",
+    "Script of the text (Devanagari, romanised or mixed) is still not verified; only the header line was read.",
+    "The local CSV has 44,247 utterance rows. authorRole is 'user' (21,239) or 'bot' (23,008). Emotions are lower-case and comma-separated (1 to 5 per utterance) and include 'confused' (125), which the paper's 16-class list does not. Local label-value census (counts of label values only, no text) under the project owner's local exploratory research authorisation, 2026-09-11."
    ],
    "download_status": "downloaded",
    "ext_decision": "none recorded",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": ["personal_names_not_reliably_redacted"]
   },
   {
    "id": "common_voice_hi",
@@ -176,7 +205,8 @@
    "ext_decision": "EXT-002 PROPOSED",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": []
   },
   {
    "id": "ravdess_audio_speech",
@@ -219,31 +249,36 @@
    "ext_decision": "EXT-003 PROPOSED",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": []
   },
   {
    "id": "crema_d",
-   "name": "CREMA-D (AudioWAV)",
-   "version": "unselected",
-   "modality": "audio",
+   "name": "CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset",
+   "version": "GitHub repository CheyneyComputerScience/CREMA-D (local clone; commit not recorded)",
+   "modality": "multimodal",
    "primary_language": "en",
    "additional_languages": [],
-   "sahay_purpose": "Proposal only (EXT-104, P2): auxiliary speech-emotion source after the voice gate.",
-   "source_page": "not recorded",
-   "download_source": "not recorded",
-   "publisher": "unknown",
-   "citation": "unknown",
+   "sahay_purpose": "Proposal only (EXT-104, P2): auxiliary acted speech-emotion source after the voice gate. Acted emotion is not acoustic distress; it cannot populate D4 without an approved mapping and validation study.",
+   "source_page": "https://github.com/CheyneyComputerScience/CREMA-D",
+   "download_source": "Git clone of https://github.com/CheyneyComputerScience/CREMA-D; audio and video are stored with Git LFS and need `git lfs` to fetch",
+   "publisher": "Cao, Cooper, Keutmann, Gur, Nenkova and Verma (repository hosted by CheyneyComputerScience)",
+   "citation": "Cao H, Cooper DG, Keutmann MK, Gur RC, Nenkova A, Verma R. CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset. IEEE Transactions on Affective Computing. 2014;5(4):377-390.",
    "licence_name": "unknown",
    "licence_url": "unknown",
    "redistribution": "unknown",
    "commercial_use": "unknown",
-   "research_only_restrictions": "unknown",
-   "attribution_requirements": "unknown",
-   "consent_statement": "unknown",
-   "privacy_risks": ["Voice recordings of actors."],
-   "demographics": "unknown",
-   "label_definitions": "unknown (not checked in this task)",
-   "splits": "unknown",
+   "research_only_restrictions": "Not yet reviewed by a human. The official repository README (checked 2026-09-11) states that the dataset is made available under the Open Database License v1.0 (https://opendatacommons.org/licenses/odbl/1-0/), with contents under the Database Contents License v1.0 (https://opendatacommons.org/licenses/dbcl/1-0/). The registry does not record any permission until a human licence review confirms it. The licence does not address the actors' likeness.",
+   "attribution_requirements": "Cite Cao et al. 2014 (above) and keep the ODbL/DbCL notices.",
+   "consent_statement": "Actors were recruited and recorded for the dataset (per the paper); the consent terms themselves were not reviewed.",
+   "privacy_risks": [
+    "Audio and video of 91 real actors: identifiable faces and voices.",
+    "VideoDemographics.csv holds actor age, sex, race and ethnicity: sensitive attributes linked to an actor id.",
+    "Must never be shown to a victim or used to profile demographic groups."
+   ],
+   "demographics": "91 actors, 48 male and 43 female, aged 20-74, several racial and ethnic groups (per the repository README).",
+   "label_definitions": "Acted emotion: Anger, Disgust, Fear, Happy, Neutral, Sad; intended intensity Low, Medium, High or Unspecified; plus crowd-sourced perceived-emotion ratings. Acted, perceived emotion: not distress, not crisis, not danger, not an SVI value.",
+   "splits": "No official split. 7,442 clips of 12 scripted English sentences.",
    "local_relative_path": "",
    "archive_filename": "",
    "byte_size": null,
@@ -252,17 +287,48 @@
    "extraction_status": "not_applicable",
    "review_status": "metadata_pending",
    "approved_uses": [],
-   "prohibited_uses": ["download_without_approved_ext_decision", "d4_acoustic_distress"],
-   "contamination_risk": "unknown",
-   "limitations": ["Acted emotion; English (project docs)."],
+   "prohibited_uses": [
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text",
+    "download_without_approved_ext_decision"
+   ],
+   "contamination_risk": "No text overlap with SAHAY corpora (12 scripted sentences). Audio overlap is impossible: SAHAY has no audio corpus.",
+   "limitations": [
+    "Acted emotion by professional actors reading 12 fixed English sentences: not spontaneous speech, not Hindi or Hinglish, not a helpline call.",
+    "Perceived emotion is not acoustic distress; it says nothing about D4 without a mapping study.",
+    "The local clone has NO media: all 22,326 .wav, .mp3 and .flv files are Git LFS pointer stubs (130-132 bytes, beginning with the LFS pointer signature). Only label CSVs, R scripts and READMEs are real files.",
+    "Not clinically validated."
+   ],
    "date_checked": "2026-09-11",
-   "evidence_urls": [],
-   "unresolved_questions": ["Licence and terms not verified."],
+   "evidence_urls": [
+    "https://github.com/CheyneyComputerScience/CREMA-D",
+    "https://opendatacommons.org/licenses/odbl/1-0/",
+    "https://opendatacommons.org/licenses/dbcl/1-0/"
+   ],
+   "unresolved_questions": [
+    "A human licence review must confirm the ODbL v1.0 / DbCL v1.0 terms stated in the repository README and record them here; until then every licence field stays unknown.",
+    "No approved external decision: EXT-104 is PROPOSED in docs/EXTERNAL_DECISIONS.md, yet a partial clone is present locally.",
+    "The media were never fetched (Git LFS pointers only), so download_status stays not_downloaded.",
+    "Which repository commit was cloned is not recorded.",
+    "Does the ODbL/DbCL grant cover the actors' likeness for a government prototype? Needs a human review."
+   ],
    "download_status": "not_downloaded",
    "ext_decision": "EXT-104 PROPOSED",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": []
   },
   {
    "id": "iemocap",
@@ -305,7 +371,8 @@
    "ext_decision": "none recorded (post-MVP in docs/DATASETS_AND_SERVICES.md)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": []
   },
   {
    "id": "daic_woz",
@@ -348,7 +415,245 @@
    "ext_decision": "none recorded (post-MVP in docs/DATASETS_AND_SERVICES.md)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
-   "official_locked_test_allowed": false
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": []
+  },
+  {
+   "id": "reddit_suicide_detection",
+   "name": "Suicide and Depression Detection (Kaggle)",
+   "version": "Kaggle version 14 (published 2021-01-04, modified 2021-05-19)",
+   "modality": "text",
+   "primary_language": "en",
+   "additional_languages": [],
+   "sahay_purpose": "Proposal only; nothing approved. At most an unofficial English development probe of how crisis-vocabulary handling behaves on real social-media text. Its labels record the subreddit a post came from; they are not crisis, danger, vulnerability or diagnosis labels.",
+   "source_page": "https://www.kaggle.com/datasets/nikhileswarkomati/suicide-watch",
+   "download_source": "Kaggle archive.zip (60.6 MB) for the page above; only the extracted CSV is present locally",
+   "publisher": "Nikhileswar Komati (Kaggle uploader). The posts were written by Reddit users and collected with the Pushshift API.",
+   "citation": "The Kaggle page cites 'Suicide Ideation Detection in Social Media Forums' (IEEE Xplore); the full bibliographic record was not verified.",
+   "licence_name": "CC BY-SA 4.0 as declared by the Kaggle uploader; the uploader did not write the posts and no grant from their authors, or from Reddit, is documented",
+   "licence_url": "https://creativecommons.org/licenses/by-sa/4.0/",
+   "redistribution": "unknown",
+   "commercial_use": "unknown",
+   "research_only_restrictions": "The uploader's CC BY-SA 4.0 declaration cannot license content the uploader does not own. The posts remain subject to Reddit's User Agreement and API terms; Pushshift's access was revoked by Reddit in 2023. Kaggle availability grants neither training nor redistribution rights.",
+   "attribution_requirements": "Unknown beyond the uploader's CC BY-SA attribution request.",
+   "consent_statement": "None. Public posts were scraped via Pushshift; the authors did not consent to research use and no ethics review is described.",
+   "privacy_risks": [
+    "Real people's first-person posts about suicidal ideation and depression: the most sensitive category of personal narrative this project could hold.",
+    "Posts are verbatim and public, so a sentence can be searched and re-identified; usernames, links and other identifiers may be present (not inspected).",
+    "The non-suicide class comes from r/teenagers, so many authors are likely to be minors.",
+    "Must never be printed, logged, sent to an external service, committed, shown to a victim or used to draft victim-facing text."
+   ],
+   "demographics": "Not published. Reddit users; the non-suicide class is drawn from a teenagers' community.",
+   "label_definitions": "class in {suicide, non-suicide} (version 14, per Kaggle metadata). The label is the subreddit of origin: r/SuicideWatch -> suicide, r/teenagers -> non-suicide; the metadata says r/depression posts were labelled 'depression' in version 13. It is a provenance label, not a human risk judgement, not immediate danger and not a diagnosis.",
+   "splits": "No official split. One CSV; header: unnamed index, text, class.",
+   "local_relative_path": "archive/Suicide_Detection.csv",
+   "archive_filename": "Suicide_Detection.csv",
+   "byte_size": 166902029,
+   "sha256": "1ec16b065a2fae36488de16e8abfc326586a576a25901e09467223e545ddd295",
+   "archive_safety_status": "not_applicable",
+   "extraction_status": "not_applicable",
+   "review_status": "licence_pending",
+   "approved_uses": [],
+   "prohibited_uses": [
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text",
+    "minor_authored_content_processing_without_review"
+   ],
+   "contamination_risk": "Crisis vocabulary overlaps the SAHAY crisis lexicon's domain; any row viewed while designing a rule could no longer serve as a regression probe and would have to be registered in ml/eval/contamination.py.",
+   "limitations": [
+    "Labels are subreddit membership, not annotation: a post in r/SuicideWatch is not necessarily at risk and a post elsewhere is not necessarily safe.",
+    "English Reddit text: not Hindi or Hinglish, not helpline intake.",
+    "Collected 2008-2021; register and platform differ from SAHAY intake.",
+    "Present only as a loose extracted CSV; the Kaggle archive was not kept, so archive safety could not be checked.",
+    "Not clinically validated."
+   ],
+   "date_checked": "2026-09-11",
+   "evidence_urls": [
+    "https://www.kaggle.com/datasets/nikhileswarkomati/suicide-watch",
+    "https://www.kaggle.com/datasets/nikhileswarkomati/suicide-watch/croissant/download"
+   ],
+   "unresolved_questions": [
+    "Who holds the rights in the posts, and does any grant permit this project to process them?",
+    "Does processing likely-minor-authored posts (r/teenagers) require additional safeguards or exclusion?",
+    "Were usernames, links or other identifiers removed? Not inspected (content not read).",
+    "Who downloaded the copy, when, and was it extracted by the governed mechanism? Not recorded; the mechanism refuses licence_pending datasets.",
+    "No external decision (EXT entry) exists for this dataset in docs/EXTERNAL_DECISIONS.md."
+   ],
+   "download_status": "downloaded",
+   "ext_decision": "none recorded",
+   "holdout_status": "not_holdout",
+   "sahay_dimension_mappings": {},
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": ["real_user_generated_text", "potential_victim_narratives", "minors_possible", "personal_names_not_reliably_redacted"]
+  },
+  {
+   "id": "hinglish_hate_speech_local_derivative",
+   "name": "Local modified derivative of 'Code-Mixed Hinglish Hate Speech Detection Dataset' (Kaggle): the labelled rows are the aggregate's English portion; provenance of the local file unverified",
+   "version": "Upstream Kaggle version 1 (2025-09-11); the local file name and seven extra columns match no published file",
+   "modality": "text",
+   "primary_language": "en",
+   "additional_languages": [
+    "unknown"
+   ],
+   "sahay_purpose": "Proposal only; nothing approved. Hate speech is not continuing threat: at most an unofficial probe of how Hinglish abusive language passes through the pipeline, after human review.",
+   "source_page": "https://www.kaggle.com/datasets/sharduldhekane/code-mixed-hinglish-hate-speech-detection-dataset",
+   "download_source": "Unknown for the local file. Its first nine header columns match the upstream combined_hate_speech_dataset.csv exactly; the local file name (hate_speech_gener2_newF.csv) and seven additional columns (sentiment, emotion, Text, Style, Sentiment, Emotion, 'Unnamed: 4') do not appear in any published file found.",
+   "publisher": "Upstream aggregate: Shardul Dhekane (Kaggle uploader). The party that produced the local derivative is unknown.",
+   "citation": "Unknown; the upstream Kaggle page gives no paper.",
+   "licence_name": "unknown: the upstream uploader declares MIT for the aggregate, but it compiles four sources whose own licences are not given, and the local file was modified by an unknown party",
+   "licence_url": "unknown",
+   "redistribution": "unknown",
+   "commercial_use": "unknown",
+   "research_only_restrictions": "Unknown. An aggregator's MIT declaration does not cover the sources it compiles, and cannot cover columns added later by someone else.",
+   "attribution_requirements": "Unknown.",
+   "consent_statement": "None. Social-media text of unknown origin.",
+   "privacy_risks": [
+    "Abusive, sexual and identity-targeted slurs; may name or tag real targets (not inspected).",
+    "Social-media text is searchable and re-identifiable.",
+    "The seven extra local columns (sentiment, emotion, style) may be machine-generated; the file name fragment 'gener2' suggests generation. Nothing in it may be treated as human-authored or human-labelled without evidence.",
+    "Must never be printed, logged, sent to an external service, committed or shown to a victim."
+   ],
+   "demographics": "Not published.",
+   "label_definitions": "Local census: 15,000 rows with hate_label 1.0 (7,500) or 0.0 (7,500), language 'english', source 'english_dataset', dataset_version 'v1.0' — the upstream aggregate's 15,000-row English part. 3,201 further rows have no hate_label, language or source; they come from the merged second table (columns Text, Style, Sentiment, Emotion) and are excluded. Upstream columns profanity_score, text_length and word_count are carried in the file. None of these is a threat, danger, vulnerability or SVI label.",
+   "splits": "No split column in the header; no official split published.",
+   "local_relative_path": "archive(2)/hate_speech_gener2_newF.csv",
+   "archive_filename": "hate_speech_gener2_newF.csv",
+   "byte_size": 4541167,
+   "sha256": "0ff85632aa3cc958896f812aad639186048162b22ade1f5d6c63633ee6bf0474",
+   "archive_safety_status": "not_applicable",
+   "extraction_status": "not_applicable",
+   "review_status": "licence_pending",
+   "approved_uses": [],
+   "prohibited_uses": [
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text",
+    "treating_added_columns_as_human_labels"
+   ],
+   "contamination_risk": "Hinglish abusive vocabulary may overlap SAHAY threat and coercion lexicons; any row viewed while designing a rule must be registered in ml/eval/contamination.py.",
+   "limitations": [
+    "Despite the upstream title, the labelled local rows are English, not Hindi or Hinglish; the Hindi and Hinglish parts of the upstream aggregate are absent from this file.",
+    "Hate speech is not continuing threat, intimidation or coercion without contextual human review.",
+    "Provenance of the local derivative is unknown; it may contain generated rows or labels.",
+    "Present only as a loose CSV; no archive to audit.",
+    "Not clinically or linguistically validated."
+   ],
+   "date_checked": "2026-09-11",
+   "evidence_urls": [
+    "https://www.kaggle.com/datasets/sharduldhekane/code-mixed-hinglish-hate-speech-detection-dataset",
+    "https://www.kaggle.com/datasets/sharduldhekane/code-mixed-hinglish-hate-speech-detection-dataset/croissant/download"
+   ],
+   "unresolved_questions": [
+    "Who produced the local file, from which upstream version, and what generated the seven extra columns?",
+    "What are the licences of the four sources the upstream aggregate compiles?",
+    "Does the file contain model-generated text? If so it cannot be used as real-language evidence.",
+    "What does hate_label encode (0/1 or strings)? Not verified; content not read.",
+    "No external decision (EXT entry) exists for this dataset in docs/EXTERNAL_DECISIONS.md.",
+    "What are the 3,201 unlabelled rows (second-table schema), and were they machine-generated? They are excluded from conversion. Local label-value census (counts of label values only, no text) under the project owner's local exploratory research authorisation, 2026-09-11."
+   ],
+   "download_status": "downloaded",
+   "ext_decision": "none recorded",
+   "holdout_status": "not_holdout",
+   "sahay_dimension_mappings": {},
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": ["real_user_generated_text", "minors_possible", "personal_names_not_reliably_redacted"]
+  },
+  {
+   "id": "hinglish_sentiment_kaggle",
+   "name": "hinglish sentiment analysis (Kaggle)",
+   "version": "Kaggle version 1 (published 2024-04-10)",
+   "modality": "text",
+   "primary_language": "hi-Latn",
+   "additional_languages": [],
+   "sahay_purpose": "Proposal only; nothing approved. At most an unofficial probe of romanised Hindi, spelling variation and code-switching through the pipeline. Its sentiment classes are not safety, vulnerability or routing labels.",
+   "source_page": "https://www.kaggle.com/datasets/ankitlakra24/hinglish-sentiment-analysis",
+   "download_source": "Kaggle archive.zip (579.6 KB) for the page above; only the extracted CSV is present locally",
+   "publisher": "Ankit Lakra (Kaggle uploader). The origin of the text is not described.",
+   "citation": "None given.",
+   "licence_name": "Apache 2.0 as declared by the Kaggle uploader; the origin of the text, and so who holds rights in it, is not described",
+   "licence_url": "https://www.apache.org/licenses/LICENSE-2.0",
+   "redistribution": "unknown",
+   "commercial_use": "unknown",
+   "research_only_restrictions": "An uploader's Apache 2.0 declaration covers only what the uploader owns. The text appears to be social-media posts of undocumented origin. Kaggle availability grants neither training nor redistribution rights.",
+   "attribution_requirements": "Unknown beyond the uploader's Apache 2.0 notice.",
+   "consent_statement": "None. Origin of the text not described.",
+   "privacy_risks": [
+    "Social-media text of undocumented origin; it may contain names, handles or other identifiers (the adapter redacts URLs, e-mails, handles, phone numbers and long numbers; names are not detected).",
+    "Political and communal content is present; never display or reuse it.",
+    "Must never be printed, logged, sent to an external service, committed or shown to a victim."
+   ],
+   "demographics": "Not published.",
+   "label_definitions": "Header-less CSV: an original row index, the text, and a class in {0: 4,252, 1: 5,473, 2: 4,869} (local census). What each class means is not published, so no polarity is assumed; the adapter namespaces the raw value only.",
+   "splits": "File name says training only; no test file is present and no split column exists.",
+   "local_relative_path": "archive(1)/FinalTrainingOnly.csv",
+   "archive_filename": "FinalTrainingOnly.csv",
+   "byte_size": 1304470,
+   "sha256": "50596b3ec7506916fda5f1d08148c649e570012eafdbf27a4da02d13ab215c80",
+   "archive_safety_status": "not_applicable",
+   "extraction_status": "not_applicable",
+   "review_status": "licence_pending",
+   "approved_uses": [],
+   "prohibited_uses": [
+    "training",
+    "evaluation",
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text",
+    "polarity_assumption"
+   ],
+   "contamination_risk": "Romanised Hindi overlaps the SAHAY Hinglish lexicons; any row viewed while designing a rule must be registered in ml/eval/contamination.py.",
+   "limitations": [
+    "Sentiment classes of unpublished meaning: not safety, not vulnerability, not routing.",
+    "Romanised text; much of it may be Urdu-leaning or political rather than helpline register.",
+    "Present only as a loose CSV; the Kaggle archive was not kept, so archive safety could not be checked.",
+    "Not clinically or linguistically validated."
+   ],
+   "date_checked": "2026-09-11",
+   "evidence_urls": [
+    "https://www.kaggle.com/datasets/ankitlakra24/hinglish-sentiment-analysis",
+    "https://www.kaggle.com/datasets/ankitlakra24/hinglish-sentiment-analysis/croissant/download"
+   ],
+   "unresolved_questions": [
+    "Identification: the Kaggle metadata lists exactly FinalTrainingOnly.csv with three fields, and the fields it shows are the file's first data row, which matches the local first row by hash. Strongly supported, not publisher-confirmed.",
+    "What do classes 0, 1 and 2 mean? Not published.",
+    "Where does the text come from, and who holds rights in it?",
+    "No external decision (EXT entry) exists for this dataset in docs/EXTERNAL_DECISIONS.md."
+   ],
+   "download_status": "downloaded",
+   "ext_decision": "none recorded",
+   "holdout_status": "not_holdout",
+   "sahay_dimension_mappings": {},
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": ["real_user_generated_text", "minors_possible", "personal_names_not_reliably_redacted"]
   }
  ]
 }

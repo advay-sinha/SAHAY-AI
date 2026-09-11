@@ -36,7 +36,7 @@ Registry id `dreaddit`. **Status: `licence_pending`. No use is approved.** Check
 
 **Approved uses:** none.
 
-**Permitted handling today:** registry metadata, checksum and ZIP-directory audit only.
+**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, training, tuning or evaluation data.
 
 **Prohibited uses:**
 - training, evaluation or threshold tuning;
@@ -48,3 +48,5 @@ Registry id `dreaddit`. **Status: `licence_pending`. No use is approved.** Check
 - victim-facing output;
 - uploading to any external service;
 - committing derived text.
+
+**Invariant 8 and sensitivity.** Sensitivity flags: `real_user_generated_text`, `potential_victim_narratives`, `minors_possible`, `personal_names_not_reliably_redacted`. This dataset may contain authentic sensitive narratives; offline aggregation and redaction reduce exposure but do not make them simulated. It is accepted only as private, offline exploratory research and must never be used in the MVP, the product, the demo, training, tuning, the locked corpus or any official evaluation.
