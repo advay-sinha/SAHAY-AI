@@ -1,4 +1,4 @@
-import { turnNumber } from "../../console/logic";
+import { formatAcknowledgedBy, turnNumber } from "../../console/logic";
 import type { PacketAlert, PacketTurn } from "../../types/packet";
 
 /** Alerts sit at the top of the workspace and require acknowledgement. */
@@ -20,7 +20,7 @@ export function AlertsPanel({
 }) {
   if (alerts.length === 0) {
     return (
-      <section aria-labelledby="alerts-h" className="border border-neutral-300 p-3">
+      <section aria-labelledby="alerts-h" className="panel p-3">
         <h2 id="alerts-h" className="font-semibold">Safety alerts</h2>
         <p className="text-sm text-neutral-700">No safety alerts.</p>
       </section>
@@ -35,7 +35,7 @@ export function AlertsPanel({
           <article
             key={a.id}
             role={pending ? "alert" : undefined}
-            className={`border-2 p-2 ${pending ? "border-red-800 bg-red-50" : "border-neutral-400"}`}
+            className={`rounded border p-3 ${pending ? "border-error bg-error text-on-error" : "border-secondary/50 bg-teal-50"}`}
           >
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <span className="font-semibold capitalize">
@@ -43,11 +43,11 @@ export function AlertsPanel({
               </span>
               {pending ? (
                 <button type="button" onClick={() => onAcknowledge(a.id)} disabled={readOnly || busyId === a.id}
-                  className="border border-red-900 px-2 py-0.5 text-sm font-medium">
+                  className="rounded border border-white px-2 py-1 text-sm font-semibold hover:bg-white hover:text-error">
                   {busyId === a.id ? "Acknowledging…" : "Acknowledge"}
                 </button>
               ) : (
-                <span className="text-xs">Acknowledged by {a.acknowledged_by}</span>
+                <span className="text-xs">{formatAcknowledgedBy(a.acknowledged_by, a.acknowledged_at) ?? "Acknowledged"}</span>
               )}
             </div>
             <p className="mt-1 text-xs">

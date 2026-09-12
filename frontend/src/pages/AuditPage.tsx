@@ -2,12 +2,13 @@ import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { ConsoleIcon } from "../components/ConsoleIcon";
+import { filterAuditDetail } from "../console/logic";
 import type { AuditEntry, QueueItem } from "../types/packet";
 
-/**
- * Audit trail. /audit lists cases; /audit/:caseId shows every recorded event:
- * who (system or a named officer), what and when. Append-only on the server.
- */
+const actionTone = (action: string) => action.toLowerCase().includes("alert") ? "bg-error text-white" : action.toLowerCase().includes("decision") || action.toLowerCase().includes("ack") ? "bg-teal-100 text-teal-900" : "bg-surface-container text-on-surface";
+
+/** Append-only audit viewer. Details are allow-listed before presentation. */
 export function AuditPage() {
   const { caseId } = useParams();
   const { api } = useAuth();
@@ -15,59 +16,25 @@ export function AuditPage() {
   const [entries, setEntries] = useState<AuditEntry[] | null>(null);
   const [error, setError] = useState(false);
 
-  useEffect(() => {
-    setError(false);
-    setEntries(null);
-    const run = caseId ? api.audit(caseId).then(setEntries) : api.queue().then(setCases);
-    run.catch((err: unknown) => {
-      if (!(err instanceof ApiError && err.status === 401)) setError(true);
-    });
-  }, [api, caseId]);
+  useEffect(() => { setError(false); setEntries(null); const run = caseId ? api.audit(caseId).then(setEntries) : api.queue().then(setCases); run.catch((err: unknown) => { if (!(err instanceof ApiError && err.status === 401)) setError(true); }); }, [api, caseId]);
+  if (error) return <main className="p-6"><div className="panel p-5 text-error">The audit trail could not be loaded.</div></main>;
 
-  if (error) return <main className="p-6">The audit trail could not be loaded.</main>;
+  if (!caseId) return <main className="mx-auto max-w-6xl space-y-4 p-4 lg:p-6">
+    <header className="panel flex items-center gap-3 p-4"><span className="grid h-10 w-10 place-items-center rounded bg-surface-container"><ConsoleIcon name="audit" className="h-6 w-6 text-secondary" /></span><div><h1 className="text-headline-md">Audit Trail & Decision Ledger</h1><p className="text-xs text-on-surface-variant">Select a case to inspect its recorded events and human decisions.</p></div></header>
+    <section className="panel overflow-hidden">{cases === null ? <p className="p-6">Loading…</p> : cases.length === 0 ? <p className="p-6">No cases.</p> : <div className="overflow-x-auto"><table className="w-full text-sm"><thead className="bg-surface-container text-left text-[10px] uppercase tracking-wider"><tr><th className="px-4 py-2">Case reference</th><th className="px-4 py-2">Band</th><th className="px-4 py-2">Status</th><th className="px-4 py-2">Assigned officer</th><th className="px-4 py-2">Ledger</th></tr></thead><tbody>{cases.map((c) => <tr key={c.case_id} className="border-t border-outline-variant/40 hover:bg-surface-container-low"><td className="px-4 py-3 font-semibold">{c.reference}</td><td className="px-4 py-3"><span className={`badge ${c.band ? `badge-${c.band.toLowerCase()}` : "badge-nha"}`}>{c.band ?? "Needs Human Assessment"}</span></td><td className="px-4 py-3 capitalize">{c.status.replace(/_/g, " ")}</td><td className="px-4 py-3">{c.assigned_to ?? "Unassigned"}</td><td className="px-4 py-3"><Link to={`/audit/${c.case_id}`} className="btn-secondary">Open ledger</Link></td></tr>)}</tbody></table></div>}</section>
+  </main>;
 
-  if (!caseId) {
-    return (
-      <main className="mx-auto max-w-4xl p-6">
-        <h1 className="text-xl font-medium">Audit trail</h1>
-        {cases === null ? <p>Loading…</p> : cases.length === 0 ? <p>No cases.</p> : (
-          <ul className="mt-2 list-disc pl-5">
-            {cases.map((c) => (
-              <li key={c.case_id}><Link to={`/audit/${c.case_id}`} className="underline">{c.reference}</Link></li>
-            ))}
-          </ul>
-        )}
-      </main>
-    );
-  }
+  const systemEntries = entries?.filter((entry) => entry.actor_kind !== "human") ?? [];
+  const humanEntries = entries?.filter((entry) => entry.actor_kind === "human") ?? [];
 
-  return (
-    <main className="mx-auto max-w-5xl p-6">
-      <p className="text-sm"><Link to="/audit" className="underline">All cases</Link> · <Link to={`/cases/${caseId}`} className="underline">Open case</Link></p>
-      <h1 className="mt-1 text-xl font-medium">Audit trail</h1>
-      {entries === null ? <p>Loading…</p> : entries.length === 0 ? <p>No events recorded.</p> : (
-        <div className="overflow-x-auto">
-          <table className="mt-2 w-full text-sm">
-            <thead>
-              <tr className="border-b border-neutral-500 text-left">
-                <th scope="col">When</th><th scope="col">Actor</th><th scope="col">Event</th><th scope="col">Detail</th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((e, i) => (
-                <tr key={i} className="border-b border-neutral-200 align-top">
-                  <td className="whitespace-nowrap">{e.at ? new Date(e.at).toLocaleString() : "—"}</td>
-                  <td>{e.actor_kind === "human" ? e.actor : "system"}</td>
-                  <td className="font-mono text-xs">{e.action}</td>
-                  <td className="text-xs">
-                    {Object.entries(e.detail).map(([k, v]) => `${k}: ${typeof v === "object" ? JSON.stringify(v) : String(v)}`).join(" · ")}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </main>
-  );
+  return <main className="mx-auto max-w-[1400px] space-y-4 p-4 lg:p-6">
+    <header className="panel p-4"><div className="flex flex-wrap items-center gap-3"><ConsoleIcon name="audit" className="h-6 w-6" /><h1 className="text-headline-md">Case Decision Ledger</h1><span className="badge badge-low font-mono">{caseId}</span><span className="badge badge-success"><ConsoleIcon name="shield" className="h-3.5 w-3.5" /> Append-only record</span><div className="ml-auto flex gap-2"><Link to="/audit" className="btn-secondary">All cases</Link><Link to={`/cases/${caseId}`} className="btn-primary">Open case</Link></div></div><p className="mt-3 text-xs text-on-surface-variant">System outputs and officer actions remain visually distinct. Sensitive free-text fields are not rendered in this viewer.</p></header>
+    {entries !== null && <section className="grid gap-4 lg:grid-cols-2" aria-label="System and human decision summary">
+      <article className="panel border-t-2 border-t-outline p-4"><div className="flex items-center justify-between"><h2 className="text-headline-sm">AI Ingestion & Recommendations</h2><span className="badge badge-low">Assistive · provisional</span></div><p className="mt-1 text-xs text-on-surface-variant">System-generated classifications remain separate from officer determinations.</p><div className="mt-3 flex flex-wrap gap-2">{systemEntries.length === 0 ? <span className="text-sm text-on-surface-variant">No system events.</span> : [...new Set(systemEntries.map((entry) => entry.action))].map((action) => <span key={action} className={`rounded px-2 py-1 font-mono text-[10px] ${actionTone(action)}`}>{action}</span>)}</div><strong className="mt-4 block text-2xl tabular-nums">{systemEntries.length}<span className="ml-2 text-xs font-normal text-on-surface-variant">recorded system events</span></strong></article>
+      <article className="panel border-t-2 border-t-secondary p-4"><div className="flex items-center justify-between"><h2 className="text-headline-sm">Final Officer Decisions & Actions</h2><span className="badge badge-success">Human controlled</span></div><p className="mt-1 text-xs text-on-surface-variant">Named human actions are recorded independently for accountability.</p><div className="mt-3 flex flex-wrap gap-2">{humanEntries.length === 0 ? <span className="text-sm text-on-surface-variant">No human events.</span> : [...new Set(humanEntries.map((entry) => entry.action))].map((action) => <span key={action} className={`rounded px-2 py-1 font-mono text-[10px] ${actionTone(action)}`}>{action}</span>)}</div><strong className="mt-4 block text-2xl tabular-nums">{humanEntries.length}<span className="ml-2 text-xs font-normal text-on-surface-variant">recorded human events</span></strong></article>
+    </section>}
+    <section className="panel overflow-hidden" aria-labelledby="ledger-h"><div className="flex items-center justify-between border-b border-outline-variant/50 p-4"><div><h2 id="ledger-h" className="text-headline-sm">Chronological immutable event audit trail</h2><p className="text-xs text-on-surface-variant">Every available event for this case, in server-provided order.</p></div><span className="badge badge-success">{entries?.length ?? 0} events</span></div>
+      {entries === null ? <p className="p-6">Loading…</p> : entries.length === 0 ? <p className="p-6">No events recorded.</p> : <div className="overflow-x-auto"><table className="w-full min-w-[800px] text-xs"><thead className="bg-surface-container text-left text-[10px] uppercase tracking-wider"><tr><th className="px-4 py-2">Timestamp</th><th className="px-4 py-2">Actor & role</th><th className="px-4 py-2">Classification</th><th className="px-4 py-2">Safe event detail</th></tr></thead><tbody>{entries.map((e, i) => { const safe = filterAuditDetail(e.detail); return <tr key={`${e.at}-${i}`} className="border-t border-outline-variant/40 align-top hover:bg-surface-container-low"><td className="whitespace-nowrap px-4 py-3 font-mono">{e.at ? new Date(e.at).toLocaleString() : "—"}</td><td className="px-4 py-3"><strong className="block">{e.actor_kind === "human" ? e.actor : "System"}</strong><span className="text-[10px] uppercase text-on-surface-variant">{e.actor_kind}</span></td><td className="px-4 py-3"><span className={`rounded px-2 py-1 font-mono text-[10px] font-semibold ${actionTone(e.action)}`}>{e.action}</span></td><td className="px-4 py-3">{Object.keys(safe).length === 0 ? <span className="text-on-surface-variant">No displayable detail</span> : <dl className="flex flex-wrap gap-x-3 gap-y-1">{Object.entries(safe).map(([k, v]) => <div key={k} className="flex gap-1"><dt className="font-semibold">{k.replace(/_/g, " ")}:</dt><dd>{typeof v === "object" ? JSON.stringify(v) : String(v)}</dd></div>)}</dl>}</td></tr>; })}</tbody></table></div>}
+    </section>
+  </main>;
 }

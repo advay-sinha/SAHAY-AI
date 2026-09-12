@@ -25,7 +25,7 @@ export function RecommendationsPanel({
 }) {
   if (packet.recommendations.length === 0) {
     return (
-      <section aria-labelledby="recs-h" className="border border-neutral-300 p-3">
+      <section aria-labelledby="recs-h" className="panel p-3">
         <h2 id="recs-h" className="font-semibold">Recommendations</h2>
         <p className="text-sm text-neutral-700">
           {packet.assessment.band === null
@@ -36,8 +36,8 @@ export function RecommendationsPanel({
     );
   }
   return (
-    <section aria-labelledby="recs-h" className="space-y-3">
-      <h2 id="recs-h" className="font-semibold">Recommendations</h2>
+    <section aria-labelledby="recs-h" className="panel space-y-3 p-3">
+      <h2 id="recs-h" className="text-headline-sm">Recommended Support Pathways</h2>
       {!canDecide && blockedReason && <p className="text-xs text-neutral-700">{blockedReason}</p>}
       {packet.recommendations.map((r) => (
         <RecommendationItem key={r.action_id} rec={r} packet={packet} canDecide={canDecide}
@@ -80,7 +80,7 @@ function RecommendationItem({
 
   return (
     <div>
-      <article className="border border-dashed border-neutral-500 p-2" aria-label={`Suggested: ${rec.label}`}>
+      <article className="rounded border border-dashed border-outline bg-surface-container-low p-3" aria-label={`Suggested: ${rec.label}`}>
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h3 className="font-medium">{rec.label}</h3>
           <span className="text-xs uppercase tracking-wide">
@@ -105,7 +105,7 @@ function RecommendationItem({
               {(["confirm", "modify", "reject"] as const).map((d) => (
                 <button key={d} type="button" aria-pressed={choice === d}
                   onClick={() => { setChoice(d); setError(null); }}
-                  className={`border px-2 py-0.5 text-sm capitalize ${choice === d ? "border-neutral-900 bg-neutral-900 text-white" : "border-neutral-500"}`}>
+                  className={`rounded border px-2 py-1 text-sm capitalize ${choice === d ? "border-primary bg-primary text-white" : "border-outline-variant bg-white"}`}>
                   {d}
                 </button>
               ))}
@@ -120,7 +120,7 @@ function RecommendationItem({
                   className="mt-1 w-full border border-neutral-500 p-1 text-sm" />
                 {error && <p role="alert" className="text-xs text-red-800">{error}</p>}
                 <button type="button" onClick={submit} disabled={busy}
-                  className="mt-1 border border-neutral-900 px-3 py-0.5 text-sm font-medium">
+                  className="btn-primary mt-2">
                   {busy ? "Recording…" : `Record ${choice}`}
                 </button>
               </div>
@@ -130,7 +130,7 @@ function RecommendationItem({
       </article>
 
       {decision && (
-        <div className="ml-4 border-l-4 border-neutral-900 bg-neutral-50 p-2 text-sm" aria-label="Officer decision">
+        <div className="ml-4 border-l-4 border-secondary bg-teal-50 p-2 text-sm" aria-label="Officer decision">
           <span className="font-semibold capitalize">Officer decision: {decision.decision}</span>
           <span className="text-xs text-neutral-700"> — {decision.officer}
             {decision.decided_at ? `, ${new Date(decision.decided_at).toLocaleString()}` : ""}</span>
