@@ -1,40 +1,46 @@
-import { Pressable, Text } from "react-native";
+import { Pressable, Text, View } from "react-native";
 import { t } from "../i18n";
+import { pressFeedbackStyle, theme, typeStyles } from "../theme";
+import { DecorativeMark } from "./Presentation";
 
-interface TalkToPersonButtonProps {
-  busy?: boolean;
-  disabled?: boolean;
-  label?: string;
+interface Props {
   onPress: () => void;
+  disabled?: boolean;
+  busy?: boolean;
+  label?: string;
 }
 
-/**
- * Persistent on every conversational screen. One tap, immediate, never in a
- * menu, never buried or delayed. Available regardless of consent state.
- */
-export function TalkToPersonButton({
-  busy = false,
-  disabled = false,
-  label = t("human.button"),
-  onPress,
-}: TalkToPersonButtonProps) {
+export function TalkToPersonButton({ onPress, disabled = false, busy = false, label = t("human.button") }: Props) {
   return (
     <Pressable
-      accessibilityRole="button"
       accessibilityLabel={label}
+      accessibilityRole="button"
       accessibilityState={{ busy, disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={{
-        justifyContent: "center",
-        minHeight: 56,
-        opacity: disabled ? 0.65 : 1,
-        paddingHorizontal: 16,
-      }}
+      style={({ pressed }) => [
+        {
+          alignItems: "center",
+          backgroundColor: disabled ? theme.colors.disabled : theme.colors.navySecondary,
+          borderColor: disabled ? theme.colors.outline : theme.colors.navySecondary,
+          borderRadius: theme.radius.large,
+          borderWidth: 1,
+          flexDirection: "row",
+          gap: theme.space.md,
+          minHeight: 56,
+          paddingHorizontal: theme.space.lg,
+          paddingVertical: theme.space.md,
+        },
+        pressed && !disabled ? pressFeedbackStyle : null,
+      ]}
     >
-      <Text allowFontScaling style={{ fontSize: 18 }}>
-        {label}
-      </Text>
+      <DecorativeMark pattern="pair" size={36} tone="teal" />
+      <Text allowFontScaling style={[typeStyles.label, { color: theme.colors.card, flex: 1 }]}>{label}</Text>
+      <View
+        accessibilityElementsHidden
+        importantForAccessibility="no-hide-descendants"
+        style={{ width: 20, height: 20, borderColor: theme.colors.tealSoft, borderRadius: 10, borderWidth: 2 }}
+      />
     </Pressable>
   );
 }

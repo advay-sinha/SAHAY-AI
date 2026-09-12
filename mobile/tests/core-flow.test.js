@@ -50,13 +50,17 @@ function acceptDisabledPresentation(source, declined) {
 test("language and home use flexible scroll-safe root layouts", () => {
   for (const screen of ["LanguageScreen.tsx", "HomeScreen.tsx"]) {
     const source = readScreen(screen);
-    assert.match(source, /<ScrollView[\s\S]*contentContainerStyle=\{\{\s*flexGrow:\s*1/);
+    assert.match(source, /<SafeScreen>/);
+    assert.match(source, /<ScrollView[\s\S]*contentContainerStyle=\{\{[\s\S]*?flexGrow:\s*1/);
     assert.match(source, /style=\{\{\s*flex:\s*1\s*\}\}/);
-    assert.doesNotMatch(source, /<View\s+style=\{\{\s*flex:\s*1/);
+    assert.match(source, /backgroundColor:\s*theme\.colors\.canvas/);
   }
+  const home = readScreen("HomeScreen.tsx");
+  assert.ok(home.indexOf("<AiDisclosure />") < home.indexOf("<ScrollView"));
+  assert.ok(home.indexOf("<PersistentFooter>") > home.indexOf("</ScrollView>"));
 });
 
-test("language offers accessible Hindi and English 48px controls", () => {
+test("language offers balanced accessible Hindi and English controls", () => {
   const source = readScreen("LanguageScreen.tsx");
   assert.match(source, /onSelectLanguage:\s*\(lang:\s*Lang\)\s*=>\s*void/);
   assert.match(source, /onSelectLanguage\(["']hi["']\)/);
@@ -66,7 +70,8 @@ test("language offers accessible Hindi and English 48px controls", () => {
   assert.equal((source.match(/accessibilityRole="button"/g) ?? []).length, 2);
   assert.equal((source.match(/accessibilityLabel=/g) ?? []).length, 2);
   assert.match(source, /accessibilityState=/);
-  assert.match(source, /minHeight:\s*48/);
+  assert.match(source, /minHeight:\s*88/);
+  assert.equal((source.match(/height:\s*28,\s*width:\s*28/g) ?? []).length, 2);
 });
 
 test("consent starts undecided with either choice available", () => {
@@ -89,7 +94,9 @@ test("consent starts undecided with either choice available", () => {
   assert.equal((source.match(/accessibilityRole="button"/g) ?? []).length, 2);
   assert.match(source, /accessibilityState=\{\{\s*disabled:\s*declined,\s*selected:\s*declined\s*\}\}/);
   assert.match(source, /disabled=\{declined\}/);
-  assert.match(source, /minHeight:\s*48/);
+  assert.match(source, /minHeight:\s*theme\.size\.button/);
+  assert.match(source, /<SurfaceCard elevated tone="navy"/);
+  assert.equal((source.match(/\["consent\.[^"]+",/g) ?? []).length, 4);
 });
 
 test("decline then accept invokes only decline", () => {
@@ -192,5 +199,7 @@ test("home enables Talk, Chat, My Requests, and the human request", () => {
   assert.match(source, /onPress=\{onOpenRequests\}/);
   assert.equal((source.match(/accessibilityState=\{\{\s*disabled:\s*false\s*\}\}/g) ?? []).length, 3);
   assert.match(source, /accessibilityRole="button"/);
-  assert.match(source, /minHeight:\s*48/);
+  assert.match(source, /minHeight:\s*168/);
+  assert.match(source, /minHeight:\s*84/);
+  assert.match(source, /<PersistentFooter>[\s\S]*<TalkToPersonButton onPress=\{onRequestHuman\}/);
 });
