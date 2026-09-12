@@ -10,7 +10,7 @@ Install now only after approval:
 - VS Code or another editor
 - a physical Android phone for the later mobile gate
 
-FFmpeg, Android SDK/ADB, Docker, PostgreSQL and Redis are intentionally deferred until their features need them.
+FFmpeg, Android SDK/ADB, Docker and Redis are intentionally deferred until their features need them. The backend runtime uses an explicitly configured Supabase PostgreSQL development/demo project.
 
 **Node version:** the project targets **Node.js 24 LTS** (24.19.0 installed 2026-09-10). Node 20 is end of life and Node 23 was never an LTS line. Node 22 was the original target, but it has moved to maintenance and is no longer offered by `winget` under `OpenJS.NodeJS.LTS`, which now tracks the active LTS line. `frontend/package.json` and `mobile/package.json` both declare `"engines": { "node": ">=24.0.0 <25.0.0" }`. Recorded as EXT-113 in `docs/EXTERNAL_DECISIONS.md`.
 
@@ -49,15 +49,30 @@ ml/.venv/
 
 Frontend and mobile have independent `package.json` and lockfiles. Never install project packages globally.
 
-## Local persistence
+## Backend persistence
 
-Use `sqlite+aiosqlite:///./runtime/db/sahay.db`, enable foreign keys, WAL and a busy timeout. Use Alembic from the beginning so a later PostgreSQL migration is controlled.
+The normal backend runtime is Supabase PostgreSQL through SQLAlchemy and the asynchronous PostgreSQL driver. FastAPI remains the only application database gateway; web and mobile clients receive no Supabase key or database credential.
+
+Copy `.env.example` to the ignored `.env` and obtain connection strings from the Supabase dashboard's Connect panel. Use a direct connection for a persistent backend with IPv6 access. On an IPv4-only development machine, use the Session pooler on port 5432. Do not use transaction pooling on port 6543: it has different prepared-statement and session semantics and is rejected by configuration.
+
+`DATABASE_URL` is the runtime connection. Set `MIGRATION_DATABASE_URL` to a separate direct, migration-safe connection when available. Both must require TLS. Never place either value in source, documentation, shell history, client configuration or test output.
+
+Normal startup has no SQLite fallback. Disposable SQLite remains available only when `APP_ENV=test` for unit/integration tests, migration compatibility checks and the guarded local scenario/reset scripts.
+
+Run migrations from `backend/`:
+
+```powershell
+.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m alembic check
+```
+
+Before the first Supabase migration, perform the read-only preflight and obtain explicit authorization for the sanitized empty development/demo target. Existing SQLite data is never transferred automatically.
 
 ## Console authentication (local MVP)
 
 Contract: `POST /auth/login → {token, role}` (HANDOVER.md §12.4), Bearer-token JWT. Executive and Supervisor roles (EC-01). No cookies, no SSO/MFA — production authentication is out of MVP scope (HANDOVER.md §8).
 
-**Local-development accounts only.** `backend/seed/seed.py` creates `exec1`, `exec2` (executive) and `sup1` (supervisor). The password comes from `SEED_PASSWORD` in your environment, or is generated and printed once. No credential is committed, compiled into the frontend, or prefilled on the login page. Never reuse these accounts or passwords with real case data.
+**Local-development accounts only.** `backend/seed/seed.py` creates `exec1`, `exec2` (executive) and `sup1` (supervisor). The password comes from `SEED_PASSWORD` in your environment, or is generated and printed once. No credential is committed, compiled into the frontend, or prefilled on the login page. Never reuse these accounts or passwords with real case data. Remote seeding is denied by default and must not be run until schema verification and separate authorization are complete.
 
 ```powershell
 $env:SEED_PASSWORD = "<choose a local-only password>"
@@ -92,6 +107,10 @@ UI role checks are navigation only. The backend checks the token and role on eve
 ## Manual verification
 
 Until CI is approved, run focused tests, lint and builds through `scripts/verify-local.ps1`. A designated integration owner runs the complete scenario on the demo machine before merging local team branches.
+
+## Database recovery boundary
+
+Alembic creates schema; it does not copy the old SQLite file. Preserve existing SQLite files and sidecars unchanged. Do not reset, truncate or clean a Supabase target. If preflight finds an application table, migration revision or unexpected data, stop and select a newly confirmed empty development/demo project. The security migration's downgrade intentionally does not restore broad client grants or disable RLS.
 
 ## Team isolation on one machine
 

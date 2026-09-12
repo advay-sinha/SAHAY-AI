@@ -2,7 +2,6 @@
 
 from contextlib import closing
 import json
-import os
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -10,12 +9,14 @@ import sys
 import tempfile
 import unittest
 
+from backend.tests import disposable_sqlite_subprocess_env
+
 
 class TestLegacyMigrationToHead(unittest.TestCase):
     REPO = Path(__file__).resolve().parents[2]
     BACKEND = REPO / "backend"
     PRE_HEAD = "4abeb4233bf7"
-    HEAD = "7fbad9360da7"
+    HEAD = "2d6e3f4a5b6c"
 
     def alembic(self, env, *arguments):
         return subprocess.run(
@@ -30,8 +31,7 @@ class TestLegacyMigrationToHead(unittest.TestCase):
     def test_released_migration_copies_only_eligible_legacy_audit_data(self):
         with tempfile.TemporaryDirectory() as tmp:
             database = Path(tmp) / "task3-legacy.db"
-            env = dict(os.environ)
-            env["DATABASE_URL"] = (
+            env = disposable_sqlite_subprocess_env(
                 "sqlite+aiosqlite:///" + database.as_posix()
             )
 
@@ -112,6 +112,12 @@ class TestLegacyMigrationToHead(unittest.TestCase):
                     ("session-task3", "chat", "en", "S1", 0, None, created),
                 )
                 connection.execute(
+                    "INSERT INTO sessions "
+                    "(id, channel, lang, state, human_joined, ended_at, created_at) "
+                    "VALUES (?, ?, ?, ?, ?, ?, ?)",
+                    ("session-joined", "chat", "en", "SH", 1, None, created),
+                )
+                connection.execute(
                     "INSERT INTO cases "
                     "(id, session_id, reference, band, claimed_by, taken_over_at, "
                     "structured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
@@ -122,6 +128,21 @@ class TestLegacyMigrationToHead(unittest.TestCase):
                         "Moderate",
                         "user-task3",
                         None,
+                        "{}",
+                        created,
+                    ),
+                )
+                connection.execute(
+                    "INSERT INTO cases "
+                    "(id, session_id, reference, band, claimed_by, taken_over_at, "
+                    "structured, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                    (
+                        "case-joined",
+                        "session-joined",
+                        "SAH-JOINED",
+                        "High",
+                        "user-task3",
+                        created,
                         "{}",
                         created,
                     ),
@@ -176,6 +197,11 @@ class TestLegacyMigrationToHead(unittest.TestCase):
                     "dedupe_key, created_at FROM audit_log ORDER BY id"
                 ).fetchall()
                 self.assertEqual(after, original)
+                joined = connection.execute(
+                    "SELECT id, human_joined_at FROM sessions ORDER BY id"
+                ).fetchall()
+                self.assertEqual(joined[0], ("session-joined", created))
+                self.assertEqual(joined[1], ("session-task3", None))
                 self.assertEqual(
                     connection.execute("SELECT version_num FROM alembic_version").fetchone(),
                     (self.HEAD,),

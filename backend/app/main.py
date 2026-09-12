@@ -1,6 +1,6 @@
 """FastAPI application entry point.
 
-Local MVP: one process, SQLite, mock LLM, local assessment runner.
+One process, PostgreSQL runtime, mock LLM, local assessment runner.
 Bound to 0.0.0.0 so a physical phone on the LAN can reach it.
 
 Requires the EXT-001 packages (approved and installed 2026-09-10). The
@@ -21,6 +21,7 @@ from .adapters.assessment_runner import runner
 from .api import router as api_router
 from .core import log_redaction
 from .core.config import get_settings
+from .core.db import dispose_engine
 from .core.errors import DomainError
 from .workers import assessment as _assessment_worker  # noqa: F401  (binds the job to the runner)
 from .schemas.contracts import HealthResponse
@@ -39,6 +40,7 @@ async def lifespan(app: FastAPI):
     # reproducible from the seed script.
     yield
     await runner.drain()  # let in-flight assessment cycles finish cleanly
+    await dispose_engine()
 
 
 app = FastAPI(
