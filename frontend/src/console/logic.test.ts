@@ -25,7 +25,7 @@ import {
   turnNumber,
   validateDecision,
   validateMessage,
-  validateOverride,
+  validateOverride, formatAcknowledgedBy, filterAuditDetail,
 } from "./logic";
 
 const DIMS = ["D1", "D2", "D3", "D4", "D5", "D6", "D7", "D8", "D9"] as const;
@@ -109,7 +109,6 @@ describe("assessment display", () => {
     expect(explainAbstention("something_new")).toBe("something new");
   });
 });
-
 describe("officer input validation", () => {
   it("modify and reject need a rationale; confirm does not", () => {
     expect(validateDecision("confirm", "")).toBeNull();
@@ -124,7 +123,6 @@ describe("officer input validation", () => {
     expect(validateOverride("High", "officer judgement")).toBeNull();
   });
 });
-
 describe("evidence", () => {
   it("only resolves ids that are real turns", () => {
     expect(resolveEvidence(["t1", "ghost", "t2"], TURNS)).toEqual(["t1", "t2"]);
@@ -229,3 +227,28 @@ describe("trajectory", () => {
     expect(high!.y!).toBeLessThan(low!.y!);
   });
 });
+
+describe("audit and alerts formatting", () => {
+  it("formats alert acknowledgement with timestamp", () => {
+    expect(formatAcknowledgedBy("Executive One", null)).toBe("Acknowledged by Executive One");
+    const at = "2026-09-11T12:00:00Z";
+    expect(formatAcknowledgedBy("Executive One", at)).toBe(`Acknowledged by Executive One at ${new Date(at).toLocaleString()}`);
+    expect(formatAcknowledgedBy(null, null)).toBeNull();
+  });
+
+  it("filters sensitive audit details", () => {
+    const raw = {
+      action_id: "act-1",
+      band: "High",
+      narrative: "Victim reported severe distress",
+      transcript_text: "Help me",
+      unknown_field: 42
+    };
+    const safe = filterAuditDetail(raw);
+    expect(safe).toEqual({
+      action_id: "act-1",
+      band: "High"
+    });
+  });
+});
+

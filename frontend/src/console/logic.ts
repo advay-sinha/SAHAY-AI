@@ -52,7 +52,6 @@ export function normalizationNote(a: PacketAssessment): string | null {
     `(divided by ${denominator.toFixed(2)}).`
   );
 }
-
 export function assessmentView(a: PacketAssessment): AssessmentView {
   if (a.suppressed) {
     return { mode: "suppressed", reason: a.reason ?? "Consent declined — no AI assessment." };
@@ -238,3 +237,31 @@ export const BAND_BOUNDS: { band: Band; from: number; to: number }[] = [
   { band: "High", from: 55, to: 74 },
   { band: "Critical", from: 75, to: 100 },
 ];
+
+// ---------------------------------------------------------------------------
+// Audit and Alerts formatting
+// ---------------------------------------------------------------------------
+
+export function formatAcknowledgedBy(name: string | null, at: string | null): string | null {
+  if (!name) return null;
+  if (!at) return `Acknowledged by ${name}`;
+  return `Acknowledged by ${name} at ${new Date(at).toLocaleString()}`;
+}
+
+export const SAFE_DETAIL_KEYS = new Set([
+  "stage", "timeline_event_id", "officer_id", "previous_status",
+  "alert_id", "alert_type", "decision_id", "action_id", "decision",
+  "override_id", "band", "from_band", "to_band", "turn_id", "session_id",
+  "channel", "state", "reason", "intent", "audio", "trigger_turn_ids",
+  "severity", "evidence", "from_severity", "to_severity", "recommendation_id",
+]);
+
+export function filterAuditDetail(detail: Record<string, unknown>): Record<string, unknown> {
+  const safe: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(detail)) {
+    if (SAFE_DETAIL_KEYS.has(k)) {
+      safe[k] = v;
+    }
+  }
+  return safe;
+}

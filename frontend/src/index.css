@@ -1,3 +1,76 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    overscroll-behavior: none;
+  }
+
+  body {
+    font-family: "Segoe UI", "Nirmala UI", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 20px;
+    color: #0b1c30;
+    background: #f8f9ff;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  :focus-visible { @apply outline-none ring-2 ring-secondary ring-offset-2; }
+  button, a, select, input, textarea { @apply transition-colors; }
+}
+
+@layer components {
+  /* ── Typography classes matching the Civic Operations design system ── */
+  .text-headline-xl { font-family: "Segoe UI", system-ui, sans-serif; font-size: 32px; line-height: 40px; font-weight: 700; letter-spacing: -0.02em; }
+  .text-headline-lg { font-family: "Segoe UI", system-ui, sans-serif; font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.015em; }
+  .text-headline-md { font-family: "Segoe UI", system-ui, sans-serif; font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .text-headline-sm { font-family: "Segoe UI", system-ui, sans-serif; font-size: 16px; line-height: 24px; font-weight: 600; letter-spacing: -0.005em; }
+  .text-body-lg { font-family: "Segoe UI", "Nirmala UI", system-ui, sans-serif; font-size: 16px; line-height: 24px; font-weight: 400; }
+  .text-body-md { font-family: "Segoe UI", "Nirmala UI", system-ui, sans-serif; font-size: 14px; line-height: 20px; font-weight: 400; }
+  .text-body-sm { font-family: "Segoe UI", "Nirmala UI", system-ui, sans-serif; font-size: 12px; line-height: 16px; font-weight: 400; }
+  .text-label-md { font-family: "Segoe UI", system-ui, sans-serif; font-size: 13px; line-height: 16px; font-weight: 600; letter-spacing: 0.01em; }
+  .text-label-sm { font-family: "Segoe UI", system-ui, sans-serif; font-size: 11px; line-height: 14px; font-weight: 600; letter-spacing: 0.03em; }
+  .text-code-sm { font-family: ui-monospace, monospace; font-size: 12px; line-height: 16px; font-weight: 500; letter-spacing: 0.02em; }
+
+  /* ── Panel container used for data cards and sections ── */
+  .panel {
+    @apply rounded-lg border border-outline-variant/50 bg-surface-container-lowest;
+  }
+
+  /* ── Status badges ── */
+  .badge {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded text-label-sm font-semibold;
+  }
+  .badge-critical { @apply bg-error text-on-error; }
+  .badge-high { @apply bg-on-tertiary-container/20 text-on-tertiary-container; }
+  .badge-moderate { @apply bg-surface-container-highest text-on-surface; }
+  .badge-low { @apply bg-surface-container text-on-surface-variant; }
+  .badge-nha { @apply bg-surface-container-high text-on-surface-variant border border-outline-variant; }
+  .badge-success { @apply bg-secondary/10 text-secondary; }
+
+  /* ── Button base classes ── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1 px-4 py-2 bg-primary text-on-primary rounded text-label-md font-semibold transition-colors hover:bg-primary/80 disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-surface-container-lowest border border-outline-variant text-on-surface rounded text-label-sm transition-colors hover:bg-surface-container;
+  }
+  .btn-confirm {
+    @apply inline-flex items-center justify-center gap-1 px-4 py-2 bg-secondary text-on-secondary rounded text-label-md font-semibold transition-colors hover:bg-secondary/90 disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-1 px-3 py-1.5 bg-error text-on-error rounded text-label-sm font-semibold transition-colors hover:bg-error/90 disabled:opacity-50;
+  }
+
+  /* ── Section header ── */
+  .section-header {
+    @apply flex items-center justify-between pb-2;
+  }
+  .section-title {
+    @apply text-headline-sm text-on-surface;
+  }
+}

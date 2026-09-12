@@ -17,7 +17,7 @@ export function AssessmentPanel({
 
   if (view.mode === "suppressed") {
     return (
-      <section aria-labelledby="assess-h" className="border border-neutral-400 p-3">
+      <section aria-labelledby="assess-h" className="panel border-l-4 border-l-outline p-3">
         <h2 id="assess-h" className="font-semibold">Assessment</h2>
         <p className="mt-1 text-sm">{view.reason}</p>
         <p className="mt-1 text-sm">Read the transcript and assess the case directly.</p>
@@ -27,7 +27,7 @@ export function AssessmentPanel({
 
   if (view.mode === "needs_human") {
     return (
-      <section aria-labelledby="assess-h" className="border-2 border-neutral-700 p-3" data-testid="needs-human">
+      <section aria-labelledby="assess-h" className="panel border-l-4 border-l-amber-600 p-3" data-testid="needs-human">
         <h2 id="assess-h" className="font-semibold">Needs Human Assessment</h2>
         <p className="mt-1 text-sm">
           The system has not produced a score for this case. Assess it from the transcript.
@@ -49,14 +49,14 @@ export function AssessmentPanel({
   }
 
   return (
-    <section aria-labelledby="assess-h" className="border border-neutral-400 p-3">
-      <h2 id="assess-h" className="font-semibold">Assessment</h2>
+    <section aria-labelledby="assess-h" className="panel overflow-hidden p-3">
+      <h2 id="assess-h" className="text-headline-sm">Structured Vulnerability Index (SVI)</h2>
       <div className="mt-1 flex flex-wrap items-baseline gap-x-4">
-        <span className="text-2xl tabular-nums" aria-label={`Stress vulnerability index ${view.svi}`}>
+        <span className="text-3xl font-bold tabular-nums" aria-label={`Stress vulnerability index ${view.svi}`}>
           {view.svi.toFixed(1)}
         </span>
-        <span className="text-lg font-medium">{view.band}</span>
-        <span className="text-sm">
+        <span className={`badge badge-${view.band.toLowerCase()}`}>{view.band}</span>
+        <span className="ml-auto text-sm font-semibold text-secondary">
           Confidence {view.confidence === null ? "—" : view.confidence.toFixed(2)}
         </span>
       </div>
@@ -67,10 +67,10 @@ export function AssessmentPanel({
       {view.normalizationNote && (
         <p className="mt-1 text-xs text-neutral-700" data-testid="normalization-note">{view.normalizationNote}</p>
       )}
-      <table className="mt-2 w-full text-sm">
+      <div className="mt-3 overflow-x-auto"><table className="w-full text-xs">
         <caption className="sr-only">Dimension breakdown</caption>
         <thead>
-          <tr className="text-left">
+          <tr className="bg-surface-container text-left text-[10px] uppercase tracking-wide">
             <th scope="col">Dimension</th>
             <th scope="col" className="text-right">Weight</th>
             <th scope="col" className="text-right">Score</th>
@@ -80,7 +80,7 @@ export function AssessmentPanel({
         </thead>
         <tbody>
           {view.rows.map((r) => (
-            <tr key={r.dimension} className="border-t border-neutral-200 align-top">
+            <tr key={r.dimension} className="border-t border-outline-variant/40 align-top">
               <th scope="row" className="py-1 text-left font-normal">
                 {r.dimension} · {r.label}
               </th>
@@ -102,7 +102,7 @@ export function AssessmentPanel({
             </tr>
           ))}
         </tbody>
-      </table>
+      </table></div>
     </section>
   );
 }
