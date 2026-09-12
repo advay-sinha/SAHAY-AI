@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MAX_MESSAGE_CHARS, validateMessage, validateOverride } from "../../console/logic";
+import { isVerifiedTakeover, MAX_MESSAGE_CHARS, validateMessage, validateOverride } from "../../console/logic";
 import type { Band } from "../../types/contracts";
 import type { CasePacket } from "../../types/packet";
 
@@ -34,8 +34,17 @@ export function DecisionControls({
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [takeoverError, setTakeoverError] = useState<string | null>(null);
+  const [takeoverBusy, setTakeoverBusy] = useState(false);
   const [busy, setBusy] = useState(false);
-  const taken = packet.header.status === "taken_over";
+  const taken = isVerifiedTakeover(packet);
+
+  async function submitTakeover() {
+    setTakeoverBusy(true);
+    setTakeoverError(null);
+    const failure = await onTakeover();
+    setTakeoverBusy(false);
+    setTakeoverError(failure);
+  }
 
   async function submitOverride() {
     const invalid = validateOverride(band, reason);
@@ -60,10 +69,11 @@ export function DecisionControls({
         <p className="text-xs text-neutral-700">
           Mutes the assistant and tells the complainant a person has joined.
         </p>
-        <button type="button" disabled={!canAct || taken || busy}
-          onClick={async () => setTakeoverError(await onTakeover())}
+        <button type="button" disabled={!canAct || taken || takeoverBusy || busy}
+          aria-busy={takeoverBusy}
+          onClick={() => void submitTakeover()}
           className="btn-confirm mt-1">
-          {taken ? "You have taken over" : "Take over"}
+          {taken ? "You have taken over" : takeoverBusy ? "Taking over\u2026" : "Take over"}
         </button>
         {takeoverError && <p role="alert" className="text-xs text-red-800">{takeoverError}</p>}
       </div>

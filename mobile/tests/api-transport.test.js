@@ -1,5 +1,7 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
 const {
   ApiError,
   createSession,
@@ -26,11 +28,54 @@ function response(status, value) {
 }
 
 test("API base URL accepts HTTPS and local-development HTTP only", () => {
-  assert.equal(validateApiBaseUrl("https://demo.invalid", false), "https://demo.invalid");
-  assert.equal(validateApiBaseUrl("http://192.168.1.9:8000", true), "http://192.168.1.9:8000");
-  assert.throws(() => validateApiBaseUrl("http://demo.invalid", false), ApiError);
-  assert.throws(() => validateApiBaseUrl("ftp://localhost", true), ApiError);
-  assert.throws(() => validateApiBaseUrl("https://demo.invalid/path", false), ApiError);
+  assert.equal(validateApiBaseUrl("https://demo.invalid", { buildEnvironment: "production" }), "https://demo.invalid");
+  assert.equal(validateApiBaseUrl("http://192.168.1.9:8000", { isDevelopment: true }), "http://192.168.1.9:8000");
+  assert.throws(() => validateApiBaseUrl("http://demo.invalid"), ApiError);
+  assert.throws(() => validateApiBaseUrl("ftp://localhost", { isDevelopment: true }), ApiError);
+  assert.throws(() => validateApiBaseUrl("https://demo.invalid/path"), ApiError);
+});
+
+test("release preview HTTP requires an explicit loopback-only configuration", () => {
+  const preview = { buildEnvironment: "preview", allowHttpLoopback: true };
+  assert.equal(validateApiBaseUrl("http://127.0.0.1:18000", preview), "http://127.0.0.1:18000");
+  assert.equal(validateApiBaseUrl("http://localhost:18000", preview), "http://localhost:18000");
+  assert.throws(() => validateApiBaseUrl("http://127.0.0.1:18000", { buildEnvironment: "preview" }), ApiError);
+  assert.throws(() => validateApiBaseUrl("http://192.168.1.9:18000", preview), ApiError);
+  assert.throws(() => validateApiBaseUrl("http://demo.invalid", preview), ApiError);
+});
+
+test("production rejects plain HTTP even if development or loopback flags are set", () => {
+  const production = {
+    isDevelopment: true,
+    buildEnvironment: "production",
+    allowHttpLoopback: true,
+  };
+  assert.throws(() => validateApiBaseUrl("http://127.0.0.1:18000", production), ApiError);
+  assert.throws(() => validateApiBaseUrl("http://192.168.1.9:18000", production), ApiError);
+});
+
+test("EAS preview uses device port 18000 without granting production an HTTP opt-in", () => {
+  const eas = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "eas.json"), "utf8"));
+  assert.equal(eas.build.preview.env.EXPO_PUBLIC_API_URL, "http://127.0.0.1:18000");
+  assert.equal(eas.build.preview.env.EXPO_PUBLIC_BUILD_ENVIRONMENT, "preview");
+  assert.equal(eas.build.preview.env.EXPO_PUBLIC_ALLOW_HTTP_LOOPBACK, "true");
+  assert.equal(eas.build.production.env.EXPO_PUBLIC_BUILD_ENVIRONMENT, "production");
+  assert.equal(eas.build.production.env.EXPO_PUBLIC_API_URL, undefined);
+  assert.equal(eas.build.production.env.EXPO_PUBLIC_ALLOW_HTTP_LOOPBACK, undefined);
+});
+
+test("Android cleartext manifest policy is preview-only", () => {
+  const { setCleartextPolicy } = require("../plugins/withPreviewCleartextTraffic");
+  const manifest = () => ({
+    manifest: {
+      application: [{ $: { "android:name": ".MainApplication", "android:usesCleartextTraffic": "placeholder" } }],
+    },
+  });
+
+  const preview = setCleartextPolicy(manifest(), "preview");
+  assert.equal(preview.manifest.application[0].$["android:usesCleartextTraffic"], "true");
+  const production = setCleartextPolicy(manifest(), "production");
+  assert.equal(production.manifest.application[0].$["android:usesCleartextTraffic"], "false");
 });
 
 test("session response validator rejects missing and extra keys", () => {

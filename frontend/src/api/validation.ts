@@ -171,4 +171,4 @@ export const validateOverride = (value: unknown) => accept(value, (candidate): c
   exact(candidate, ["override_id", "case_id", "from_band", "to_band", "reason"]) && nonempty(candidate.override_id)
   && nonempty(candidate.case_id) && band(candidate.from_band) && oneOf(BANDS)(candidate.to_band) && string(candidate.reason));
 export const validateTakeover = (value: unknown) => accept(value, (candidate): candidate is { case_id: string; status: string } =>
-  exact(candidate, ["case_id", "status"]) && nonempty(candidate.case_id) && string(candidate.status));
+  exact(candidate, ["case_id", "status"]) && nonempty(candidate.case_id) && candidate.status === "taken_over");

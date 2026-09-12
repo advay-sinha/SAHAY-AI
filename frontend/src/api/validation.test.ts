@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { createApiClient } from "./client";
-import { ResponseValidationError, validateHealth, validateTimeline } from "./validation";
+import { ResponseValidationError, validateHealth, validateTakeover, validateTimeline } from "./validation";
 import { validateAuthOk, validateSocketEvent } from "./socketValidation";
 
 const HEALTH = {
@@ -54,6 +54,12 @@ describe("exact REST response validation", () => {
     for (const operation of operations) {
       await expect(operation).rejects.toMatchObject({ status: 502 });
     }
+  });
+
+  it("accepts only the durable taken-over acknowledgement", () => {
+    const accepted = { case_id: "case-fictional", status: "taken_over" };
+    expect(validateTakeover(accepted)).toEqual(accepted);
+    expect(() => validateTakeover({ ...accepted, status: "claimed" })).toThrow(ResponseValidationError);
   });
 });
 

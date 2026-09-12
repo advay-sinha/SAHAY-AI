@@ -60,6 +60,8 @@ def prepare_database(db_path: Path, reset: bool) -> None:
     if not str(db_path).startswith(str(RUNTIME_DB)):
         raise SystemExit(f"refusing: {db_path} is outside {RUNTIME_DB} (only runtime/db is disposable)")
     os.environ["DATABASE_URL"] = f"sqlite+aiosqlite:///{db_path.as_posix()}"
+    os.environ["MIGRATION_DATABASE_URL"] = os.environ["DATABASE_URL"]
+    os.environ["APP_ENV"] = "test"
     # Seed accounts get a local-only password; it is never printed.
     os.environ.setdefault("SEED_PASSWORD", "scenario-local-only-" + uuid.uuid4().hex[:8])
     if reset:

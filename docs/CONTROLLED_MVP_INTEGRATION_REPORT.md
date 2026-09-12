@@ -4,113 +4,155 @@ Date: 2026-09-12
 
 Branch: `integration/controlled-mvp`
 
-Base: `origin/dev` at `cdae3b66caabf3701866330a063ed57dde63191f`
+## Stopping state
 
-## Scope and status
+The 52-path controlled text MVP was preserved first in local checkpoint commit `ec10d50` (`feat(integration): add controlled text MVP session and handoff`). Nothing was pushed.
 
-This is a supervised internal SIH demonstration using fictional data. It is not production-ready, clinically validated, approved for real victims, an official accuracy evaluation, or an autonomous emergency-response system.
+The updated `origin/dev` at `61689fa` is now merged with `--no-commit --no-ff`. `MERGE_HEAD` remains `61689fa88aa617c5d3490fc1e0a489987226f6d5`; all resolutions and integration fixes are staged, and the final merge commit has deliberately not been created.
 
-The approved text/session/timeline/handoff slice is implemented and verified. Nothing has been committed, pushed, merged into `dev`, deployed, or applied to PostgreSQL/Supabase. Voice, replay, persistent Mobile credentials, offline queues, automatic resend, D4, shadow-model product integration, and deployment remain deferred.
+This remains a supervised internal demonstration using fictional data. It is not production-ready, clinically validated, approved for real victims, or an autonomous emergency-response system.
 
-## Dependency setup
+## Incoming dev audit
 
-- Backend compatibility includes Python 3.12. `backend/.venv` uses Python 3.12 and the repository-pinned development requirements.
-- Frontend dependencies were restored with `npm ci` and the existing lockfile.
-- No dependency manifest or lockfile changed and no package was added or upgraded.
-- `npm ci` reported 10 existing audit findings. No unapproved `audit fix` was run.
+`cdae3b6..origin/dev` contains `a4507fe` and merge commit `61689fa`. The incoming change modifies 19 paths with 717 insertions and 89 deletions. It adds:
 
-## Implemented integration
+- SQLAlchemy URL normalization for encrypted PostgreSQL through `asyncpg`;
+- bounded pooling, pre-ping, connection and command timeouts;
+- separate runtime and migration database URLs;
+- sanitized configuration, migration and seed failures;
+- backend-only PostgreSQL RLS and privilege revocation;
+- guarded remote-demo seeding;
+- PostgreSQL metadata/configuration tests and SQLite migration compatibility tests;
+- the pinned `asyncpg==0.31.0` dependency and setup documentation.
 
-### Mobile REST and memory-only session
+FastAPI remains the only database gateway. Web and Mobile contain no PostgreSQL, Supabase, database URL or database credential integration.
 
-- `EXPO_PUBLIC_API_URL` is required and accepts only valid HTTP(S) origins. Plain HTTP is restricted to local development hosts.
-- `POST /sessions` is issued once after an explicit consent decision, is locked while pending, is never automatically retried, and accepts only the exact frozen nine-key response.
-- The root provider retains the session, bearer credential, pending IDs, and socket state only in process memory.
-- Authenticated timeline retrieval uses only the active session's `case_id`, sends the credential only in the `Authorization` header, validates the exact response, preserves server order and duplicates, clears the whole session on authentication failure, and discards stale responses.
-- Chat and handoff UI state changes only on the matching causal acknowledgement; local socket `send()` success is not treated as persistence.
+## Conflicts and semantic resolutions
 
-### Executive Web REST and socket validation
+Git reported one textual conflict in `backend/tests/test_legacy_migration.py`. Both branches extended the same migration test with different head IDs. The resolution retains upstream's historical-row assertions, retains PC-11 upgrade/downgrade coverage, uses the shared disposable SQLite environment helper, and expects the new merged head.
 
-- The frozen login response is exactly `{token, role, display_name}`; missing or extra keys fail closed.
-- Every successful REST response passes through an endpoint-specific runtime validator. Malformed successful responses become an unavailable/502 client error rather than rendered data.
-- Executive socket authentication uses the exact first frame and no URL credential. Domain events are accepted only after a matching non-victim `auth.ok` and exact runtime validation, including nested dimension, structured-case, alert, and escalation data.
-- Server ordering is preserved and reconnect recovery uses authoritative REST refetching without event replay or action resend.
+The following semantic overlaps were also reconciled:
 
-### Canonical WebSocket protocol (PC-11)
+- Upstream's two-head graph (`2d6e3f4a5b6c` and `9c7e2d4a11b0`) is joined by new forward-only revision `e4b7f8a9c012` without rewriting either branch revision.
+- The merge revision applies upstream's backend-only PostgreSQL posture to the PC-11 `human_requests` table.
+- Explicit SQLite URLs are accepted for `development`, `local` and `test`; `demo` and `production` still require encrypted PostgreSQL. `DATABASE_URL` remains required, so there is no silent fallback.
+- Reset and scenario commands set both `DATABASE_URL` and `MIGRATION_DATABASE_URL`, preventing an ignored `.env` from redirecting Alembic to another database.
+- `/health` reports database `configured`, not `ready`; it remains a liveness/configuration endpoint and does not probe database readiness.
+- `docs/LOCAL_SETUP.md` now documents the implemented first-frame WebSocket protocol, causal acknowledgements, REST recovery, no replay, local SQLite, backend-only Supabase, and commands that migrate and seed one physical SQLite file.
 
-- First frame within five seconds: exact `auth` with a nonempty bearer token.
-- First server response: exact `auth.ok` with path `session_id` and role `victim`, `executive`, or `supervisor`; no snapshot/domain event precedes it.
-- Any query component is rejected. Close codes are 4400 protocol, 4401 authentication/expiry, 4403 authorization, and 1011 internal/database failure, always with an empty reason.
-- Chat IDs match `^m:[1-9][0-9]{0,15}$`. Exact chat requests carry only ID, text, and `hi|en` language. Only leading/trailing whitespace is removed; canonical text is 1-2000 Unicode characters and language must match the session.
-- `chat.ack accepted` is sent only after commit and means only durable victim-turn persistence. Duplicate retries return the original opaque turn ID (maximum 64 characters); conflicting ID reuse is rejected without another insert.
-- Human IDs match `^h:[1-9][0-9]{0,15}$`. The human-request row and transition to `SH` commit atomically. `human_request.ack` is causal; `session.status: SH` is only a state event. Internal UTC `requested_at` is never returned to the victim.
-- Reconnect performs authentication, receives the current state snapshot, and refetches permitted REST resources. There is no event replay, automatic resend, persistent queue, or background replay.
+## Final Alembic graph
 
-### Database migration
+Exactly one head exists:
 
-Revision `9c7e2d4a11b0` (down revision `7fbad9360da7`) adds:
+```text
+db1fbb96898f
+  -> 4abeb4233bf7
+    -> 7fbad9360da7
+      -> 2d6e3f4a5b6c ----\
+      -> 9c7e2d4a11b0 -----+-> e4b7f8a9c012 (head)
+```
 
-- nullable `turns.client_message_id VARCHAR(18)`;
-- unique constraint `uq_turns_session_client_message` on `(session_id, client_message_id)`;
-- internal `human_requests(id, session_id, request_id, requested_at)`;
-- cascading session foreign key, session index, and unique `uq_human_requests_session_request`.
+Revision `9c7e2d4a11b0` remains the controlled-MVP migration for nullable historical `turns.client_message_id`, uniqueness on `(session_id, client_message_id)`, the `human_requests` table, and uniqueness on `(session_id, request_id)`. Historical and system turns remain valid because the new turn identifier is nullable. No published `origin/dev` migration was rewritten by the resolution.
 
-The migration and ORM are consistent, SQLite-first, and PostgreSQL-compatible. Verification covered empty base-to-head upgrade, a representative existing database upgrade, uniqueness, concurrent duplicates, downgrade to the prior revision, re-upgrade, and `alembic check`. No real database was modified.
+Fresh base-to-head migration, representative existing-database migration, downgrade to `7fbad9360da7`, re-upgrade, uniqueness behavior and `alembic check` pass on disposable SQLite databases.
+
+PostgreSQL verification covers URL normalization, TLS enforcement, pool/timeout options, sanitized errors, model metadata compilation for all 16 tables, security-table coverage, remote-seed boundaries, and the pinned `asyncpg 0.31.0` runtime import. No real Supabase project was contacted or migrated.
+
+Alembic offline PostgreSQL SQL generation cannot pass the published `7fbad9360da7` data-copy revision: that revision fetches existing rows, while an offline Alembic connection returns no result object. Fixing that would rewrite published history, which this integration forbids. Live PostgreSQL upgrade verification therefore requires a separately authorized disposable PostgreSQL target.
+
+## Backend, Web and Mobile contract audit
+
+- Backend supports local SQLite and encrypted PostgreSQL, sanitizes connection/configuration errors, keeps credentials server-side, commits chat before `chat.ack`, and commits a human-request row plus `SH` atomically before `human_request.ack`.
+- Crisis detection still runs synchronously before policy and model-dependent work. Deterministic invariance tests cover optional model output, silence, absence, timeout, failure and malformed output.
+- Web targets FastAPI, validates exact login/queue/case/timeline/audit/action payloads, sends first-frame socket authentication, accepts events only after `auth.ok`, and refetches REST data after reconnect.
+- Mobile targets FastAPI through `EXPO_PUBLIC_API_URL`, creates sessions through `POST /sessions`, keeps credentials and identifiers in memory, uses the returned `case_id`, confirms only correlated acknowledgements, reuses identifiers only on explicit retry, and has no automatic resend or persistent queue.
+- Neither client places a bearer token in a page or WebSocket URL. No unsupported shadow, diagnostic or D4 product data was added. Text sessions keep D4 structurally unavailable; no D4 value is invented.
+
+## Web defect resolution and Android preview preparation
+
+- The corrupted Web database fallback now renders an em dash. The remaining Web source scan contains no common mojibake markers.
+- The console header no longer asserts a static Operational state. It starts at Checking backend, renders Operational only after an exact successful `/health` response with `status: "ok"`, and renders Backend unreachable after a failed or non-ok response. Regression tests cover both failure paths.
+- The Mobile `preview` EAS profile explicitly selects `environment: "preview"` while retaining internal distribution and Android APK output.
+- The controlled preview compiles `http://127.0.0.1:18000` with explicit preview and loopback opt-ins. A no-dependency local Expo config plugin enables Android release cleartext only for `EAS_BUILD_PROFILE=preview` and writes it false for production.
+- Mobile URL validation permits release-build HTTP only for that explicit preview configuration and a loopback hostname. It rejects preview HTTP on private-LAN/public hosts and rejects every production HTTP URL even if development or loopback flags are supplied. HTTPS remains accepted.
+- A USB-connected Android phone must run `adb reverse tcp:18000 tcp:8000`; otherwise the APK's `127.0.0.1:18000` points back to the phone rather than reaching FastAPI on laptop port 8000. `docs/LOCAL_SETUP.md` records installation, verification and reconnection steps.
+- The USB preview instructions were corrected to bind FastAPI to `127.0.0.1`, prohibit LAN exposure, and invoke the preview build with `npx eas-cli@latest build --platform android --profile preview` rather than requiring a globally installed `eas` command.
 
 ## Verification results
 
 | Area | Result |
 |---|---|
-| Backend | 166 passed; Ruff passed |
-| Backend contract/login focused rerun | 66 passed |
-| Web | Typecheck passed; lint passed; 64 tests passed; production build passed |
-| Mobile | Typecheck passed; 122 tests passed |
-| Deterministic ML | 776 tests passed |
-| Diff hygiene | `git diff --check` passed |
+| Focused database/config/migration/health tests | 39 passed |
+| Complete Backend pytest suite | 185 passed; one existing Starlette/AnyIO deprecation warning |
+| Backend Ruff | Passed |
+| Web typecheck | Passed |
+| Web lint | Passed |
+| Web tests | 66 passed |
+| Web production build | Passed |
+| Mobile typecheck | Passed |
+| Mobile model-free tests | 126 passed |
+| Expo Android manifest introspection | Preview cleartext true; production cleartext false |
+| Preview port and documentation consistency | Device loopback 18000 forwards to laptop FastAPI 8000; no stale 8000-to-8000 preview mapping |
+| Relevant Backend security tests | 133 passed; one existing Starlette/AnyIO deprecation warning |
+| Deterministic ML unittest discovery | 776 passed |
+| Deterministic ML pytest discovery | 776 passed; one pytest-asyncio configuration warning |
+| Prediction/model/label firewall tests | Passed within both 776-test ML runs |
+| Deterministic backend invariance | Passed within the 185-test Backend run |
+| SQLite migration graph and `alembic check` | Passed |
+| PostgreSQL model/config/security checks | Passed without contacting a server |
+| Whitespace | `git diff --cached --check` passed |
 
-Backend emitted one pre-existing Starlette/AnyIO deprecation warning. The ML governance tests printed expected refusal-path diagnostics while all 776 assertions passed; no finalized result was touched.
+The ML suites printed expected refusal-path diagnostics and did not alter any finalized result.
 
-## Fictional end-to-end and failure results
+## Local runtime smoke test
 
-- Fictional session creation returned the exact frozen shape, then victim WebSocket authentication returned `auth.ok` before the current `session.status` snapshot.
-- A fictional chat message was trimmed, durably inserted once, acknowledged as `accepted`, and published only after commit. Exact retry returned `duplicate` with the original turn ID. Different content with the same ID returned `id_conflict`; a language mismatch returned `not_permitted`.
-- Concurrent identical chat submissions produced exactly one victim turn and one shared turn ID. Concurrent identical human requests produced exactly one request row and one transition side effect.
-- A declined-consent fictional session could still request a human. The request row and `SH` transition committed together; retry returned `duplicate` and caused no repeated side effect.
-- Query URLs, malformed JSON, binary data, unknown frames, extra/missing keys, and invalid IDs failed with 4400. Timeout, missing/malformed/expired credentials failed with 4401. Wrong-session victim credentials and unauthorized staff actions failed with 4403. Simulated database/internal failure sent no acknowledgement and closed 1011. Tested close reasons were empty.
-- Timeline tests preserved authoritative ordering and duplicates and rejected malformed successful responses rather than presenting an empty state.
+One temporary SQLite file was selected explicitly for `DATABASE_URL` and `MIGRATION_DATABASE_URL`. Alembic, seed and two FastAPI starts used that same file. All data was fictional, all local processes were stopped, and the temporary directory was removed.
 
-## Deterministic authority and safety
+The smoke test passed:
 
-- The deterministic crisis pre-check and detector remain authoritative; application code imports neither experimental package.
-- An invariance matrix covering optional output firing, silence, unavailability, timeout, failure, and malformed output produced byte-for-byte equal authoritative deterministic results.
-- The fictional crisis fixture continued to fire the crisis pre-check and route Critical in every case.
-- D4 remained structurally unavailable on the text channel with null score and confidence; no value was invented.
-- No Task 7B branch, checkpoint, private corpus, predictions, report, or review packet was integrated or staged.
+1. base-to-head migration and `alembic check`;
+2. fictional seed and Backend startup;
+3. `/health` liveness without a database-readiness claim;
+4. Executive login with the exact response shape;
+5. Web dashboard HTTP load from a local Vite process;
+6. Mobile-format fictional session creation;
+7. authenticated timeline retrieval using the returned `case_id`;
+8. first-frame victim authentication followed by a correlated accepted chat acknowledgement;
+9. Executive REST reload of the persisted turn;
+10. duplicate chat acknowledgement with the original opaque turn ID and one stored turn;
+11. correlated human-request acknowledgement;
+12. authoritative session state `SH`;
+13. Backend restart followed by REST and WebSocket recovery from the persisted database;
+14. exact tokens and token query parameters absent from URLs and captured Backend/Web logs;
+15. honest connection failure after the Backend was stopped.
 
-## Security and privacy scan
+The smoke used HTTP and protocol clients plus an HTTP-loaded Web bundle. A physical phone and an interactive browser rendering/accessibility pass were not available in this terminal run.
 
-- No real secret, private key, environment file, database, checkpoint, dataset, binary, build output, cache, or private record is in the integration diff.
-- No Mobile credential persistence API is referenced. Mobile credentials and pending actions remain memory-only.
-- Product clients do not construct token-bearing WebSocket URLs. Remaining query-token strings are defensive redaction and credential-scrubbing tests or clearly marked historical review text superseded by PC-11.
-- No application import of experimental ML/training packages was found.
-- No submitted narrative, token, auth frame, transcript, audio, password, or database credential is logged by the changed application paths.
-- Expected scan matches were fictional test passwords, a synthetic PostgreSQL redaction fixture, login field names, and the pre-existing Web console session-scoped credential store. None is a credential leak or a Mobile persistence change.
-- `docs/EXTERNAL_DECISIONS.md` and EXT-119 are unchanged.
+## Security, privacy and ownership scan
 
-## Known limitations
+The final staged merge scan found no `.env`, `prompt.txt`, database, runtime file, secret/private path, dataset, checkpoint, model weight, media/binary artifact, Mobile credential-persistence API, or file over 5 MB. There are no unstaged or non-ignored untracked files.
 
-- `/health` reports configured/static state; it is not evidence that a database connection is reachable. A readiness contract remains future work.
-- SQLite remains the controlled local MVP database. PostgreSQL/Supabase migration is deferred under EXT-110.
-- Reconnect recovery depends on REST refetch; WebSocket event history is not replayed.
-- Mobile sessions and pending actions disappear when the process ends by design.
-- Voice/audio transport, VAD/Whisper application wiring, ASR/TTS, offline queues, and deployment are not implemented.
-- S0, S9, and SX fixed scripts remain unavailable as recorded by the existing health/configuration state. Crisis routing remains deterministic and fail-closed, but this is not a victim-ready crisis experience.
-- The repository dependency install reported 10 existing npm audit findings; remediation requires separate dependency approval.
+Eight secret-rule matches were reviewed. They are the public `.env.example` placeholder, synthetic redaction/configuration fixtures under Backend tests, and documentation placeholders. None is a real credential. No `.env` values were read or exposed.
 
-## Changed/staged integration paths
+The staged ownership roots are repository root configuration/documentation, Backend, Web, Mobile, `docs/LOCAL_SETUP.md`, and local scripts. Web/Mobile additions are limited to the approved defect fixes, preview APK configuration, URL/manifest safeguards and tests. No Task 7B branch/checkpoint/private corpus, shadow product integration, D4 measurement, or real victim data is present.
 
-Only approved Backend API/schema/model/service/WebSocket/migration/tests, canonical contract documentation, Web API/auth/socket/types/tests, Mobile routes/network/session/screens/types/tests, and this report are staged. `prompt.txt` is ignored by repository policy and was cleared locally after this report was produced, so it is not in the index. Dependency manifests, lockfiles, external decisions, ML research paths, artifacts, databases, and build output are excluded.
+## Exact remaining blockers
 
-Proposed commit message (not executed):
+1. A live PostgreSQL base-to-head migration and runtime smoke were not run because no authorized disposable PostgreSQL service is available, and the task forbids using a real Supabase project.
+2. Offline PostgreSQL SQL generation stops in published revision `7fbad9360da7` because its data migration requires query results; published history was preserved.
+3. The remote EAS build, physical-phone install/runtime check and interactive-browser check remain external manual gates; no remote build was invoked from this terminal.
+4. The final merge commit is intentionally pending at the requested stopping point.
 
-`feat(integration): add controlled text MVP session and handoff`
+## Git status and graph
+
+Status after staging this report: branch `integration/controlled-mvp`, `MERGE_HEAD=61689fa88aa617c5d3490fc1e0a489987226f6d5`, 33 staged paths, zero unstaged paths, zero non-ignored untracked paths.
+
+```text
+* ec10d50 (HEAD -> integration/controlled-mvp) feat(integration): add controlled text MVP session and handoff
+| * 61689fa (origin/dev) Merge pull request #15 from advay-sinha/feat/backend-supabase-postgres
+|/|
+| * a4507fe (origin/feat/backend-supabase-postgres) feat(backend): migrate runtime persistence to Supabase PostgreSQL
+* | cdae3b6 Merge pull request #13 from advay-sinha/feat/web-console
+```
+
+No push, PR, deployment, remote EAS build, merge into `dev`, stash change, real Supabase migration, or final merge commit was performed.

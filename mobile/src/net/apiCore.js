@@ -32,14 +32,19 @@ function nonEmptyString(value) {
 
 function isLocalHostname(hostname) {
   const normalized = hostname.toLowerCase();
-  if (normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1") return true;
+  if (isLoopbackHostname(normalized)) return true;
   if (/^10(?:\.[0-9]{1,3}){3}$/.test(normalized)) return true;
   if (/^192\.168(?:\.[0-9]{1,3}){2}$/.test(normalized)) return true;
   const match = /^172\.([0-9]{1,2})(?:\.[0-9]{1,3}){2}$/.exec(normalized);
   return match !== null && Number(match[1]) >= 16 && Number(match[1]) <= 31;
 }
 
-function validateApiBaseUrl(raw, isDevelopment) {
+function isLoopbackHostname(hostname) {
+  const normalized = hostname.toLowerCase();
+  return normalized === "localhost" || normalized === "127.0.0.1" || normalized === "::1";
+}
+
+function validateApiBaseUrl(raw, options = {}) {
   if (typeof raw !== "string" || raw.length === 0) throw new ApiError("configuration");
   let parsed;
   try {
@@ -51,8 +56,13 @@ function validateApiBaseUrl(raw, isDevelopment) {
   if (parsed.username || parsed.password || parsed.search || parsed.hash || parsed.pathname !== "/") {
     throw new ApiError("configuration");
   }
-  if (parsed.protocol === "http:" && (!isDevelopment || !isLocalHostname(parsed.hostname))) {
-    throw new ApiError("configuration");
+  if (parsed.protocol === "http:") {
+    const isProduction = options.buildEnvironment === "production";
+    const developmentLocal = options.isDevelopment === true && !isProduction && isLocalHostname(parsed.hostname);
+    const previewLoopback = options.buildEnvironment === "preview"
+      && options.allowHttpLoopback === true
+      && isLoopbackHostname(parsed.hostname);
+    if (!developmentLocal && !previewLoopback) throw new ApiError("configuration");
   }
   return parsed.origin;
 }

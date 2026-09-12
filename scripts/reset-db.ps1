@@ -54,9 +54,11 @@ foreach ($suffix in @("", "-wal", "-shm", "-journal")) {
     if (Test-Path $path) { Remove-Item $path -Force; Write-Host "  removed $(Split-Path -Leaf $path)" }
 }
 
-# Both steps read DATABASE_URL, so a non-default -Database is honoured.
+# Pin both runtime and migration URLs so an ignored .env cannot redirect Alembic.
 $uri = "sqlite+aiosqlite:///" + ($Database -replace '\\', '/')
 $env:DATABASE_URL = $uri
+$env:MIGRATION_DATABASE_URL = $uri
+$env:APP_ENV = "test"
 
 Push-Location (Join-Path $root "backend")
 try {

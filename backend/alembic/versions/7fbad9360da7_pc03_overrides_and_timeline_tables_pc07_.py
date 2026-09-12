@@ -148,7 +148,7 @@ def upgrade() -> None:
     bind.execute(sa.text(
         "UPDATE sessions SET human_joined_at = "
         "(SELECT taken_over_at FROM cases WHERE cases.session_id = sessions.id) "
-        "WHERE human_joined = 1 AND human_joined_at IS NULL"))
+        "WHERE human_joined IS TRUE AND human_joined_at IS NULL"))
 
     # --- channel onto the frozen enum ---------------------------------------
     for old, new in CHANNEL_MAP.items():

@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { navFor, PATHS } from "../auth/routing";
+import { BackendStatusBadge } from "./BackendStatusBadge";
 import { ConsoleIcon, SahayMark } from "./ConsoleIcon";
 import { Disclaimer } from "./Disclaimer";
 
@@ -25,7 +26,7 @@ export function AppShell() {
       <div className="w-12 xl:w-60"><span className="xl:hidden"><SahayMark compact /></span><span className="hidden xl:block"><SahayMark /></span></div>
       <div className="hidden h-8 w-px bg-slate-600 md:block" />
       <span className="ml-4 hidden rounded border border-cyan-300/20 bg-slate-700 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-cyan-200 md:inline-flex">HELPLINE 14566 · NATIONAL ATROCITIES MONITORING</span>
-      <span className="ml-3 hidden items-center gap-2 rounded border border-slate-600 px-3 py-1.5 text-xs text-slate-200 lg:flex"><span className="h-2 w-2 rounded-full bg-cyan-300" /> Operational</span>
+      <BackendStatusBadge />
       <div className="ml-auto flex min-w-0 items-center gap-2 sm:gap-4">
         <div className="min-w-0 text-right" data-testid="whoami"><strong className="block truncate text-xs">{session.displayName || "Signed in"}</strong><span className="block text-[10px] uppercase tracking-wide text-slate-400">Role: {session.role}</span></div>
         <button type="button" onClick={signOut} className="flex items-center gap-2 rounded border border-slate-600 px-2 py-1.5 text-xs hover:bg-slate-800" data-testid="logout"><ConsoleIcon name="logout" className="h-4 w-4" /><span className="hidden sm:inline">Sign out</span></button>

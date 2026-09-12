@@ -75,3 +75,4 @@ START_HERE.md
 # and settings.json, and the non-authoritative design references in
 # frontend/design/ and mobile/design/. They are the project's operating
 # instructions and are reviewed like any other source. See CLAUDE.md section 7.
+/.env

@@ -19,6 +19,7 @@ import {
   explainAbstention,
   filterQueue,
   formatWait,
+  isVerifiedTakeover,
   resolveEvidence,
   trajectoryGeometry,
   trajectoryPath,
@@ -153,9 +154,11 @@ describe("officer message (PC-07)", () => {
 
   it("is allowed only after a verified takeover by the claiming officer", () => {
     const ok = packet({});
+    expect(isVerifiedTakeover(ok)).toBe(true);
     expect(canMessage(ok, canAct(ok, "u1")).ok).toBe(true);
     for (const over of [{ status: "claimed" }, { human_joined: false }, { human_joined_at: null }, { session_ended: true }]) {
       const p = packet(over);
+      if (!("session_ended" in over)) expect(isVerifiedTakeover(p)).toBe(false);
       expect(canMessage(p, canAct(p, "u1")).ok).toBe(false);
     }
     expect(canMessage(ok, canAct(ok, "u2")).ok).toBe(false);

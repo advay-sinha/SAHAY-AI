@@ -8,9 +8,9 @@ Install now only after approval:
 - Python 3.11
 - Node.js 24 LTS and npm
 - VS Code or another editor
-- a physical Android phone for the later mobile gate
+- a physical Android phone and Android SDK Platform Tools (ADB) for the USB preview gate
 
-FFmpeg, Android SDK/ADB, Docker, PostgreSQL and Redis are intentionally deferred until their features need them.
+FFmpeg, the full Android SDK/Android Studio, Docker and Redis are intentionally deferred until their features need them. The backend supports local SQLite and an explicitly configured Supabase PostgreSQL development/demo project.
 
 **Node version:** the project targets **Node.js 24 LTS** (24.19.0 installed 2026-09-10). Node 20 is end of life and Node 23 was never an LTS line. Node 22 was the original target, but it has moved to maintenance and is no longer offered by `winget` under `OpenJS.NodeJS.LTS`, which now tracks the active LTS line. `frontend/package.json` and `mobile/package.json` both declare `"engines": { "node": ">=24.0.0 <25.0.0" }`. Recorded as EXT-113 in `docs/EXTERNAL_DECISIONS.md`.
 
@@ -36,7 +36,29 @@ Run `/prepare-codebase local` in Claude Code. This is a Claude command, not a Po
 | Vite executive console | 5173 |
 | Expo Metro | 8081 |
 
-Bind FastAPI to `0.0.0.0` for physical-phone access. The phone uses the laptop's LAN IPv4 address, not `localhost`.
+## Physical Android preview APK over USB
+
+mobile/eas.json defines the controlled local-demo build as the preview profile: named EAS environment preview, internal distribution and Android APK output. That profile compiles EXPO_PUBLIC_API_URL=http://127.0.0.1:18000 plus explicit preview/loopback flags. A repository-local Expo config plugin enables Android cleartext traffic only when EAS_BUILD_PROFILE=preview; production writes usesCleartextTraffic=false.
+
+The application validator independently permits plain HTTP in a non-development build only when the compiled environment is exactly preview, the loopback opt-in is exactly true, and the host is localhost, 127.0.0.1 or ::1. Preview URLs on a LAN or public host and every production HTTP URL fail closed. HTTPS remains valid.
+
+Build and install the controlled preview APK using the existing EAS project and an authorized USB-debugging phone:
+
+~~~powershell
+Push-Location mobile
+npx eas-cli@latest build --platform android --profile preview
+Pop-Location
+
+adb devices
+adb install -r <path-to-downloaded-preview.apk>
+adb reverse tcp:18000 tcp:8000
+adb reverse --list
+.\scripts\start-backend.ps1
+~~~
+
+Inside the installed APK, 127.0.0.1 is the Android device itself. The adb reverse mapping is therefore required to carry both HTTP and WebSocket traffic on device port 18000 to FastAPI on laptop port 8000. Re-run adb reverse tcp:18000 tcp:8000 after unplugging the cable, revoking USB debugging, restarting ADB or rebooting the phone. This controlled release preview deliberately has no plain-HTTP LAN fallback.
+
+For the controlled USB preview, bind FastAPI to 127.0.0.1 on port 8000. The APK uses http://127.0.0.1:18000, and `adb reverse tcp:18000 tcp:8000` forwards that device port to the laptop backend. Do not expose the backend over LAN.
 
 ## Environments
 
@@ -49,27 +71,59 @@ ml/.venv/
 
 Frontend and mobile have independent `package.json` and lockfiles. Never install project packages globally.
 
-## Local persistence
+## Backend persistence
 
-Use `sqlite+aiosqlite:///./runtime/db/sahay.db`, enable foreign keys, WAL and a busy timeout. Use Alembic from the beginning so a later PostgreSQL migration is controlled.
+The backend uses SQLAlchemy with either local SQLite or Supabase PostgreSQL. FastAPI is the only application database gateway; Web and Mobile never receive a Supabase key or database credential and never connect to Supabase directly.
+
+For local development, copy `.env.example` to the ignored `.env` and set:
+
+```dotenv
+APP_ENV=development
+DATABASE_URL=sqlite+aiosqlite:///./runtime/db/sahay.db
+MIGRATION_DATABASE_URL=
+```
+
+Relative SQLite paths resolve from the repository root, even when commands run from `backend/`. SQLite enables foreign keys, WAL and a busy timeout. `development`, `local` and `test` accept an explicitly configured SQLite URL; `demo` and `production` require PostgreSQL.
+
+For Supabase, obtain connection strings from the dashboard's Connect panel. Use a direct connection for a persistent backend with IPv6 access. On an IPv4-only development machine, use the Session pooler on port 5432. Do not use transaction pooling on port 6543: it has different prepared-statement and session semantics and is rejected by configuration.
+
+`DATABASE_URL` is the runtime connection. Set `MIGRATION_DATABASE_URL` to a separate direct, migration-safe connection when available. Both must require TLS. Never place either value in source, documentation, shell history, client configuration or test output.
+
+There is no implicit database fallback: `DATABASE_URL` is required. Tests and migration checks use disposable SQLite databases and override both database URL variables so a private `.env` cannot redirect them.
+
+Run migrations and the fictional seed from `backend/`. Both commands below resolve `./runtime/db/sahay.db` to the same physical repository-level file:
+
+```powershell
+Push-Location backend
+.venv\Scripts\python.exe -m alembic upgrade head
+.venv\Scripts\python.exe -m alembic check
+$env:SEED_PASSWORD = "<choose a local-only password>"
+.venv\Scripts\python.exe seed\seed.py
+Pop-Location
+```
+
+Before the first Supabase migration, perform the read-only preflight and obtain explicit authorization for the sanitized empty development/demo target. Existing SQLite data is never transferred automatically.
 
 ## Console authentication (local MVP)
 
-Contract: `POST /auth/login → {token, role}` (HANDOVER.md §12.4), Bearer-token JWT. Executive and Supervisor roles (EC-01). No cookies, no SSO/MFA — production authentication is out of MVP scope (HANDOVER.md §8).
+Contract: `POST /auth/login → {token, role, display_name}` (HANDOVER.md §12.4), Bearer-token JWT. Executive and Supervisor roles (EC-01). No cookies, no SSO/MFA — production authentication is out of MVP scope (HANDOVER.md §8).
 
-**Local-development accounts only.** `backend/seed/seed.py` creates `exec1`, `exec2` (executive) and `sup1` (supervisor). The password comes from `SEED_PASSWORD` in your environment, or is generated and printed once. No credential is committed, compiled into the frontend, or prefilled on the login page. Never reuse these accounts or passwords with real case data.
-
-```powershell
-$env:SEED_PASSWORD = "<choose a local-only password>"
-backend\.venv\Scripts\python.exe backend\seed\seed.py
-```
+**Local-development accounts only.** `backend/seed/seed.py` creates `exec1`, `exec2` (executive) and `sup1` (supervisor). The password comes from `SEED_PASSWORD` in your environment, or is generated and printed once. No credential is committed, compiled into the frontend, or prefilled on the login page. Never reuse these accounts or passwords with real case data. Remote seeding is denied by default and must not be run until schema verification and separate authorization are complete.
 
 **Token transport.**
 
 - REST: `Authorization: Bearer <jwt>` only. A `?token=` query parameter on a REST route is ignored (401).
 - Page URLs never carry a token. `/login?token=…` authenticates nothing; the login page strips any query string from the address bar without reading it.
-- WebSocket: the frozen contract puts the token in the handshake URL, `WSS /ws/session/{id}?token=<jwt>`, because a browser WebSocket cannot send an Authorization header. That URL is not a page URL and never enters browser history, but uvicorn logs it, so `backend/app/core/log_redaction.py` rewrites `token=` values and anything JWT-shaped to `[REDACTED]` in every uvicorn log line.
-- **PC-05 (approved in principle, phased, 2026-09-11):** the target protocol moves the socket token out of the URL into a first `{"type":"auth","token":...}` frame, with a short timeout and no data before authentication (CONTRACTS.md §1). Backend and Executive Web own the implementation. Until it ships, the query-token form above stays supported for the text-first web slice. `POST /sessions` already returns `ws_url` without a token and the victim credential as `session_token` (PC-09); clients append `?token=` themselves.
+- WebSocket URLs contain only `/ws/session/{session_id}`. Any query component is rejected.
+- Within five seconds of opening the socket, the client sends exactly `{"type":"auth","token":"<token>"}`. The server sends no domain event or snapshot before authentication.
+- Successful authentication returns `auth.ok` with the path session ID and authenticated role. Only then may the client accept events or send actions.
+
+**Acknowledgements and reconnect recovery.**
+
+- A chat message is shown as confirmed only after its correlated `chat.ack` reports `accepted` or `duplicate`. Socket send success alone is not confirmation.
+- A human request is shown as confirmed only after its correlated `human_request.ack`. A `session.status` event is not the causal acknowledgement.
+- There is no automatic resend, persistent Mobile queue or WebSocket event replay. An explicit retry reuses the original in-memory identifier.
+- After reconnect, authenticate again, wait for `auth.ok`, accept the current state snapshot, and reload authoritative permitted data through REST. Opaque server turn IDs reconcile duplicate transcript lines.
 
 **Session storage.** The project had no existing session mechanism, so the console keeps `{token, role, displayName, expiresAt}` in `sessionStorage` under `sahay.console.session`: it survives a reload, ends with the tab, and is not shared between tabs. If storage is blocked, it falls back to memory. Trade-off: any script on the page can read `sessionStorage`, so the console loads no third-party scripts or CDN assets and renders no raw HTML.
 
@@ -91,7 +145,11 @@ UI role checks are navigation only. The backend checks the token and role on eve
 
 ## Manual verification
 
-Until CI is approved, run focused tests, lint and builds through `scripts/verify-local.ps1`. A designated integration owner runs the complete scenario on the demo machine before merging local team branches.
+Until CI is approved, run focused tests, lint and builds through `scripts/verify-local.ps1`. A designated integration owner runs the complete scenario on the demo machine before merging local team branches. `/health` is a liveness and configuration response; it does not probe the database and must not be used as readiness evidence.
+
+## Database recovery boundary
+
+Alembic creates schema; it does not copy the old SQLite file. Preserve existing SQLite files and sidecars unchanged. Do not reset, truncate or clean a Supabase target. If preflight finds an application table, migration revision or unexpected data, stop and select a newly confirmed empty development/demo project. The security migration's downgrade intentionally does not restore broad client grants or disable RLS.
 
 ## Team isolation on one machine
 

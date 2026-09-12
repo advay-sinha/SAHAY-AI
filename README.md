@@ -15,7 +15,7 @@ Local-first AI-assisted intake, vulnerability assessment and human escalation pr
 
 - Windows development/demo machine
 - CPython 3.11.9 and Node.js 24 LTS
-- FastAPI + SQLite
+- FastAPI + SQLAlchemy + Supabase PostgreSQL or local SQLite
 - local background assessment runner
 - React/Vite executive console
 - Expo victim app on a physical Android phone
@@ -23,7 +23,7 @@ Local-first AI-assisted intake, vulnerability assessment and human escalation pr
 - mock LLM by default
 - manual verification
 
-Docker, CI/CD, PostgreSQL, Redis and pgvector are deferred.
+Docker, CI/CD, Redis and pgvector are deferred. SQLite remains supported for local development and tests.
 
 ## Checks that run today, with nothing installed
 

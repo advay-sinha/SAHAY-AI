@@ -45,7 +45,7 @@ export function ConnectionCheck() {
         <dt>Fixed scripts</dt>
         <dd>{health == null ? "—" : health.fixed_scripts_ready ? "ready" : "not yet written"}</dd>
         <dt>Database configuration</dt>
-        <dd>{health?.database ?? "â€”"}</dd>
+        <dd>{health?.database ?? "\u2014"}</dd>
       </dl>
       <p className="mt-2 text-on-surface-variant">Health reports configured/static state; it is not a live database probe.</p>
     </section>

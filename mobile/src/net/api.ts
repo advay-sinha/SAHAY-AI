@@ -9,7 +9,11 @@ import {
   type Consent,
 } from "./apiCore";
 
-const API_BASE_URL = validateApiBaseUrl(process.env.EXPO_PUBLIC_API_URL, __DEV__);
+const API_BASE_URL = validateApiBaseUrl(process.env.EXPO_PUBLIC_API_URL, {
+  isDevelopment: __DEV__,
+  buildEnvironment: process.env.EXPO_PUBLIC_BUILD_ENVIRONMENT,
+  allowHttpLoopback: process.env.EXPO_PUBLIC_ALLOW_HTTP_LOOPBACK === "true",
+});
 const SOCKET_BASE_URL = API_BASE_URL.replace(/^http/, "ws");
 
 export { ApiError, type ActiveSession, type Consent };

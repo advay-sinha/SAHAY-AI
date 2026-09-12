@@ -20,7 +20,13 @@ export class ApiError extends Error {
   status: number | null;
 }
 
-export function validateApiBaseUrl(raw: unknown, isDevelopment: boolean): string;
+export interface ApiUrlValidationOptions {
+  isDevelopment?: boolean;
+  buildEnvironment?: string;
+  allowHttpLoopback?: boolean;
+}
+
+export function validateApiBaseUrl(raw: unknown, options?: ApiUrlValidationOptions): string;
 export function validateSessionResponse(value: unknown): ActiveSession | null;
 export function createSession(
   baseUrl: string,

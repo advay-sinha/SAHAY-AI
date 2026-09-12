@@ -174,11 +174,17 @@ export function canAct(packet: CasePacket, officerId: string | undefined, role?:
   return { ok: true };
 }
 
+/** A durable takeover requires the case and session markers to agree. */
+export function isVerifiedTakeover(packet: CasePacket): boolean {
+  const h = packet.header;
+  return h.status === "taken_over" && h.human_joined && h.human_joined_at !== null;
+}
+
 /** PC-07: an officer may message only after a verified takeover. */
 export function canMessage(packet: CasePacket, gate: ActionGate): ActionGate {
   if (!gate.ok) return gate;
   const h = packet.header;
-  if (h.status !== "taken_over" || !h.human_joined || !h.human_joined_at) {
+  if (!isVerifiedTakeover(packet)) {
     return { ok: false, reason: "Take over the conversation before messaging the complainant." };
   }
   if (h.session_ended) return { ok: false, reason: "The session has ended." };

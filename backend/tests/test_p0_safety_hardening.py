@@ -459,14 +459,10 @@ class TestP0SafetyHardening(DecisionBase):
         )
         self.assertEqual(body["status"], "ok")
         self.assertEqual(
-            {
-                body["app_env"],
-                body["llm_provider"],
-                body["assessment_runner"],
-                body["database"],
-            },
+            {body["app_env"], body["llm_provider"], body["assessment_runner"]},
             {"ready"},
         )
+        self.assertEqual(body["database"], "configured")
         serialized = response.text
         for forbidden in (
             synthetic.DATABASE_URL,

@@ -16,6 +16,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/withPreviewCleartextTraffic",
       [
         "expo-audio",
         {
