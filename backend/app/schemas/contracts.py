@@ -7,7 +7,7 @@ rather than reaching a victim client.
 
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from ..core.enums import (
     ALERT_SEVERITIES,
@@ -124,7 +124,6 @@ class ActionRecommended(BaseModel):
     rationale: str
     policy_citations: List[str] = Field(default_factory=list)
     confidence: float
-    status: Literal["awaiting_decision", "decided"] = "awaiting_decision"
 
 
 class EscalationPacket(BaseModel):
@@ -145,7 +144,7 @@ class LoginRequest(BaseModel):
 
 
 class LoginResponse(BaseModel):
-    """HANDOVER.md 12.4: `{token, role}`. display_name is additive."""
+    """CONTRACTS.md section 4: exact `{token, role, display_name}`."""
 
     model_config = ConfigDict(extra="forbid")
 
@@ -168,10 +167,9 @@ class CreateSessionResponse(VictimSafeModel):
                    route or another session. It is not an executive token;
                    executive tokens come only from POST /auth/login.
     ws_url         path only, `/ws/session/{session_id}`. It carries NO token,
-                   so it is safe to log. Connecting (PC-05): the target
+                   so it is safe to log. Connecting (PC-11): the approved
                    protocol sends `{"type":"auth","token":...}` as the first
-                   frame; the text-first slice temporarily still accepts
-                   `?token=<session_token>` appended by the client.
+                   frame within five seconds. Query components are rejected.
     """
 
     session_id: str
@@ -190,14 +188,66 @@ class EndSessionResponse(VictimSafeModel):
     reference_no: str
 
 
-class ChatMessage(BaseModel):
-    type: Literal["chat.message"] = "chat.message"
+class SocketFrame(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class SocketAuth(SocketFrame):
+    type: Literal["auth"]
+    token: str = Field(min_length=1, max_length=4096)
+
+
+class SocketAuthOk(SocketFrame):
+    type: Literal["auth.ok"]
+    session_id: str
+    role: Literal["victim", "executive", "supervisor"]
+
+
+class ChatMessage(SocketFrame):
+    type: Literal["chat.message"]
+    client_message_id: str = Field(pattern=r"^m:[1-9][0-9]{0,15}$")
     text: str
-    lang: Lang = "hi"
+    lang: Lang
+
+    @field_validator("text")
+    @classmethod
+    def canonical_text(cls, value: str) -> str:
+        canonical = value.strip()
+        if not 1 <= len(canonical) <= 2000:
+            raise ValueError("text must contain 1 to 2000 characters after trimming")
+        return canonical
 
 
-class RequestHuman(BaseModel):
-    type: Literal["request_human"] = "request_human"
+class ChatAckAccepted(SocketFrame):
+    type: Literal["chat.ack"]
+    client_message_id: str
+    status: Literal["accepted", "duplicate"]
+    turn_id: str = Field(min_length=1, max_length=64)
+
+
+class ChatAckRejected(SocketFrame):
+    type: Literal["chat.ack"]
+    client_message_id: str
+    status: Literal["rejected"]
+    error: Literal["session_ended", "not_permitted", "id_conflict"]
+
+
+class RequestHuman(SocketFrame):
+    type: Literal["request_human"]
+    request_id: str = Field(pattern=r"^h:[1-9][0-9]{0,15}$")
+
+
+class HumanRequestAck(SocketFrame):
+    type: Literal["human_request.ack"]
+    request_id: str
+    status: Literal["accepted", "duplicate"]
+
+
+class HumanRequestRejected(SocketFrame):
+    type: Literal["human_request.ack"]
+    request_id: str
+    status: Literal["rejected"]
+    error: Literal["session_ended", "not_permitted"]
 
 
 class DecisionRequest(BaseModel):

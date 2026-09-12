@@ -1,19 +1,18 @@
 import { useRouter } from "expo-router";
 import { ChatScreen } from "../src/screens/ChatScreen";
-
-async function unavailableSend(_text: string): Promise<void> {
-  throw new Error();
-}
+import { useSession } from "../src/session/SessionProvider";
 
 export default function ChatRoute() {
   const router = useRouter();
+  const { session, events, sendChat } = useSession();
 
   return (
     <ChatScreen
-      aiPermitted={false}
-      consent="pending"
+      aiPermitted={session?.consent === "granted"}
+      consent={session?.consent ?? "pending"}
       onRequestHuman={() => router.push("/handoff")}
-      onSend={unavailableSend}
+      onSend={sendChat}
+      receivedMessages={events}
     />
   );
 }

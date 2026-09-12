@@ -27,7 +27,7 @@ export interface DisplayMessage {
 }
 
 export function createChatSendController(
-  onSend: (text: string) => Promise<void>,
+  onSend: (text: string, localId: number) => Promise<void>,
   onStateChange: (state: ChatState) => void,
 ): ChatSendController;
 

@@ -142,6 +142,7 @@ export interface HumanDecision {
 }
 
 export interface OverrideRecord {
+  id: string;
   from_band: Band | null;
   to_band: Band;
   reason: string;

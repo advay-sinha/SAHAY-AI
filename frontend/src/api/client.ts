@@ -20,6 +20,20 @@ import type {
   VictimTimeline,
 } from "../types/contracts";
 import type { AuditEntry, CasePacket, QueueItem } from "../types/packet";
+import {
+  ResponseValidationError,
+  validateAlertAck,
+  validateAudit,
+  validateCasePacket,
+  validateClaim,
+  validateDecision,
+  validateHealth,
+  validateOfficerMessage,
+  validateOverride,
+  validateQueue,
+  validateTakeover,
+  validateTimeline,
+} from "./validation";
 
 export const API_BASE: string = import.meta.env.VITE_API_URL ?? "/api";
 
@@ -45,7 +59,7 @@ export interface ApiDeps {
 const SAFE_DETAIL_STATUSES = new Set([400, 403, 404, 409]);
 
 export function createApiClient({ fetchFn, getToken, onUnauthorized, base = API_BASE }: ApiDeps) {
-  async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+  async function request<T>(path: string, validate: (value: unknown) => T, init: RequestInit = {}): Promise<T> {
     const headers = new Headers(init.headers);
     if (init.body !== undefined && !headers.has("Content-Type")) {
       headers.set("Content-Type", "application/json");
@@ -76,33 +90,38 @@ export function createApiClient({ fetchFn, getToken, onUnauthorized, base = API_
       }
       throw new ApiError(response.status, detail);
     }
-    return (await response.json()) as T;
+    let value: unknown;
+    try {
+      value = await response.json();
+      return validate(value);
+    } catch (error) {
+      if (error instanceof ResponseValidationError) throw new ApiError(502);
+      throw new ApiError(502);
+    }
   }
 
-  const post = <T>(path: string, body?: unknown) =>
-    request<T>(path, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
+  const post = <T>(path: string, validate: (value: unknown) => T, body?: unknown) =>
+    request<T>(path, validate, { method: "POST", body: body === undefined ? undefined : JSON.stringify(body) });
   const id = encodeURIComponent;
 
   return {
-    request,
-    health: () =>
-      request<{ status: string; llm_provider: string; assessment_runner: string; fixed_scripts_ready: boolean }>("/health"),
-    queue: () => request<QueueItem[]>("/queue"),
-    case: (caseId: string) => request<CasePacket>(`/cases/${id(caseId)}`),
-    claim: (caseId: string) => post<{ case_id: string; status: string }>(`/cases/${id(caseId)}/claim`),
+    health: () => request("/health", validateHealth),
+    queue: () => request<QueueItem[]>("/queue", validateQueue),
+    case: (caseId: string) => request<CasePacket>(`/cases/${id(caseId)}`, validateCasePacket),
+    claim: (caseId: string) => post(`/cases/${id(caseId)}/claim`, validateClaim),
     acknowledge: (caseId: string, alertId: string) =>
-      post<AlertAckResponse>(`/cases/${id(caseId)}/alerts/${id(alertId)}/ack`),
+      post<AlertAckResponse>(`/cases/${id(caseId)}/alerts/${id(alertId)}/ack`, validateAlertAck),
     decide: (caseId: string, actionId: string, decision: DecisionKind, rationale: string) =>
-      post<{ decision_id: string }>(`/cases/${id(caseId)}/decisions`, { action_id: actionId, decision, rationale }),
+      post(`/cases/${id(caseId)}/decisions`, validateDecision, { action_id: actionId, decision, rationale }),
     /** reason is required by contract; the server refuses a blank one with 400. */
     override: (caseId: string, band: Band, reason: string) =>
-      post<{ to_band: Band }>(`/cases/${id(caseId)}/override`, { band, reason }),
-    takeover: (caseId: string) => post<{ status: string }>(`/cases/${id(caseId)}/takeover`),
+      post(`/cases/${id(caseId)}/override`, validateOverride, { band, reason }),
+    takeover: (caseId: string) => post(`/cases/${id(caseId)}/takeover`, validateTakeover),
     /** PC-07: only after takeover (409 before). The officer's own words. */
     message: (caseId: string, text: string, lang?: Lang) =>
-      post<OfficerMessageResponse>(`/cases/${id(caseId)}/messages`, { text, lang }),
-    timeline: (caseId: string) => request<VictimTimeline>(`/cases/${id(caseId)}/timeline`),
-    audit: (caseId: string) => request<AuditEntry[]>(`/cases/${id(caseId)}/audit`),
+      post<OfficerMessageResponse>(`/cases/${id(caseId)}/messages`, validateOfficerMessage, { text, lang }),
+    timeline: (caseId: string) => request<VictimTimeline>(`/cases/${id(caseId)}/timeline`, validateTimeline),
+    audit: (caseId: string) => request<AuditEntry[]>(`/cases/${id(caseId)}/audit`, validateAudit),
   };
 }
 

@@ -10,6 +10,8 @@ const {
   TIMELINE_STAGES,
   dispatchVictimEvent,
   parseVictimEvent,
+  parseSocketMessage,
+  validateSocketControl,
   validateVictimEvent,
   validateVictimTimeline,
 } = require("../src/net/victimPayload");
@@ -333,9 +335,27 @@ test("socket dispatch drops invalid input and emits only validated events", () =
   assert.deepEqual(received, [VALID_EVENTS["assistant.turn"]]);
 });
 
-test("SessionSocket delegates text frames to the strict dispatch path", () => {
+test("SessionSocket authenticates first and delegates only strict validated frames", () => {
   const source = fs.readFileSync(path.join(__dirname, "..", "src", "net", "socket.ts"), "utf8");
-  assert.match(source, /import \{ dispatchVictimEvent \} from ["']\.\/victimPayload["']/);
-  assert.match(source, /dispatchVictimEvent\(String\(message\.data\), this\.options\.onEvent\)/);
+  assert.match(source, /import \{ parseSocketMessage \} from ["']\.\/victimPayload["']/);
+  assert.match(source, /new WebSocket\(`\$\{this\.options\.baseUrl\}\$\{this\.options\.path\}`\)/);
+  assert.doesNotMatch(source, /\?token=/);
+  assert.match(source, /socket\.send\(JSON\.stringify\(\{ type: "auth", token: this\.options\.token \}\)\)/);
+  assert.match(source, /parseSocketMessage\(message\.data, this\.options\.sessionId\)/);
+  assert.match(source, /frame\.type === "auth\.ok"[\s\S]*this\.authenticated = true/);
+  assert.match(source, /frame === null[\s\S]*socket\.close\(4400, ""\)/);
   assert.doesNotMatch(source, /parsed as VictimEvent/);
+});
+
+test("socket control acknowledgements use exact keys and approved identifiers", () => {
+  const auth = { type: "auth.ok", session_id: "session-1", role: "victim" };
+  const accepted = { type: "chat.ack", client_message_id: "m:1", status: "accepted", turn_id: "turn-1" };
+  const duplicate = { type: "human_request.ack", request_id: "h:1", status: "duplicate" };
+  assert.deepEqual(validateSocketControl(auth, "session-1"), auth);
+  assert.deepEqual(parseSocketMessage(JSON.stringify(accepted), "session-1"), accepted);
+  assert.deepEqual(validateSocketControl(duplicate, "session-1"), duplicate);
+  assert.equal(validateSocketControl({ ...auth, token: "forbidden" }, "session-1"), null);
+  assert.equal(validateSocketControl({ ...accepted, client_message_id: "m:0" }, "session-1"), null);
+  assert.equal(validateSocketControl({ ...accepted, turn_id: "x".repeat(65) }, "session-1"), null);
+  assert.equal(validateSocketControl({ ...duplicate, requested_at: "private" }, "session-1"), null);
 });

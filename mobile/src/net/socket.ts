@@ -1,77 +1,79 @@
-/**
- * Session socket with reconnect and resume.
- *
- * The client drops any event that is not on the allowlist. The server already
- * filters by role; this is defence in depth, not the primary control.
- */
-
-import type { VictimEvent } from "../types/events";
-import { dispatchVictimEvent } from "./victimPayload";
+import type { ChatAck, HumanRequestAck, SocketControlFrame, VictimEvent } from "../types/events";
+import { parseSocketMessage } from "./victimPayload";
 
 export interface SessionSocketOptions {
   baseUrl: string;
+  path: string;
   sessionId: string;
   token: string;
   onEvent: (event: VictimEvent) => void;
-  onAudio?: (chunk: ArrayBuffer) => void;
-  onStateChange?: (state: "connecting" | "open" | "closed") => void;
+  onControl: (frame: SocketControlFrame) => void;
+  onStateChange?: (state: "connecting" | "authenticating" | "open" | "closed", code?: number) => void;
 }
 
 export class SessionSocket {
   private socket: WebSocket | null = null;
-  private lastAckSeq = 0;
+  private authenticated = false;
 
   constructor(private readonly options: SessionSocketOptions) {}
 
   connect(): void {
+    if (this.socket !== null) return;
     this.options.onStateChange?.("connecting");
-    const { baseUrl, sessionId, token } = this.options;
-    const socket = new WebSocket(
-      `${baseUrl}/ws/session/${sessionId}?token=${encodeURIComponent(token)}`,
-    );
-    socket.binaryType = "arraybuffer";
-
-    socket.onopen = () => this.options.onStateChange?.("open");
-    socket.onclose = () => this.options.onStateChange?.("closed");
-
+    const socket = new WebSocket(`${this.options.baseUrl}${this.options.path}`);
+    socket.onopen = () => {
+      this.options.onStateChange?.("authenticating");
+      socket.send(JSON.stringify({ type: "auth", token: this.options.token }));
+    };
+    socket.onclose = (event) => {
+      this.authenticated = false;
+      this.socket = null;
+      this.options.onStateChange?.("closed", event.code);
+    };
     socket.onmessage = (message) => {
-      if (message.data instanceof ArrayBuffer) {
-        this.options.onAudio?.(message.data);
+      if (typeof message.data !== "string") {
+        socket.close(4400, "");
         return;
       }
-      dispatchVictimEvent(String(message.data), this.options.onEvent);
+      const frame = parseSocketMessage(message.data, this.options.sessionId);
+      if (frame === null) {
+        socket.close(4400, "");
+        return;
+      }
+      if (frame.type === "auth.ok") {
+        if (frame.role !== "victim" || this.authenticated) {
+          socket.close(4400, "");
+          return;
+        }
+        this.authenticated = true;
+        this.options.onControl(frame);
+        this.options.onStateChange?.("open");
+      } else if (frame.type === "chat.ack" || frame.type === "human_request.ack") {
+        if (this.authenticated) this.options.onControl(frame);
+      } else if (this.authenticated) {
+        this.options.onEvent(frame);
+      }
     };
-
     this.socket = socket;
   }
 
-  /** 8-byte header: uint32 seq | uint32 ms, then 16 kHz mono PCM16. */
-  sendFrame(seq: number, ms: number, pcm16: ArrayBuffer): void {
-    if (this.socket?.readyState !== WebSocket.OPEN) return;
-    const frame = new ArrayBuffer(8 + pcm16.byteLength);
-    const view = new DataView(frame);
-    view.setUint32(0, seq);
-    view.setUint32(4, ms);
-    new Uint8Array(frame, 8).set(new Uint8Array(pcm16));
-    this.socket.send(frame);
-    this.lastAckSeq = seq;
+  sendText(clientMessageId: string, text: string, lang: "hi" | "en"): boolean {
+    if (!this.authenticated || this.socket?.readyState !== WebSocket.OPEN) return false;
+    this.socket.send(JSON.stringify({ type: "chat.message", client_message_id: clientMessageId, text, lang }));
+    return true;
   }
 
-  sendText(text: string, lang: string): void {
-    this.socket?.send(JSON.stringify({ type: "chat.message", text, lang }));
-  }
-
-  /** One tap, immediate, never in a menu. */
-  requestHuman(): void {
-    this.socket?.send(JSON.stringify({ type: "request_human" }));
-  }
-
-  resumeFrom(): number {
-    return this.lastAckSeq;
+  requestHuman(requestId: string): boolean {
+    if (!this.authenticated || this.socket?.readyState !== WebSocket.OPEN) return false;
+    this.socket.send(JSON.stringify({ type: "request_human", request_id: requestId }));
+    return true;
   }
 
   close(): void {
     this.socket?.close();
     this.socket = null;
+    this.authenticated = false;
   }
 }
+
+export type { ChatAck, HumanRequestAck };

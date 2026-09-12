@@ -1,9 +1,7 @@
 import { HandoffScreen } from "../src/screens/HandoffScreen";
-
-async function unavailableHumanRequest(): Promise<void> {
-  throw new Error();
-}
+import { useSession } from "../src/session/SessionProvider";
 
 export default function HandoffRoute() {
-  return <HandoffScreen onRequestHuman={unavailableHumanRequest} />;
+  const { requestHuman } = useSession();
+  return <HandoffScreen onRequestHuman={requestHuman} />;
 }

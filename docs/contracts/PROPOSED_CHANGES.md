@@ -1,4 +1,4 @@
-# Contract changes PC-01 to PC-10 — lead decisions
+# Contract changes PC-01 to PC-11 — lead decisions
 
 `CONTRACTS.md` is frozen and changes only with the leads' approval. The items below were proposed on 2026-09-10 while the vertical slice was built. **The leads decided all ten on 2026-09-11**, and the decisions are applied in the same change as `CONTRACTS.md` v2.
 
@@ -8,14 +8,19 @@
 | PC-02 `alert_type` | **APPROVED** | Frozen and implemented. CONTRACTS §3 |
 | PC-03 audit-only overrides/timeline | **REJECTED**; dedicated tables instead | Implemented: `overrides`, `timeline_events`. CONTRACTS §6 (15 tables) |
 | PC-04 assignment event on the socket | **DEFERRED** (not rejected) | The console keeps polling `/queue` |
-| PC-05 socket auth out of the URL | **APPROVED IN PRINCIPLE, phased** | Target frozen. The query token is temporarily supported. CONTRACTS §1 |
+| PC-05 socket auth out of the URL | **IMPLEMENTED BY PC-11** | First-frame authentication shipped as one coordinated Backend/Web/Mobile change. CONTRACTS §1 |
 | PC-06 supervisor reassignment | **DEFERRED** | The supervisor view is read-only; console writes are executive-only |
 | PC-07 officer messaging | **APPROVED WITH STRICT LIMITS** | Frozen and implemented with safety tests. CONTRACTS §2, §4 |
 | PC-08 text-channel renormalisation | **APPROVED CONDITIONALLY** | Implemented with boundary, sensitivity, determinism and explanation tests. CONTRACTS §5, §7 |
 | PC-09 `POST /sessions` response | **APPROVED AND FROZEN** | Implemented. CONTRACTS §4 |
 | PC-10 enumerations and error shape | **FROZEN** (HANDOVER vocabulary) | Implemented; centralised in `backend/app/core/enums.py`. CONTRACTS §9 |
+| PC-11 WebSocket auth and acknowledgements | **APPROVED** | Frozen for the controlled MVP. CONTRACTS §1 |
 
 Approvers (D-11): the leads for AI/ML and Safety, Backend, Executive Web, and Mobile/Victim Experience (`.github/CODEOWNERS`, `docs/TEAM-OPERATIONS.md`).
+
+## PC-11 — WebSocket authentication and durable acknowledgements — **APPROVED**
+
+Approved 2026-09-12 for the controlled MVP. The exact authentication, chat, human-request, reconnect, close-code, privacy, ownership and test requirements are frozen in `CONTRACTS.md` section 1. Backend owns authentication, authorization, persistence and acknowledgement semantics. Mobile owns in-memory victim identifiers and acknowledgement-driven UI. Executive Web owns first-frame console authentication and validated inbound events. All three mirrors move together; there is no query-token transition and no event replay.
 
 ---
 
@@ -90,7 +95,7 @@ case.assignment  {case_id, status, assigned_officer_id}
 
 ---
 
-## PC-05 — WebSocket authentication out of the URL — **APPROVED IN PRINCIPLE, phased**
+## PC-05 — WebSocket authentication out of the URL — **IMPLEMENTED BY PC-11**
 
 **Frozen target protocol** (CONTRACTS §1):
 1. The socket connects without a JWT query parameter.
@@ -100,7 +105,7 @@ case.assignment  {case_id, status, assigned_officer_id}
 5. An invalid or expired token closes the connection.
 6. Tokens are never logged.
 
-**Transitional.** `?token=` stays temporarily supported for the text-first web slice. `backend/app/core/log_redaction.py` redacts it in every log line, as verified by the live smoke test. `POST /sessions` already returns `ws_url` without a token (PC-09).
+PC-11 completed the coordinated switch. Query components are rejected, clients send the exact first `auth` frame, and `backend/app/core/log_redaction.py` remains only as defence in depth for unexpected input.
 
 **Implementation owners:** Backend and Executive Web. The mobile socket moves at the same time.
 

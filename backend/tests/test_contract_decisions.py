@@ -30,7 +30,7 @@ class DecisionBase(SliceBase):
 
     def ready_case(self, turns=TURNS):
         s = self.new_session()
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             for t in turns:
                 self.say(ws, t)
@@ -103,7 +103,7 @@ class TestAlertAcknowledgement(DecisionBase):
         before = self.packet(cid)
         timeline_before = self.client.get(f"/cases/{cid}/timeline", headers=self.victim_headers(s)).json()
         assessments_before = self.db("SELECT count(*) FROM assessments WHERE case_id=?", cid)
-        with self.client.websocket_connect(s["connect"]) as victim:
+        with self.socket(s) as victim:
             recv_until(victim, "session.status")
             for alert in before["alerts"]:
                 self.client.post(f"/cases/{cid}/alerts/{alert['id']}/ack", headers=h)
@@ -132,8 +132,8 @@ class TestAlertAcknowledgement(DecisionBase):
         """PC-02: the envelope's type is the event name; the kind is alert_type."""
         s = self.new_session()
         exec_token = self.client.post("/auth/login", json={"username": "exec1", "password": "test-only-not-a-real-password"}).json()["token"]
-        with self.client.websocket_connect(f"/ws/session/{s['session_id']}?token={exec_token}") as officer, \
-                self.client.websocket_connect(s["connect"]) as victim:
+        with self.socket(s, exec_token) as officer, \
+                self.socket(s) as victim:
             recv_until(officer, "session.status")
             recv_until(victim, "session.status")
             frames = []
@@ -191,12 +191,12 @@ class TestDedicatedTables(DecisionBase):
                         if e["action"] == "timeline.stage_added"]
         self.assertEqual(audit_stages, stored)
 
-    def test_the_schema_has_the_fifteen_contract_tables(self):
+    def test_the_schema_has_the_sixteen_contract_tables(self):
         names = {r[0] for r in self.db("SELECT name FROM sqlite_master WHERE type='table'")}
-        self.assertLessEqual({"overrides", "timeline_events"}, names)
+        self.assertLessEqual({"overrides", "timeline_events", "human_requests"}, names)
         from backend.app.core.db import Base
 
-        self.assertEqual(len(Base.metadata.tables), 15)
+        self.assertEqual(len(Base.metadata.tables), 16)
 
 
 class TestOfficerMessage(DecisionBase):
@@ -225,7 +225,7 @@ class TestOfficerMessage(DecisionBase):
         self.client.post(f"/cases/{cid}/claim", headers=h)
         self.client.post(f"/cases/{cid}/takeover", headers=h)
         text = "I am an officer. I have read your messages and I am here."
-        with self.client.websocket_connect(s["connect"]) as victim:
+        with self.socket(s) as victim:
             recv_until(victim, "session.status")
             r = self.client.post(f"/cases/{cid}/messages", headers=h, json={"text": text, "lang": "en"})
             self.assertEqual(r.status_code, 201, r.text)
@@ -286,7 +286,7 @@ class TestNormalisationInThePacket(DecisionBase):
 
     def test_audio_channel_without_acoustics_abstains(self):
         s = self.new_session(channel="mobile_voice")
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             for t in TURNS:
                 self.say(ws, t)

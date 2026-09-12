@@ -63,6 +63,22 @@ export type VictimEvent =
   | ({ type: "timeline.update" } & TimelineUpdate)
   | ({ type: "officer.message" } & OfficerMessage);
 
+export interface SocketAuthOk {
+  type: "auth.ok";
+  session_id: string;
+  role: "victim" | "executive" | "supervisor";
+}
+
+export type ChatAck =
+  | { type: "chat.ack"; client_message_id: string; status: "accepted" | "duplicate"; turn_id: string }
+  | { type: "chat.ack"; client_message_id: string; status: "rejected"; error: "session_ended" | "not_permitted" | "id_conflict" };
+
+export type HumanRequestAck =
+  | { type: "human_request.ack"; request_id: string; status: "accepted" | "duplicate" }
+  | { type: "human_request.ack"; request_id: string; status: "rejected"; error: "session_ended" | "not_permitted" };
+
+export type SocketControlFrame = SocketAuthOk | ChatAck | HumanRequestAck;
+
 export const ALLOWED_EVENT_TYPES = [
   "assistant.turn",
   "transcript.line",

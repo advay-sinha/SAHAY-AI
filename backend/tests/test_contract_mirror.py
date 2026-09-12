@@ -190,7 +190,7 @@ class TestEnumMirror(unittest.TestCase):
 
 
 class TestTableList(unittest.TestCase):
-    """CONTRACTS.md section 6 vs the models (PC-03: 15 tables)."""
+    """CONTRACTS.md section 6 vs the models (PC-11: 16 tables)."""
 
     def test_models_declare_exactly_the_contract_tables(self):
         section = contract_section(read(CONTRACTS_MD), 6)
@@ -198,8 +198,8 @@ class TestTableList(unittest.TestCase):
         documented = sorted(t.strip() for t in listed.split("·"))
         declared = sorted(re.findall(r'__tablename__\s*=\s*"([^"]+)"', read(TABLES_PY)))
         self.assertEqual(declared, documented)
-        self.assertEqual(len(declared), 15)
-        self.assertIn("15 tables", section)
+        self.assertEqual(len(declared), 16)
+        self.assertIn("16 tables", section)
 
 
 class TestSviWeightMirror(unittest.TestCase):

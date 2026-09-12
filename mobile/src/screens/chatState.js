@@ -36,7 +36,7 @@ function createChatSendController(onSend, onStateChange) {
     emit();
 
     try {
-      await onSend(text);
+      await onSend(text, id);
       if (disposed) return false;
 
       messages = messages.map((message) => (
@@ -71,7 +71,7 @@ function createChatSendController(onSend, onStateChange) {
     emit();
 
     try {
-      await onSend(failed.text);
+      await onSend(failed.text, id);
       if (disposed) return false;
 
       messages = messages.map((message) => (

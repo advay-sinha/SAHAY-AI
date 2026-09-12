@@ -28,8 +28,7 @@ from .ws.session import router as ws_router
 
 settings = get_settings()
 
-# Before any request is served: the WebSocket handshake URL carries the JWT by
-# contract, and uvicorn would otherwise write it into the log.
+# Defence in depth for unexpected query data and JWT-shaped log arguments.
 log_redaction.install()
 
 

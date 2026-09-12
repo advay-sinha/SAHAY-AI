@@ -1,4 +1,4 @@
-# Frozen contracts — v2
+# Frozen contracts — v3
 
 > **Local MVP infrastructure profile:** SQLite through SQLAlchemy replaces PostgreSQL for the current build; a local background runner replaces Redis/RQ; local retrieval replaces pgvector. Provider interfaces must preserve a later migration path.
 
@@ -8,36 +8,38 @@ Agreed Day 1 (v1). Changed only via an issue labelled `type:contract` with **all
 
 Every team builds against this file, not against another team's current code.
 
+**v3, 2026-09-12.** PC-11 freezes and approves first-frame WebSocket authentication, durable chat acknowledgements, atomic human-request acknowledgements, and REST-based reconnect recovery for the controlled MVP. Query-token authentication and WebSocket event replay are removed.
+
 ---
 
 ## 1. Transport
 
 ```
-WSS /ws/session/{session_id}
+WSS /ws/session/{session_id}                 # no query component
 
-UP    binary   16 kHz mono PCM16 · 500 ms frames · 8-byte header: uint32 seq | uint32 ms
-      text     {"type":"auth","token":<session_token or executive token>}   (PC-05, first frame)
-               {"type":"chat.message","text":...,"lang":...}
-               {"type":"request_human"}
-DOWN  binary   assistant TTS chunks, prefixed with turn_id header
-      text     events below
+UP    {"type":"auth","token":"<non-empty bearer token>"}            # first frame, within 5 s
+DOWN  {"type":"auth.ok","session_id":"<path session ID>","role":"victim|executive|supervisor"}
 
-FALLBACK       POST /sessions/{id}/audio     whole-utterance upload (always available)
-RECONNECT      client resumes from last acknowledged seq; server de-duplicates
+UP    {"type":"chat.message","client_message_id":"m:1","text":"...","lang":"hi|en"}
+DOWN  {"type":"chat.ack","client_message_id":"m:1","status":"accepted|duplicate","turn_id":"<opaque>"}
+      {"type":"chat.ack","client_message_id":"m:1","status":"rejected","error":"session_ended|not_permitted|id_conflict"}
+
+UP    {"type":"request_human","request_id":"h:1"}
+DOWN  {"type":"human_request.ack","request_id":"h:1","status":"accepted|duplicate"}
+      {"type":"human_request.ack","request_id":"h:1","status":"rejected","error":"session_ended|not_permitted"}
 ```
 
-**Socket authentication — PC-05, approved in principle, phased.**
+All frames above have exactly the shown keys. Unknown or extra keys are invalid. `client_message_id` matches `^m:[1-9][0-9]{0,15}$`; `request_id` matches `^h:[1-9][0-9]{0,15}$`. Identifiers are scoped to the authenticated session and kept in client memory only. `turn_id` is an opaque, nonempty string of at most 64 characters; clients neither parse it nor infer ordering from it.
 
-*Target protocol (frozen):*
-1. The client connects to `/ws/session/{session_id}` with **no token in the URL**.
-2. Its first frame is `{"type":"auth","token":...}`, sent immediately after the connection opens.
-3. The server sends **no session or assessment data** before authentication succeeds.
-4. Authentication has a short timeout (5 s). Timing out, or an invalid or expired token, closes the connection (close code 4401 or 4403). The server gives no detail about why.
-5. Tokens are never logged by client or server.
+The first frame must be `auth` and arrive within five seconds. No snapshot or domain event is sent before `auth.ok`. Authentication timeout, missing/malformed/expired token closes 4401; a valid identity without access to the path session closes 4403; malformed pre-authentication data closes 4400. Any URL query component is rejected. All close reasons are empty.
 
-*Transitional (temporarily supported for the text-first web slice only):* `WSS /ws/session/{session_id}?token=<jwt>`. The server already redacts `token=` values and JWT shapes from its logs (`backend/app/core/log_redaction.py`). Clients build this URL themselves from `ws_url` and the token. They must never persist, display or log it.
+For chat, the server trims only leading and trailing whitespace. The resulting canonical text is 1-2000 Unicode characters, is stored exactly, and `lang` must equal the session language. `accepted` is sent only after durable commit and means only that the victim turn was persisted. A retry with the same id, canonical text and language gets `duplicate` with the original `turn_id`; different content or language gets `id_conflict` and persists nothing. Database uniqueness on `(session_id, client_message_id)` makes concurrent duplicates create one turn.
 
-*Implementation owners:* Backend (server handshake) and Executive Web (console socket). The mobile app moves at the same time. The query-token form is removed once both sides ship the target protocol and the slice's smoke test passes on it.
+For handoff, an active authenticated victim may request a human regardless of AI consent. The human-request record and transition to `SH` commit in one transaction before `accepted`. A duplicate id does not repeat records or side effects. `session.status: SH` is a state notification, not the initiating acknowledgement. `requested_at` remains internal UTC data.
+
+Malformed JSON, binary frames, unknown types, missing/extra keys, or invalid identifiers close 4400. An expired token after connection closes 4401; an unauthorized role/action closes 4403; an internal/database failure sends no acknowledgement and closes 1011. Reasons are always empty. Tokens, auth frames, complete queried URLs, submitted text, and internal details are never logged.
+
+**Reconnect and recovery.** There is no event replay. Reconnect, authenticate, wait for `auth.ok`, receive the current `session.status`, then refetch authoritative permitted REST resources. Clients do not automatically resend unacknowledged actions. An explicit retry reuses the in-memory id. Events missed while disconnected are recovered through REST; opaque server ids reconcile transcript entries where available.
 
 ---
 
@@ -143,7 +145,7 @@ GET  /cases/{id}/audit
 - `session_token` is **not** an executive token. Executive tokens come only from `/auth/login`.
 - A session token never authorises a console route or any other session. The server returns 403, and `backend/tests/test_vertical_slice.py` asserts this.
 - The response carries no session state and no assessment field.
-- To connect, a client uses `ws_url` plus the section 1 protocol. During the transition the client appends `?token=<session_token>` itself.
+- To connect, a client uses `ws_url` unchanged and sends the section 1 `auth` frame first. It never appends credentials to the URL.
 
 ---
 
@@ -169,13 +171,15 @@ svi.compute(dimension_scores, confidences, quality)
 
 ## 6. Database tables
 
-`users · sessions · consents · turns · cases · assessments · alerts · recommendations · decisions_ai · decisions_human · overrides · timeline_events · audit_log · policy_chunks · latency_metrics`
+`users · sessions · consents · turns · human_requests · cases · assessments · alerts · recommendations · decisions_ai · decisions_human · overrides · timeline_events · audit_log · policy_chunks · latency_metrics`
 
-That is 15 tables. PC-03 restored `overrides` and `timeline_events` (HANDOVER.md section 11). `policy_chunks` uses local keyword retrieval, not pgvector.
+That is 16 tables. PC-03 restored `overrides` and `timeline_events` (HANDOVER.md section 11). `policy_chunks` uses local keyword retrieval, not pgvector.
 
 - `decisions_ai` and `decisions_human` are **separate tables**. The record must never read as though a machine decided.
 - `overrides` is the authoritative store of band overrides. `reason` is `NOT NULL` and enforced at the endpoint.
 - `timeline_events` is the authoritative victim-safe timeline (`stage`, `label`, `created_at`). It is unique per `(case_id, dedupe_key)`.
+- `turns.client_message_id` is nullable for historical/system turns and unique with `session_id` when present.
+- `human_requests(session_id, request_id, requested_at)` stores internal handoff requests and is unique on `(session_id, request_id)`.
 - `audit_log` is an append-only **accountability record**. Writes to `overrides` and `timeline_events` also add an audit entry. The audit log is not the authoritative timeline or override store.
 
 ---

@@ -1,4 +1,5 @@
 import type { VictimEvent } from "../types/events";
+import type { SocketControlFrame } from "../types/events";
 
 export type TimelineStage =
   | "request_received"
@@ -60,3 +61,5 @@ export function dispatchVictimEvent(
   onEvent: (event: VictimEvent) => void,
 ): boolean;
 export function validateVictimTimeline(value: unknown): VictimTimeline | null;
+export function validateSocketControl(value: unknown, sessionId: string): SocketControlFrame | null;
+export function parseSocketMessage(raw: unknown, sessionId: string): VictimEvent | SocketControlFrame | null;

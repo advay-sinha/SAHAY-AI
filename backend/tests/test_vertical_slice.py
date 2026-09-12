@@ -42,6 +42,23 @@ class Closed(Exception):
     pass
 
 
+class AuthenticatedSocket:
+    def __init__(self, client, path, token):
+        self.context = client.websocket_connect(path)
+        self.token = token
+
+    def __enter__(self):
+        self.ws = self.context.__enter__()
+        self.ws.send_json({"type": "auth", "token": self.token})
+        frame = recv(self.ws)
+        if frame.get("type") != "auth.ok":
+            raise AssertionError("auth.ok was not the first server frame")
+        return self.ws
+
+    def __exit__(self, *args):
+        return self.context.__exit__(*args)
+
+
 def recv(ws, timeout=5.0):
     try:
         msg = ws._send_queue.get(timeout=timeout)
@@ -50,7 +67,7 @@ def recv(ws, timeout=5.0):
     if isinstance(msg, BaseException):
         raise msg
     if msg.get("type") == "websocket.close":
-        raise Closed(msg.get("code"))
+        raise Closed(msg.get("code"), msg.get("reason", ""))
     return json.loads(msg["text"])
 
 
@@ -134,16 +151,24 @@ class SliceBase(unittest.TestCase):
         r = self.client.post("/sessions", json={"channel": channel, "consent": consent, "lang": lang})
         self.assertEqual(r.status_code, 201, r.text)
         body = r.json()
-        # PC-09: ws_url carries no token. The text-first slice still connects
-        # with the transitional query token (CONTRACTS.md section 1, PC-05).
-        body["connect"] = f"{body['ws_url']}?token={body['session_token']}"
         return body
+
+    def socket(self, session, token=None):
+        return AuthenticatedSocket(self.client, session["ws_url"], token or session["session_token"])
 
     def settle(self):
         self.client.portal.call(self.runner.drain)
 
     def say(self, ws, text):
-        ws.send_json({"type": "chat.message", "text": text, "lang": "hi"})
+        sequence = getattr(self, "_client_message_sequence", 0) + 1
+        self._client_message_sequence = sequence
+        client_message_id = f"m:{sequence}"
+        ws.send_json({"type": "chat.message", "client_message_id": client_message_id,
+                      "text": text, "lang": "hi"})
+        ack = recv(ws)
+        self.assertEqual(ack["type"], "chat.ack")
+        self.assertEqual(ack["client_message_id"], client_message_id)
+        self.assertEqual(ack["status"], "accepted")
         frames = recv_until(ws, "session.status")
         self.settle()
         return frames
@@ -158,8 +183,8 @@ class TestVictimIsolation(SliceBase):
     def test_a_victim_socket_never_receives_assessment_data(self):
         s = self.new_session()
         exec_token = self.client.post("/auth/login", json={"username": "exec1", "password": PASSWORD}).json()["token"]
-        with self.client.websocket_connect(s["connect"]) as victim, \
-                self.client.websocket_connect(f"/ws/session/{s['session_id']}?token={exec_token}") as officer:
+        with self.socket(s) as victim, \
+                self.socket(s, exec_token) as officer:
             recv_until(victim, "session.status")
             recv_until(officer, "session.status")
             victim_frames, officer_frames = [], []
@@ -183,7 +208,7 @@ class TestVictimIsolation(SliceBase):
         from backend.app.ws.hub import hub
 
         s = self.new_session()
-        with self.client.websocket_connect(s["connect"]) as victim:
+        with self.socket(s) as victim:
             recv_until(victim, "session.status")
             before = hub.leaks_blocked
             self.client.portal.call(lambda: _async_publish(hub, s["session_id"], "assistant.turn",
@@ -196,7 +221,7 @@ class TestVictimIsolation(SliceBase):
 
         a, b = self.new_session(), self.new_session()
         with self.assertRaises((WebSocketDisconnect, Closed)):
-            with self.client.websocket_connect(f"/ws/session/{b['session_id']}?token={a['session_token']}") as ws:
+            with AuthenticatedSocket(self.client, b["ws_url"], a["session_token"]) as ws:
                 recv(ws)
 
     def test_victim_timeline_is_own_case_only_and_assessment_free(self):
@@ -219,7 +244,7 @@ class TestVictimIsolation(SliceBase):
 
 class TestAssessmentBehaviour(SliceBase):
     def run_turns(self, s, turns):
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             for t in turns:
                 self.say(ws, t)
@@ -269,7 +294,7 @@ class TestAssessmentBehaviour(SliceBase):
 
     def test_crisis_forces_sx_critical_alert_and_takeover_and_never_resumes(self):
         s = self.new_session()
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             self.say(ws, TURNS[0])
             frames = self.say(ws, "Ab aur nahi jee sakti, main jaan de dungi.")
@@ -301,7 +326,7 @@ class TestAssessmentBehaviour(SliceBase):
 class TestCasework(SliceBase):
     def ready_case(self):
         s = self.new_session()
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             for t in TURNS:
                 self.say(ws, t)
@@ -395,7 +420,7 @@ class TestCasework(SliceBase):
         s = self.ready_case()
         h = self.login("exec1")
         self.client.post(f"/cases/{s['case_id']}/claim", headers=h)
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             self.assertEqual(self.client.post(f"/cases/{s['case_id']}/takeover", headers=h).status_code, 200)
             frames = recv_until(ws, "session.status")
@@ -431,10 +456,10 @@ class TestCasework(SliceBase):
 class TestReconnectAndErrors(SliceBase):
     def test_reconnect_resumes_from_the_database(self):
         s = self.new_session()
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
             self.say(ws, TURNS[0])
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             snap = recv_until(ws, "session.status")[-1]
             self.assertEqual(snap["state"], "S1")
             self.say(ws, TURNS[1])
@@ -448,10 +473,12 @@ class TestReconnectAndErrors(SliceBase):
         vh = {"Authorization": f"Bearer {s['session_token']}"}
         r = self.client.post(f"/sessions/{s['session_id']}/end", headers=vh)
         self.assertEqual(r.json()["reference_no"], s["reference_no"])
-        with self.client.websocket_connect(s["connect"]) as ws:
+        with self.socket(s) as ws:
             recv_until(ws, "session.status")
-            ws.send_json({"type": "chat.message", "text": "still there?"})
-            recv_until(ws, "session.status")
+            ws.send_json({"type": "chat.message", "client_message_id": "m:1",
+                          "text": "still there?", "lang": "hi"})
+            self.assertEqual(recv(ws), {"type": "chat.ack", "client_message_id": "m:1",
+                                        "status": "rejected", "error": "session_ended"})
         self.assertEqual([t for t in self.packet(s["case_id"])["transcript"] if t["speaker"] == "victim"], [])
 
     def test_validation_errors_do_not_echo_input(self):
@@ -470,7 +497,7 @@ class TestReconnectAndErrors(SliceBase):
         root.setLevel(logging.DEBUG)
         try:
             s = self.new_session()
-            with self.client.websocket_connect(s["connect"]) as ws:
+            with self.socket(s) as ws:
                 recv_until(ws, "session.status")
                 for t in TURNS:
                     self.say(ws, t)

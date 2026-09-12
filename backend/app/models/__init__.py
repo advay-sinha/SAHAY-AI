@@ -8,6 +8,7 @@ from .tables import (  # noqa: F401
     Consent,
     DecisionAI,
     DecisionHuman,
+    HumanRequest,
     LatencyMetric,
     Override,
     PolicyChunk,

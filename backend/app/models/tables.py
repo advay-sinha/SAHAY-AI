@@ -1,6 +1,7 @@
 """SQLAlchemy tables.
 
-CONTRACTS.md section 6 fixes the table list: 15 tables since PC-03 restored the
+CONTRACTS.md section 6 fixes the table list: 16 tables since PC-11 added the
+internal `human_requests` table. PC-03 restored the
 dedicated `overrides` and `timeline_events` tables of HANDOVER.md section 11. `decisions_ai` and `decisions_human`
 are separate tables and must stay that way: the record must never read as though
 a machine decided.
@@ -70,9 +71,14 @@ class Consent(TimestampMixin, Base):
 
 class Turn(TimestampMixin, Base):
     __tablename__ = "turns"
-    __table_args__ = (UniqueConstraint("session_id", "seq", name="uq_turns_session_seq"),)
+    __table_args__ = (
+        UniqueConstraint("session_id", "seq", name="uq_turns_session_seq"),
+        UniqueConstraint("session_id", "client_message_id", name="uq_turns_session_client_message"),
+    )
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     session_id: Mapped[str] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), index=True)
+    # PC-11 client idempotency key. Nullable for historical, assistant and officer turns.
+    client_message_id: Mapped[Optional[str]] = mapped_column(String(18), nullable=True)
     seq: Mapped[int] = mapped_column(Integer)
     speaker: Mapped[str] = mapped_column(String(16))  # victim | assistant | officer (PC-07; HANDOVER.md section 11)
     text: Mapped[str] = mapped_column(Text, default="")
@@ -86,6 +92,17 @@ class Turn(TimestampMixin, Base):
     lang_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     # Assistant turns: "draft" (unreviewed fallback text) or "" for victim turns.
     review_status: Mapped[str] = mapped_column(String(24), default="")
+
+
+class HumanRequest(Base):
+    __tablename__ = "human_requests"
+    __table_args__ = (
+        UniqueConstraint("session_id", "request_id", name="uq_human_requests_session_request"),
+    )
+    id: Mapped[str] = mapped_column(String(36), primary_key=True)
+    session_id: Mapped[str] = mapped_column(ForeignKey("sessions.id", ondelete="CASCADE"), index=True)
+    request_id: Mapped[str] = mapped_column(String(18))
+    requested_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=_now)
 
 
 class Case(TimestampMixin, Base):

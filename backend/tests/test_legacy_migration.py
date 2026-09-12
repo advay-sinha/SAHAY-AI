@@ -15,7 +15,7 @@ class TestLegacyMigrationToHead(unittest.TestCase):
     REPO = Path(__file__).resolve().parents[2]
     BACKEND = REPO / "backend"
     PRE_HEAD = "4abeb4233bf7"
-    HEAD = "7fbad9360da7"
+    HEAD = "9c7e2d4a11b0"
 
     def alembic(self, env, *arguments):
         return subprocess.run(
@@ -184,6 +184,37 @@ class TestLegacyMigrationToHead(unittest.TestCase):
             check = self.alembic(env, "check")
             self.assertEqual(check.returncode, 0, check.stderr[-2000:])
             self.assertIn("No new upgrade operations detected", check.stdout + check.stderr)
+
+    def test_fresh_pc11_upgrade_downgrade_and_reupgrade(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            database = Path(tmp) / "fresh-pc11.db"
+            env = dict(os.environ)
+            env["DATABASE_URL"] = "sqlite+aiosqlite:///" + database.as_posix()
+
+            upgraded = self.alembic(env, "upgrade", "head")
+            self.assertEqual(upgraded.returncode, 0, upgraded.stderr[-2000:])
+            with closing(sqlite3.connect(database)) as connection:
+                columns = {row[1] for row in connection.execute("PRAGMA table_info(turns)")}
+                tables = {row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )}
+                self.assertIn("client_message_id", columns)
+                self.assertIn("human_requests", tables)
+
+            downgraded = self.alembic(env, "downgrade", "7fbad9360da7")
+            self.assertEqual(downgraded.returncode, 0, downgraded.stderr[-2000:])
+            with closing(sqlite3.connect(database)) as connection:
+                columns = {row[1] for row in connection.execute("PRAGMA table_info(turns)")}
+                tables = {row[0] for row in connection.execute(
+                    "SELECT name FROM sqlite_master WHERE type='table'"
+                )}
+                self.assertNotIn("client_message_id", columns)
+                self.assertNotIn("human_requests", tables)
+
+            reupgraded = self.alembic(env, "upgrade", "head")
+            self.assertEqual(reupgraded.returncode, 0, reupgraded.stderr[-2000:])
+            check = self.alembic(env, "check")
+            self.assertEqual(check.returncode, 0, check.stderr[-2000:])
 
 
 if __name__ == "__main__":

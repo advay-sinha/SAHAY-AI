@@ -1,7 +1,7 @@
 """POST /auth/login. Executive and supervisor accounts only.
 
-Contract: HANDOVER.md section 12.4, `POST /auth/login -> {token, role}`.
-`display_name` is returned as well, additively, for the console header.
+Canonical contract: `POST /auth/login -> {token, role, display_name}`. The
+response is exact; `display_name` is required for the console header.
 
 A victim never logs in; a victim session gets a scoped token from
 POST /sessions with role=victim.

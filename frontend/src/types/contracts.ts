@@ -5,7 +5,7 @@
  * it without a `type:contract` issue and the leads' approval is contract
  * drift. No `any` is permitted on a contract shape.
  *
- * Contract v2 (2026-09-11): PC-01..PC-10 decisions applied.
+ * Contract v3 (2026-09-12): PC-01..PC-11 decisions applied.
  */
 
 /* -------------------------------------------------------------------------
@@ -134,7 +134,7 @@ export interface SafetyAlert {
 
 export interface CaseStructured {
   incident: string | null;
-  timeline: TimelineUpdate[];
+  timeline: Array<{ stage: string; label: string; ts: string }>;
   persons: string[];
   threats: string[];
   safety_now: string | null;
@@ -151,7 +151,6 @@ export interface ActionRecommended {
   rationale: string;
   policy_citations: string[];
   confidence: number;
-  status: "awaiting_decision" | "decided";
 }
 
 export interface SafeSignalFlag {
@@ -188,6 +187,33 @@ export type ExecutiveEvent =
   | ({ type: "escalation.packet" } & EscalationPacket);
 
 export type SocketEvent = VictimEvent | ExecutiveEvent;
+
+export interface SocketAuth {
+  type: "auth";
+  token: string;
+}
+export interface SocketAuthOk {
+  type: "auth.ok";
+  session_id: string;
+  role: Role;
+}
+export interface ChatMessageRequest {
+  type: "chat.message";
+  client_message_id: string;
+  text: string;
+  lang: Lang;
+}
+export type ChatAck =
+  | { type: "chat.ack"; client_message_id: string; status: "accepted" | "duplicate"; turn_id: string }
+  | { type: "chat.ack"; client_message_id: string; status: "rejected"; error: "session_ended" | "not_permitted" | "id_conflict" };
+export interface HumanRequest {
+  type: "request_human";
+  request_id: string;
+}
+export type HumanRequestAck =
+  | { type: "human_request.ack"; request_id: string; status: "accepted" | "duplicate" }
+  | { type: "human_request.ack"; request_id: string; status: "rejected"; error: "session_ended" | "not_permitted" };
+export type SocketControlFrame = SocketAuthOk | ChatAck | HumanRequestAck;
 
 /** Event names a victim client may receive. Mirrors backend/app/ws/events.py. */
 export const VICTIM_ALLOWED_EVENTS = [

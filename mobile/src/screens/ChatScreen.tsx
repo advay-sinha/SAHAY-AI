@@ -25,7 +25,7 @@ interface ChatScreenProps {
   aiPermitted: boolean;
   consent: ConsentStatus;
   onRequestHuman: () => void;
-  onSend: (text: string) => Promise<void>;
+  onSend: (text: string, localId: number) => Promise<void>;
   receivedMessages?: readonly unknown[];
 }
 
@@ -45,7 +45,7 @@ export function ChatScreen({
   const controllerRef = useRef<ChatSendController | null>(null);
   if (controllerRef.current === null) {
     controllerRef.current = createChatSendController(
-      (text) => sendCallbackRef.current(text),
+      (text, localId) => sendCallbackRef.current(text, localId),
       setState,
     );
   }

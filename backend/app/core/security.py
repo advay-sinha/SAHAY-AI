@@ -6,10 +6,9 @@ The role on the token is what the WebSocket fan-out and the REST RBAC trust. A
 victim token can never be upgraded client-side, which is why the allowlist in
 app/ws/events.py and the checks in app/core/auth.py are keyed on this value.
 
-Tokens travel in the `Authorization: Bearer` header for REST. The one exception
-is the frozen WebSocket handshake (`WSS /ws/session/{id}?token=<jwt>`,
-CONTRACTS.md section 1), whose query string is redacted from server logs by
-app/core/log_redaction.py. No page URL ever carries a token.
+Tokens travel in the `Authorization: Bearer` header for REST. WebSockets carry
+the token only in the exact first client frame (CONTRACTS.md section 1). No URL
+ever carries a token.
 """
 
 import secrets

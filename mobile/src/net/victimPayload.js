@@ -159,6 +159,52 @@ function validateVictimTimeline(value) {
   }
 }
 
+const MESSAGE_ID = /^m:[1-9][0-9]{0,15}$/;
+const REQUEST_ID = /^h:[1-9][0-9]{0,15}$/;
+
+function validateSocketControl(value, sessionId) {
+  try {
+    if (!isRecord(value) || typeof value.type !== "string") return null;
+    if (value.type === "auth.ok") {
+      return hasExactKeys(value, ["type", "session_id", "role"])
+        && value.session_id === sessionId
+        && ["victim", "executive", "supervisor"].includes(value.role) ? value : null;
+    }
+    if (value.type === "chat.ack") {
+      if (!isString(value.client_message_id) || !MESSAGE_ID.test(value.client_message_id)) return null;
+      if (value.status === "accepted" || value.status === "duplicate") {
+        return hasExactKeys(value, ["type", "client_message_id", "status", "turn_id"])
+          && isString(value.turn_id) && value.turn_id.length >= 1 && value.turn_id.length <= 64 ? value : null;
+      }
+      return value.status === "rejected"
+        && hasExactKeys(value, ["type", "client_message_id", "status", "error"])
+        && ["session_ended", "not_permitted", "id_conflict"].includes(value.error) ? value : null;
+    }
+    if (value.type === "human_request.ack") {
+      if (!isString(value.request_id) || !REQUEST_ID.test(value.request_id)) return null;
+      if (value.status === "accepted" || value.status === "duplicate") {
+        return hasExactKeys(value, ["type", "request_id", "status"] ) ? value : null;
+      }
+      return value.status === "rejected"
+        && hasExactKeys(value, ["type", "request_id", "status", "error"])
+        && ["session_ended", "not_permitted"].includes(value.error) ? value : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function parseSocketMessage(raw, sessionId) {
+  if (typeof raw !== "string") return null;
+  try {
+    const value = JSON.parse(raw);
+    return validateSocketControl(value, sessionId) || validateVictimEvent(value);
+  } catch {
+    return null;
+  }
+}
+
 module.exports = {
   CONSENT_STATUSES,
   EVENT_TYPES,
@@ -168,4 +214,6 @@ module.exports = {
   parseVictimEvent,
   validateVictimEvent,
   validateVictimTimeline,
+  validateSocketControl,
+  parseSocketMessage,
 };

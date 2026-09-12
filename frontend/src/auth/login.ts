@@ -29,16 +29,21 @@ export const LOGIN_ERROR_MESSAGES: Record<LoginErrorKind, string> = {
   unavailable: "Sign-in is unavailable right now. Please try again, or contact your supervisor.",
 };
 
-/** Validate the response shape. The contract is `{token, role}`; display_name is optional. */
+/** Validate the frozen exact response shape: `{token, role, display_name}`. */
 export function parseLoginResponse(body: unknown): Omit<LoginSuccess, "ok"> | null {
-  if (typeof body !== "object" || body === null) return null;
+  if (typeof body !== "object" || body === null || Array.isArray(body)) return null;
+  if (Object.getPrototypeOf(body) !== Object.prototype) return null;
+  const keys = Reflect.ownKeys(body);
+  if (keys.length !== 3 || !keys.every((key) => typeof key === "string"
+      && ["token", "role", "display_name"].includes(key))) return null;
   const { token, role, display_name } = body as Record<string, unknown>;
   if (typeof token !== "string" || token.length === 0) return null;
   if (!isConsoleRole(role)) return null;
+  if (typeof display_name !== "string") return null;
   return {
     token,
     role,
-    displayName: typeof display_name === "string" ? display_name : "",
+    displayName: display_name,
   };
 }
 

@@ -14,8 +14,9 @@ const MAX_BACKOFF_MS = 15_000;
  * reordered frame can never leave the screen wrong for long. Reconnects back
  * off exponentially and never spin.
  *
- * The socket URL carries the token (frozen contract). It is built inside
- * connectSession, never logged, and never shown on screen.
+ * The token is sent only in the first frame by connectSession. Reconnects
+ * authenticate again and recover authoritative state through the snapshot and
+ * REST refetch; no WebSocket replay or action resend occurs.
  */
 export function useCaseSocket(
   sessionId: string | undefined,
@@ -39,14 +40,13 @@ export function useCaseSocket(
       socket = connectSession({
         sessionId,
         token,
-        onOpen: () => {
+        onReady: () => {
           attempt = 0;
           setState("live");
         },
         onClose: (code) => {
           if (stopped) return;
-          // 1008 = the server refused us (bad token / not permitted): stop.
-          if (code === 1008) {
+          if (code === 4401 || code === 4403) {
             setState("offline");
             return;
           }

@@ -225,11 +225,9 @@ describe("login", () => {
     expect(parseLoginResponse({ role: "executive" })).toBeNull();
     expect(parseLoginResponse(null)).toBeNull();
     expect(parseLoginResponse("token")).toBeNull();
-    expect(parseLoginResponse({ token: "t", role: "executive" })).toEqual({
-      token: "t",
-      role: "executive",
-      displayName: "",
-    });
+    expect(parseLoginResponse({ token: "t", role: "executive" })).toBeNull();
+    expect(parseLoginResponse({ token: "t", role: "executive", display_name: "Name", extra: true })).toBeNull();
+    expect(parseLoginResponse({ token: "t", role: "executive", display_name: 7 })).toBeNull();
   });
 
   it("a token whose role disagrees with the response is not stored", () => {

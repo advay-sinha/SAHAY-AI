@@ -7,8 +7,8 @@ import { t } from "../i18n";
 import { pressFeedbackStyle, theme, typeStyles } from "../theme";
 
 interface ConsentScreenProps {
-  onAccept: () => void;
-  onDecline: () => void;
+  onAccept: () => Promise<void>;
+  onDecline: () => Promise<void>;
 }
 
 const buttonStyle = {
@@ -23,20 +23,27 @@ const buttonStyle = {
 
 export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
   const [declined, setDeclined] = useState(false);
+  const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
   const decisionStarted = useRef(false);
 
-  function acceptConsent(): void {
+  async function decide(consent: "granted" | "declined"): Promise<void> {
     if (decisionStarted.current) return;
     decisionStarted.current = true;
-    onAccept();
+    setPending(true);
+    setFailed(false);
+    try {
+      await (consent === "granted" ? onAccept() : onDecline());
+      if (consent === "declined") setDeclined(true);
+    } catch {
+      setFailed(true);
+      decisionStarted.current = false;
+    } finally {
+      setPending(false);
+    }
   }
 
-  function declineConsent(): void {
-    if (decisionStarted.current) return;
-    decisionStarted.current = true;
-    setDeclined(true);
-    onDecline();
-  }
+  const disabled = pending || declined;
 
   return (
     <SafeScreen>
@@ -67,10 +74,10 @@ export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
       <Pressable
         accessibilityLabel={t("consent.accept")}
         accessibilityRole="button"
-        accessibilityState={{ disabled: declined, selected: false }}
-        disabled={declined}
-        onPress={acceptConsent}
-        style={({ pressed }) => [buttonStyle, pressed && !declined ? pressFeedbackStyle : null]}
+        accessibilityState={{ disabled, selected: false }}
+        disabled={disabled}
+        onPress={() => void decide("granted")}
+        style={({ pressed }) => [buttonStyle, pressed && !disabled ? pressFeedbackStyle : null]}
       >
         <Text allowFontScaling style={[typeStyles.label, { color: theme.colors.card, textAlign: "center" }]}>
           {t("consent.accept")}
@@ -79,19 +86,21 @@ export function ConsentScreen({ onAccept, onDecline }: ConsentScreenProps) {
       <Pressable
         accessibilityLabel={t("consent.decline")}
         accessibilityRole="button"
-        accessibilityState={{ disabled: declined, selected: declined }}
-        disabled={declined}
-        onPress={declineConsent}
+        accessibilityState={{ disabled, selected: declined }}
+        disabled={disabled}
+        onPress={() => void decide("declined")}
         style={({ pressed }) => [
           buttonStyle,
           { backgroundColor: theme.colors.card, borderColor: theme.colors.navy, borderWidth: 2 },
-          pressed && !declined ? pressFeedbackStyle : null,
+          pressed && !disabled ? pressFeedbackStyle : null,
         ]}
       >
         <Text allowFontScaling style={[typeStyles.label, { color: theme.colors.navy, textAlign: "center" }]}>
           {t("consent.decline")}
         </Text>
       </Pressable>
+      {pending ? <Text accessibilityLiveRegion="polite" allowFontScaling style={typeStyles.body}>{t("timeline.loading")}</Text> : null}
+      {failed ? <Text accessibilityLiveRegion="polite" allowFontScaling style={typeStyles.body}>{t("error.body")}</Text> : null}
       {declined ? (
         <View style={{ gap: 16 }}>
           <SurfaceCard tone="teal">

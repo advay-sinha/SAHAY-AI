@@ -24,25 +24,25 @@ test("language selection updates i18n before opening consent", () => {
   assert.match(source, /<LanguageScreen\s+onSelectLanguage=\{selectLanguage\}/);
 });
 
-test("accepting consent replaces the route with home", () => {
+test("accepting consent creates the session before replacing with home", () => {
   const source = read("app", "consent.tsx");
-  assert.match(source, /onAccept=\{\(\)\s*=>\s*router\.replace\(["']\/home["']\)\}/);
+  assert.match(source, /await createSession\(consent\)/);
+  assert.ok(source.indexOf("await createSession(consent)") < source.indexOf("router.replace"));
+  assert.match(source, /onAccept=\{\(\) => decide\("granted"\)\}/);
+  assert.match(source, /consent === "granted" \? "\/home" : "\/handoff"/);
 });
 
-test("declined consent can continue to the handoff route", () => {
+test("declined consent creates a declined session before handoff", () => {
   const source = read("app", "consent.tsx");
-  assert.match(source, /onDecline=\{\(\)\s*=>\s*router\.replace\(["']\/handoff["']\)\}/);
-  assert.doesNotMatch(source, /onDecline=\{[^}]*\/home/);
+  assert.match(source, /onDecline=\{\(\) => decide\("declined"\)\}/);
+  assert.match(source, /router\.replace\(consent === "granted" \? "\/home" : "\/handoff"\)/);
 });
 
 test("accept and decline route callbacks remain strictly separated", () => {
   const source = read("app", "consent.tsx");
-  const accept = source.match(/onAccept=\{\(\)\s*=>\s*router\.replace\(["']([^"']+)["']\)\}/);
-  const decline = source.match(/onDecline=\{\(\)\s*=>\s*router\.replace\(["']([^"']+)["']\)\}/);
-
-  assert.equal(accept?.[1], "/home");
-  assert.equal(decline?.[1], "/handoff");
-  assert.notEqual(accept?.[1], decline?.[1]);
+  assert.equal((source.match(/decide\("granted"\)/g) ?? []).length, 1);
+  assert.equal((source.match(/decide\("declined"\)/g) ?? []).length, 1);
+  assert.match(source, /createSession\(consent\)/);
 });
 
 test("home sends human requests to the handoff route", () => {
@@ -69,26 +69,31 @@ test("home opens the requests route", () => {
   assert.match(source, /onOpenRequests=\{\(\)\s*=>\s*router\.push\(["']\/requests["']\)\}/);
 });
 
-test("the requests route is local, unavailable, and keeps handoff available", () => {
+test("the requests route loads only the active session timeline and keeps handoff available", () => {
   const source = read("app", "requests.tsx");
   assert.match(source, /<MyRequestsScreen/);
-  assert.match(source, /loadState=["']unavailable["']/);
+  assert.match(source, /const \{ session, loadTimeline \} = useSession\(\)/);
+  assert.match(source, /loadTimeline\(\)\.then/);
+  assert.match(source, /if \(!active \|\| value === null\) return/);
+  assert.match(source, /loadState=\{loadState\}/);
   assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
-  assert.doesNotMatch(source, /payload=|fetch\(|WebSocket|Promise\.resolve/);
+  assert.doesNotMatch(source, /fetch\(|WebSocket|Promise\.resolve/);
 });
 
-test("the chat route cannot simulate successful delivery", () => {
+test("the chat route uses acknowledgement-backed session delivery", () => {
   const source = read("app", "chat.tsx");
-  assert.match(source, /async function unavailableSend\(_text:\s*string\):\s*Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
-  assert.match(source, /onSend=\{unavailableSend\}/);
+  assert.match(source, /const \{ session, events, sendChat \} = useSession\(\)/);
+  assert.match(source, /onSend=\{sendChat\}/);
+  assert.match(source, /receivedMessages=\{events\}/);
   assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
   assert.doesNotMatch(source, /Promise\.resolve|status=["']sent["']/);
 });
 
-test("the handoff route injects an unavailable callback rather than simulated success", () => {
+test("the handoff route uses the causal session acknowledgement", () => {
   const source = read("app", "handoff.tsx");
-  assert.match(source, /async function unavailableHumanRequest\(\): Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
-  assert.match(source, /<HandoffScreen\s+onRequestHuman=\{unavailableHumanRequest\}\s*\/>/);
+  assert.match(source, /const \{ requestHuman \} = useSession\(\)/);
+  assert.match(source, /<HandoffScreen onRequestHuman=\{requestHuman\} \/>/);
+  assert.doesNotMatch(source, /Promise\.resolve/);
   assert.doesNotMatch(source, /initialState/);
 });
 

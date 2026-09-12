@@ -35,7 +35,7 @@ from ..adapters.llm import get_provider
 from ..core.config import get_settings
 from ..core.enums import CONSENT_STATUSES, SESSION_CHANNELS
 from ..core.errors import BadRequest, Conflict, NotFound
-from ..models import Alert, Case, Consent, Session, Turn
+from ..models import Alert, Case, Consent, HumanRequest, Session, Turn
 from . import audit
 from .consent import CONSENT_DECLINED, CONSENT_GRANTED, CONSENT_PENDING
 from .turn_loop import FixedScriptUnavailable, plan_turn
@@ -54,6 +54,8 @@ class Outbound:
 
     events: List[Tuple[str, Dict[str, Any]]] = field(default_factory=list)
     schedule_assessment: bool = False
+    persisted_id: Optional[str] = None
+    idempotency_status: str = "accepted"
 
     def add(self, event_type: str, payload: Dict[str, Any]) -> None:
         self.events.append((event_type, payload))
@@ -209,6 +211,7 @@ async def submit_turn(
     text: str,
     lang: Optional[str] = None,
     victim_index: Optional[int] = None,
+    client_message_id: Optional[str] = None,
 ) -> Outbound:
     """Handle one victim text turn. See the module docstring for the order."""
     out = Outbound()
@@ -224,6 +227,20 @@ async def submit_turn(
     case = await case_for_session(db, session_id)
     consent = await consent_for(db, session_id)
     lang = lang or session.lang
+    if client_message_id is not None and lang != session.lang:
+        raise Conflict("message language is not permitted")
+
+    if client_message_id is not None:
+        existing = (await db.execute(select(Turn).where(
+            Turn.session_id == session_id,
+            Turn.client_message_id == client_message_id,
+        ))).scalar_one_or_none()
+        if existing is not None:
+            if existing.text != text or existing.lang != lang:
+                raise Conflict("client message id conflict")
+            out.persisted_id = existing.id
+            out.idempotency_status = "duplicate"
+            return out
 
     turns = await _turns(db, session_id)
     # Idempotent replay: `victim_index` is the 1-based position among the
@@ -241,12 +258,26 @@ async def submit_turn(
 
     # 1. persist the victim turn, in the state it was said in
     victim = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq, speaker="victim",
-                  text=text, lang=lang, state=session.state, created_at=audit.now())
-    db.add(victim)
+                  client_message_id=client_message_id, text=text, lang=lang,
+                  state=session.state, created_at=audit.now())
     try:
-        await db.flush()
+        async with db.begin_nested():
+            db.add(victim)
+            await db.flush()
     except IntegrityError:
+        if client_message_id is not None:
+            existing = (await db.execute(select(Turn).where(
+                Turn.session_id == session_id,
+                Turn.client_message_id == client_message_id,
+            ))).scalar_one_or_none()
+            if existing is not None and existing.text == text and existing.lang == lang:
+                out.persisted_id = existing.id
+                out.idempotency_status = "duplicate"
+                return out
+            if existing is not None:
+                raise Conflict("client message id conflict") from None
         raise Conflict("duplicate sequence number") from None
+    out.persisted_id = victim.id
     turns.append(victim)
     out.add("transcript.line", transcript_payload(victim))
 
@@ -321,16 +352,48 @@ async def submit_turn(
     return out
 
 
-async def request_human(db: AsyncSession, session_id: str) -> Outbound:
+async def request_human(
+    db: AsyncSession, session_id: str, request_id: Optional[str] = None,
+) -> Outbound:
     """The victim asked for a person. Always honoured, from any state."""
     out = Outbound()
     session = await get_session_row(db, session_id)
     case = await case_for_session(db, session_id)
     consent = await consent_for(db, session_id)
+    if session.ended_at is not None:
+        raise Conflict("session has ended")
+    if request_id is not None:
+        existing = (await db.execute(select(HumanRequest).where(
+            HumanRequest.session_id == session_id,
+            HumanRequest.request_id == request_id,
+        ))).scalar_one_or_none()
+        if existing is not None:
+            out.persisted_id = existing.id
+            out.idempotency_status = "duplicate"
+            return out
+        row = HumanRequest(id=str(uuid4()), session_id=session_id, request_id=request_id,
+                           requested_at=audit.now())
+        try:
+            async with db.begin_nested():
+                db.add(row)
+                await db.flush()
+        except IntegrityError:
+            existing = (await db.execute(select(HumanRequest).where(
+                HumanRequest.session_id == session_id,
+                HumanRequest.request_id == request_id,
+            ))).scalar_one_or_none()
+            if existing is not None:
+                out.persisted_id = existing.id
+                out.idempotency_status = "duplicate"
+                return out
+            raise Conflict("duplicate human request") from None
+        out.persisted_id = row.id
     if session.state != State.SX_CRISIS.value:
         session.state = State.SH_HUMAN_HANDOFF.value
     case.needs_human = True
-    await audit.record(db, "human.requested", case_id=case.id, dedupe_key=f"human.requested:{case.id}")
+    dedupe = f"human.requested:{session_id}:{request_id}" if request_id else f"human.requested:{case.id}"
+    await audit.record(db, "human.requested", case_id=case.id, dedupe_key=dedupe,
+                       detail={"request_id": request_id} if request_id else None)
     # SH is a fixed script and is not approved: nothing is spoken.
     await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "SH"})
     out.add("session.status", status_payload(session, consent))

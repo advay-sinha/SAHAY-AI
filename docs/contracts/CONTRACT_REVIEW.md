@@ -7,7 +7,7 @@ The Integration Lead applied the decisions in one change to:
 - HANDOVER §11–§13
 - the typed mirrors and the contract tests
 
-Final decision records: `PROPOSED_CHANGES.md`. The analysis below is kept as it was written, for the record.
+Final decision records: `PROPOSED_CHANGES.md`. The analysis below is kept as it was written, for the record. **PC-11 (2026-09-12) supersedes every transitional PC-05 statement below: query authentication is removed and rejected; exact first-frame authentication is now canonical.**
 
 ## 0. Repository state this review is based on
 

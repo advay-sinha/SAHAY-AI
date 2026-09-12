@@ -1,11 +1,9 @@
-"""Keep tokens out of server logs.
+"""Keep tokens and submitted narrative out of server logs.
 
-The frozen WebSocket contract (CONTRACTS.md section 1) carries the JWT in the
-handshake URL: `WSS /ws/session/{id}?token=<jwt>`. Browsers cannot set an
-Authorization header on a WebSocket, which is why the contract does this. The
-cost is that uvicorn writes the full handshake path, query string included,
-into its log -- so without this filter every socket connection would put a
-live bearer token into the log file.
+The approved WebSocket contract carries credentials only in the exact first
+client frame and rejects every URL query component. This filter remains as
+defence in depth so malformed or hostile requests cannot put a credential into
+uvicorn, proxy, or application logs.
 
 It also pins SQL-logging libraries to WARNING, because they log bound
 parameters -- and a parameter can be a victim's message.
@@ -15,10 +13,8 @@ This filter rewrites log records before any handler sees them:
   * anything shaped like a JWT (three base64url segments starting `eyJ`)
     becomes `[REDACTED-JWT]`, wherever it appears
 
-Changing the socket contract to carry the token some other way (for example
-in the Sec-WebSocket-Protocol header, or as the first message) is a
-`type:contract` decision for the three leads. This filter is the mitigation
-until then; it is not a substitute for that decision.
+It is a fallback control, not permission for a client to put credentials in a
+URL or log frame contents.
 """
 
 import logging
