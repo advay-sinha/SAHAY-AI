@@ -9,7 +9,6 @@ import { RecommendationsPanel } from "../components/case/RecommendationsPanel";
 import { StructuredPanel } from "../components/case/StructuredPanel";
 import { TranscriptPanel } from "../components/case/TranscriptPanel";
 import { Trajectory } from "../components/case/Trajectory";
-import { Disclaimer } from "../components/Disclaimer";
 import { canAct, canMessage, formatWait, resolveEvidence } from "../console/logic";
 import { useCaseSocket } from "../console/useCaseSocket";
 import type { Band, DecisionKind } from "../types/contracts";
@@ -104,10 +103,12 @@ export function CasePage() {
   const claimable = !readOnly && !h.assigned_officer_id && h.status === "open";
 
   return (
-    <main className="space-y-3 p-4">
-      <header className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-neutral-400 pb-2">
-        <h1 className="text-lg font-semibold">{h.reference}</h1>
-        <span className="text-sm">{h.band ? `Band ${h.band}` : "Needs Human Assessment"}
+    <main className="mx-auto max-w-[1600px] space-y-4 p-4 lg:p-6">
+      <header className="panel flex flex-wrap items-center gap-x-4 gap-y-2 p-4">
+        <Link to="/queue" className="text-xs text-on-surface-variant hover:underline">← Queue</Link>
+        <Link to={`/audit/${caseId}`} className="text-xs text-on-surface-variant hover:underline">Audit ledger</Link>
+        <h1 className="text-headline-md">{h.reference}</h1>
+        <span className={`badge ${h.band ? `badge-${h.band.toLowerCase()}` : "badge-nha"}`}>{h.band ? `Band ${h.band}` : "Needs Human Assessment"}
           {h.band_source === "override" ? " (officer override)" : ""}</span>
         <span className="text-sm">Consent: {h.consent}</span>
         <span className="text-sm">{h.language} · {h.channel}</span>
@@ -119,7 +120,7 @@ export function CasePage() {
           {socket === "live" ? "Live" : socket === "reconnecting" ? "Reconnecting…" : socket === "offline" ? "Offline — showing last known state" : "Connecting…"}
         </span>
         {claimable && (
-          <button type="button" className="border border-neutral-900 px-3 py-1 text-sm font-medium"
+          <button type="button" className="btn-primary"
             onClick={async () => setNotice(await run(() => api.claim(caseId)))}>
             Claim case
           </button>
@@ -127,10 +128,10 @@ export function CasePage() {
       </header>
       {notice && <p role="alert" className="text-sm text-red-800">{notice}</p>}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(16rem,1fr)_minmax(0,2fr)_minmax(20rem,1.4fr)]">
+      <div className="grid items-start gap-4 lg:grid-cols-2 2xl:grid-cols-[minmax(15rem,.8fr)_minmax(22rem,1fr)_minmax(24rem,1.15fr)]">
         <div className="space-y-3">
           <StructuredPanel record={packet.structured} transcript={packet.transcript} onEvidence={showEvidence} />
-          <section aria-labelledby="unc-h" className="border border-neutral-300 p-3 text-sm">
+          <section aria-labelledby="unc-h" className="panel p-3 text-sm">
             <h2 id="unc-h" className="font-semibold">Uncertainty</h2>
             <dl className="mt-1 grid grid-cols-[auto_1fr] gap-x-3 text-xs">
               {Object.entries(packet.uncertainty).map(([k, v]) => (
@@ -143,8 +144,8 @@ export function CasePage() {
           </section>
         </div>
 
-        <section aria-labelledby="transcript-h" className="min-w-0">
-          <h2 id="transcript-h" className="mb-2 font-semibold">Transcript (original language)</h2>
+        <section aria-labelledby="transcript-h" className="panel min-w-0 p-3 lg:row-span-2 2xl:row-auto">
+          <h2 id="transcript-h" className="mb-2 text-headline-sm">Bilingual Live Transcript <span className="ml-2 text-xs font-normal text-on-surface-variant">Original language</span></h2>
           <TranscriptPanel transcript={packet.transcript} highlight={highlight} />
         </section>
 
@@ -169,7 +170,6 @@ export function CasePage() {
             onMessage={(text) => run(() => api.message(caseId, text))} />
         </div>
       </div>
-      <Disclaimer />
     </main>
   );
 }

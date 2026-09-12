@@ -57,6 +57,7 @@ foreach ($suffix in @("", "-wal", "-shm", "-journal")) {
 # Both steps read DATABASE_URL, so a non-default -Database is honoured.
 $uri = "sqlite+aiosqlite:///" + ($Database -replace '\\', '/')
 $env:DATABASE_URL = $uri
+$env:APP_ENV = "test"
 
 Push-Location (Join-Path $root "backend")
 try {

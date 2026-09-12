@@ -34,17 +34,17 @@ export function StructuredPanel({
   const empty = single.every(([, f]) => !f) && lists.every(([, l]) => !l || l.length === 0);
 
   return (
-    <section aria-labelledby="struct-h" className="border border-neutral-400 p-3">
-      <h2 id="struct-h" className="font-semibold">Structured record</h2>
+    <section aria-labelledby="struct-h" className="panel p-3">
+      <h2 id="struct-h" className="text-headline-sm">Structured Extraction</h2>
       {empty ? (
         <p className="mt-1 text-sm text-neutral-700">Nothing extracted yet.</p>
       ) : (
-        <dl className="mt-1 space-y-1 text-sm">
+        <dl className="mt-3 space-y-2 text-sm">
           {single.map(([label, f]) =>
             f ? (
-              <div key={label}>
-                <dt className="text-xs font-semibold text-neutral-700">{label}</dt>
-                <dd>
+              <div key={label} className="rounded bg-surface-container-low p-2">
+                <dt className="text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{label}</dt>
+                <dd className="mt-1">
                   {f.value}
                   {sources(f)}
                 </dd>
@@ -53,8 +53,8 @@ export function StructuredPanel({
           )}
           {lists.map(([label, items]) =>
             items && items.length > 0 ? (
-              <div key={label}>
-                <dt className="text-xs font-semibold text-neutral-700">{label}</dt>
+              <div key={label} className="rounded bg-surface-container-low p-2">
+                <dt className="text-[10px] font-semibold uppercase tracking-wide text-on-surface-variant">{label}</dt>
                 <dd>
                   <ul className="list-disc pl-5">
                     {items.map((f, i) => (

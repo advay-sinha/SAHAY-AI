@@ -105,7 +105,7 @@ test("the error route renders ErrorScreen and sends human contact only to handof
 
 test("the error route retries with back navigation and a home fallback", () => {
   const source = read("app", "error.tsx");
-  const retry = source.match(/function retry\(\): void\s*\{([\s\S]*?)\n  \}\n\n  return \(/);
+  const retry = source.match(/function retry\(\): void\s*\{([\s\S]*?)\r?\n  \}\r?\n\r?\n  return \(/);
   assert.ok(retry, "error route retry callback is missing");
   assert.match(retry[1], /if \(router\.canGoBack\(\)\)\s*\{\s*router\.back\(\);\s*return;/);
   assert.match(retry[1], /router\.replace\(["']\/home["']\)/);

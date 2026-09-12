@@ -89,10 +89,17 @@ test("error content is large-font scroll-safe without disabling font scaling", (
 });
 
 test("retry is an accessible button with a minimum 48px touch target", () => {
-  const retryButton = source.match(/<Pressable([\s\S]*?)>/);
+  const retryButton = source.match(/<Pressable([\s\S]*?)<\/Pressable>/);
   assert.ok(retryButton, "retry button is missing");
   assert.match(retryButton[1], /accessibilityLabel=\{t\(["']error\.retry["']\)\}/);
   assert.match(retryButton[1], /accessibilityRole="button"/);
-  assert.match(retryButton[1], /minHeight:\s*48/);
+  assert.match(retryButton[1], /minHeight:\s*theme\.size\.button/);
   assert.match(source, /accessibilityRole="header"/);
+});
+
+test("error reassurance panel and persistent footer are compositionally separated", () => {
+  assert.match(source, /<SurfaceCard elevated tone="recessed"/);
+  assert.match(source, /minHeight:\s*280/);
+  assert.ok(source.indexOf("<PersistentFooter>") > source.indexOf("</ScrollView>"));
+  assert.match(source, /pattern="shield" size=\{72\} tone="danger"/);
 });

@@ -51,8 +51,8 @@ export function DecisionControls({
   }
 
   return (
-    <section aria-labelledby="decide-h" className="space-y-3 border border-neutral-400 p-3">
-      <h2 id="decide-h" className="font-semibold">Officer actions</h2>
+    <section aria-labelledby="decide-h" className="panel space-y-3 p-3">
+      <h2 id="decide-h" className="text-headline-sm">Officer Actions</h2>
       {!canAct && blockedReason && <p className="text-xs text-neutral-700">{blockedReason}</p>}
 
       <div>
@@ -62,7 +62,7 @@ export function DecisionControls({
         </p>
         <button type="button" disabled={!canAct || taken || busy}
           onClick={async () => setTakeoverError(await onTakeover())}
-          className="mt-1 border border-neutral-900 px-3 py-1 text-sm font-medium disabled:opacity-50">
+          className="btn-confirm mt-1">
           {taken ? "You have taken over" : "Take over"}
         </button>
         {takeoverError && <p role="alert" className="text-xs text-red-800">{takeoverError}</p>}
@@ -90,7 +90,7 @@ export function DecisionControls({
               setMessageError(failure);
               if (!failure) setMessage("");
             }}
-            className="mt-1 border border-neutral-900 px-3 py-0.5 text-sm font-medium disabled:opacity-50">
+            className="btn-primary mt-1">
             Send message
           </button>
         </div>
@@ -113,7 +113,7 @@ export function DecisionControls({
           onChange={(e) => setReason(e.target.value)} className="w-full border border-neutral-500 p-1 text-sm" />
         {error && <p role="alert" className="text-xs text-red-800">{error}</p>}
         <button type="button" onClick={submitOverride} disabled={!canAct || busy}
-          className="mt-1 border border-neutral-900 px-3 py-0.5 text-sm font-medium disabled:opacity-50">
+          className="btn-secondary mt-1">
           Record override
         </button>
       </div>

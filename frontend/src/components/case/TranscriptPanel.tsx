@@ -16,7 +16,7 @@ export function TranscriptPanel({
     return <p className="text-sm text-neutral-700">No messages yet.</p>;
   }
   return (
-    <ol aria-label="Transcript" className="space-y-2">
+    <ol aria-label="Transcript" className="max-h-[70vh] space-y-3 overflow-y-auto pr-1">
       {transcript.map((t, i) => {
         const victim = t.speaker === "victim";
         const lit = highlight === t.id;
@@ -25,7 +25,7 @@ export function TranscriptPanel({
             key={t.id}
             id={`turn-${t.id}`}
             tabIndex={-1}
-            className={`max-w-[92%] border p-2 ${victim ? "mr-auto border-neutral-500 bg-white" : "ml-auto border-neutral-300 bg-neutral-100"} ${lit ? "outline outline-4 outline-amber-500" : ""}`}
+            className={`max-w-[94%] rounded border p-3 ${victim ? "mr-auto border-outline-variant bg-white" : t.speaker === "officer" ? "ml-auto border-secondary bg-teal-50" : "ml-auto border-blue-200 bg-surface-container-low"} ${lit ? "outline outline-2 outline-amber-500" : ""}`}
           >
             <div className="flex flex-wrap justify-between gap-2 text-xs text-neutral-700">
               <span className="font-semibold">

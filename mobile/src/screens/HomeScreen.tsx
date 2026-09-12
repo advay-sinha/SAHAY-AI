@@ -1,15 +1,20 @@
-import { Pressable, ScrollView, Text } from "react-native";
+import { Pressable, ScrollView, Text, View } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
+import { DecorativeMark, PersistentFooter, SafeScreen } from "../components/Presentation";
 import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
+import { pressFeedbackStyle, theme, typeStyles } from "../theme";
 
 const controlStyle = {
   alignItems: "center" as const,
-  backgroundColor: "#d7dde2",
-  justifyContent: "center" as const,
-  minHeight: 48,
-  opacity: 0.65,
-  paddingHorizontal: 20,
+  backgroundColor: theme.colors.card,
+  borderColor: theme.colors.border,
+  borderRadius: theme.radius.large,
+  borderWidth: 1,
+  flexDirection: "row" as const,
+  gap: theme.space.md,
+  minHeight: 84,
+  padding: theme.space.lg,
 };
 
 interface HomeScreenProps {
@@ -30,45 +35,66 @@ export function HomeScreen({
   const talkLabel = t("home.talk");
 
   return (
-    <ScrollView
-      contentContainerStyle={{ flexGrow: 1, gap: 16, padding: 16 }}
-      style={{ flex: 1 }}
-    >
-      <AiDisclosure />
-      <TalkToPersonButton onPress={onRequestHuman} />
-      <Pressable
+    <SafeScreen>
+      <View style={{ backgroundColor: theme.colors.canvas, flex: 1, gap: theme.space.md, padding: theme.space.lg }}>
+        <AiDisclosure />
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, gap: theme.space.md, paddingBottom: theme.space.sm }}
+          style={{ flex: 1 }}
+        >
+          <Pressable
         accessibilityLabel={talkLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled: false }}
         onPress={onOpenTalk}
-        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+        style={({ pressed }) => [
+          controlStyle,
+          {
+            alignItems: "stretch",
+            backgroundColor: theme.colors.navySecondary,
+            flexDirection: "column",
+            minHeight: 168,
+            padding: theme.space.xl,
+          },
+          pressed ? pressFeedbackStyle : null,
+        ]}
       >
-        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
-          {talkLabel}
-        </Text>
-      </Pressable>
-      <Pressable
+        <DecorativeMark pattern="wave" size={64} tone="teal" />
+        <View style={{ alignSelf: "stretch", flex: 1, justifyContent: "flex-end" }}>
+          <Text allowFontScaling style={[typeStyles.heading, { color: theme.colors.card, flexShrink: 1 }]}>
+            {talkLabel}
+          </Text>
+        </View>
+          </Pressable>
+          <Pressable
         accessibilityLabel={chatLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled: false }}
         onPress={onOpenChat}
-        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+        style={({ pressed }) => [controlStyle, pressed ? pressFeedbackStyle : null]}
       >
-        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
+        <DecorativeMark pattern="center" />
+        <Text allowFontScaling style={[typeStyles.heading, { flex: 1, flexShrink: 1 }]}>
           {chatLabel}
         </Text>
-      </Pressable>
-      <Pressable
+          </Pressable>
+          <Pressable
         accessibilityLabel={requestsLabel}
         accessibilityRole="button"
         accessibilityState={{ disabled: false }}
         onPress={onOpenRequests}
-        style={{ ...controlStyle, backgroundColor: "#ffffff", opacity: 1 }}
+        style={({ pressed }) => [controlStyle, pressed ? pressFeedbackStyle : null]}
       >
-        <Text allowFontScaling style={{ color: "#25313a", fontSize: 18 }}>
+        <DecorativeMark pattern="tiles" tone="teal" />
+        <Text allowFontScaling style={[typeStyles.heading, { flex: 1, flexShrink: 1 }]}>
           {requestsLabel}
         </Text>
-      </Pressable>
-    </ScrollView>
+          </Pressable>
+        </ScrollView>
+        <PersistentFooter>
+          <TalkToPersonButton onPress={onRequestHuman} />
+        </PersistentFooter>
+      </View>
+    </SafeScreen>
   );
 }

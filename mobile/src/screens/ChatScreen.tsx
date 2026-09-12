@@ -9,8 +9,10 @@ import {
   View,
 } from "react-native";
 import { AiDisclosure } from "../components/AiDisclosure";
+import { SafeScreen, SurfaceCard } from "../components/Presentation";
 import { TalkToPersonButton } from "../components/TalkToPersonButton";
 import { t } from "../i18n";
+import { pressFeedbackStyle, theme, typeStyles } from "../theme";
 import {
   createChatSendController,
   selectDisplayMessages,
@@ -69,40 +71,47 @@ export function ChatScreen({
   }
 
   return (
+    <SafeScreen>
     <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      style={{ flex: 1, gap: 12, padding: 16 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1, gap: 12, padding: 16, backgroundColor: theme.colors.canvas }}
     >
       <View style={{ gap: 12 }}>
         <AiDisclosure />
       </View>
 
       <ScrollView
-        contentContainerStyle={{ flexGrow: 1, gap: 12, justifyContent: "flex-end" }}
+        contentContainerStyle={{ flexGrow: 1, gap: 12, justifyContent: "flex-end", paddingVertical: 8 }}
+        keyboardDismissMode="none"
         keyboardShouldPersistTaps="handled"
         style={{ flex: 1 }}
       >
         {displayMessages.map((message) => (
-          <View key={message.id} style={{ gap: 4, paddingVertical: 8 }}>
-            <Text accessibilityRole="header" allowFontScaling style={{ fontSize: 16 }}>
+          <View key={message.id} style={{ alignSelf: "flex-start", gap: theme.space.xs, maxWidth: "88%" }}>
+            <Text accessibilityRole="header" allowFontScaling style={[typeStyles.caption, { color: theme.colors.navy }]}>
               {t(message.labelKey)}
             </Text>
-            <Text accessibilityRole="text" allowFontScaling style={{ fontSize: 18 }}>
-              {message.text}
-            </Text>
+            <SurfaceCard
+              tone={message.labelKey === "chat.human_officer" ? "teal" : "navy"}
+              style={{ borderTopLeftRadius: theme.radius.small, padding: theme.space.lg }}
+            >
+              <Text accessibilityRole="text" allowFontScaling style={typeStyles.body}>
+                {message.text}
+              </Text>
+            </SurfaceCard>
           </View>
         ))}
 
         {state.messages.map((message) => (
-          <View key={message.id} style={{ gap: 4, paddingVertical: 8 }}>
-            <Text accessibilityRole="text" allowFontScaling style={{ fontSize: 18 }}>
+          <View key={message.id} style={{ alignSelf: "flex-end", gap: theme.space.xs, maxWidth: "88%" }}>
+            <Text accessibilityRole="text" allowFontScaling style={{ backgroundColor: theme.colors.navySecondary, borderRadius: theme.radius.large, borderTopRightRadius: theme.radius.small, color: theme.colors.card, fontSize: 17, lineHeight: 26, padding: theme.space.lg }}>
               {message.text}
             </Text>
             <Text
               accessibilityLiveRegion="polite"
               accessibilityRole="text"
               allowFontScaling
-              style={{ fontSize: 16 }}
+              style={{ color: message.status === "failed" ? theme.colors.danger : theme.colors.muted, fontSize: 15, lineHeight: 20, textAlign: "right" }}
             >
               {message.status === "pending"
                 ? t("chat.pending")
@@ -117,19 +126,20 @@ export function ChatScreen({
                 accessibilityState={{ disabled: isPending }}
                 disabled={isPending}
                 onPress={() => retry(message.id)}
-                style={{ justifyContent: "center", minHeight: 48, paddingHorizontal: 16 }}
+                style={({ pressed }) => [{ alignItems: "center", alignSelf: "flex-end", backgroundColor: theme.colors.dangerSoft, borderRadius: theme.radius.medium, justifyContent: "center", minHeight: 48, paddingHorizontal: 16 }, pressed && !isPending ? pressFeedbackStyle : null]}
               >
-                <Text allowFontScaling style={{ fontSize: 18 }}>
+                <Text allowFontScaling style={[typeStyles.label, { color: theme.colors.danger }]}>
                   {t("error.retry")}
                 </Text>
               </Pressable>
             ) : null}
           </View>
         ))}
-      </ScrollView>
-
-      <View style={{ gap: 8 }}>
-        <TextInput
+      <View style={{ gap: theme.space.md, paddingTop: theme.space.md }}>
+        <TalkToPersonButton onPress={onRequestHuman} />
+        <SurfaceCard elevated style={{ gap: theme.space.sm, padding: theme.space.md }}>
+        <View style={{ alignItems: "flex-end", flexDirection: "row", gap: theme.space.sm }}>
+          <TextInput
           accessibilityHint={t("chat.placeholder")}
           accessibilityLabel={t("chat.placeholder")}
           accessibilityState={{ disabled: isPending }}
@@ -138,37 +148,49 @@ export function ChatScreen({
           multiline
           onChangeText={(text) => controllerRef.current?.setDraft(text)}
           placeholder={t("chat.placeholder")}
+          scrollEnabled
           style={{
-            borderColor: "#56636d",
-            borderWidth: 1,
-            fontSize: 18,
-            maxHeight: 160,
-            minHeight: 48,
-            padding: 12,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.outline,
+            borderRadius: theme.radius.medium,
+            borderWidth: 1.5,
+            color: theme.colors.ink,
+            fontSize: 17,
+            lineHeight: 24,
+            maxHeight: 96,
+            flex: 1,
+            minHeight: theme.size.button,
+            padding: theme.space.md,
             textAlignVertical: "top",
           }}
           value={state.draft}
-        />
-        <Pressable
+          />
+          <Pressable
           accessibilityLabel={t("chat.send")}
           accessibilityRole="button"
           accessibilityState={{ busy: isPending, disabled: !canSend }}
           disabled={!canSend}
           onPress={send}
-          style={{
+          style={({ pressed }) => [{
             alignItems: "center",
+            backgroundColor: canSend ? theme.colors.navySecondary : theme.colors.disabled,
+            borderRadius: theme.radius.medium,
             justifyContent: "center",
-            minHeight: 48,
-            opacity: canSend ? 1 : 0.65,
+            minHeight: theme.size.button,
+            minWidth: 88,
             paddingHorizontal: 16,
-          }}
+            paddingVertical: 12,
+          }, pressed && canSend ? pressFeedbackStyle : null]}
         >
-          <Text allowFontScaling style={{ fontSize: 18 }}>
+          <Text allowFontScaling style={[typeStyles.label, { color: canSend ? theme.colors.card : theme.colors.muted }]}>
             {t("chat.send")}
           </Text>
-        </Pressable>
-        <TalkToPersonButton onPress={onRequestHuman} />
+          </Pressable>
+        </View>
+        </SurfaceCard>
       </View>
+      </ScrollView>
     </KeyboardAvoidingView>
+    </SafeScreen>
   );
 }

@@ -2,97 +2,30 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ApiError } from "../api/client";
 import { useAuth } from "../auth/AuthContext";
+import { ConsoleIcon } from "../components/ConsoleIcon";
 import { formatWait } from "../console/logic";
 import type { QueueItem } from "../types/packet";
 
-/**
- * Supervisor view — READ-ONLY by owner decision (2026-09-10). Operational
- * status only: counts by band and state, unacknowledged alerts, unassigned and
- * longest-waiting cases, and who holds what. No reassignment control (BE-021,
- * P3; docs/contracts/PROPOSED_CHANGES.md PC-06) and deliberately no per-officer
- * performance ranking.
- *
- * Reachable only with a supervisor session; executives are redirected by the
- * route guard. The backend is still the authority on every request.
- */
+/** Supervisor-only, intentionally read-only operational overview. */
 export function SupervisorPage() {
   const { api } = useAuth();
   const [items, setItems] = useState<QueueItem[] | null>(null);
   const [error, setError] = useState(false);
+  useEffect(() => { const load = () => api.queue().then((value) => { setItems(value); setError(false); }).catch((err: unknown) => { if (!(err instanceof ApiError && err.status === 401)) setError(true); }); void load(); const timer = setInterval(load, 10_000); return () => clearInterval(timer); }, [api]);
+  const stats = useMemo(() => { const all = items ?? []; const count = (f: (i: QueueItem) => boolean) => all.filter(f).length; return { total: all.length, critical: count((i) => i.band === "Critical"), high: count((i) => i.band === "High"), nha: count((i) => i.band === null || i.needs_human_assessment), unackAlerts: count((i) => i.alerts.some((a) => !a.acknowledged)), unassigned: count((i) => !i.assigned_officer_id), takenOver: count((i) => i.status === "taken_over"), takeoverRequested: count((i) => i.takeover_requested && i.status !== "taken_over"), oldestUnassigned: all.filter((i) => !i.assigned_officer_id).sort((a, b) => b.wait_seconds - a.wait_seconds).slice(0, 6) }; }, [items]);
+  if (error) return <main className="p-6"><div className="panel p-5 text-error">Operational status could not be loaded.</div></main>;
+  if (items === null) return <main className="p-6">Loading supervisor operations…</main>;
 
-  useEffect(() => {
-    const load = () =>
-      api.queue().then(setItems).catch((err: unknown) => {
-        if (!(err instanceof ApiError && err.status === 401)) setError(true);
-      });
-    void load();
-    const t = setInterval(load, 10_000);
-    return () => clearInterval(t);
-  }, [api]);
+  const metricCards = [{ label: "Live cases", value: stats.total, note: "current queue", tone: "text-on-surface" }, { label: "Unack. alerts", value: stats.unackAlerts, note: "requires attention", tone: stats.unackAlerts ? "text-error" : "text-secondary" }, { label: "Unassigned", value: stats.unassigned, note: "awaiting owner", tone: "text-on-surface" }, { label: "Takeover requested", value: stats.takeoverRequested, note: "not yet taken", tone: "text-amber-700" }, { label: "Needs assessment", value: stats.nha, note: "AI suppressed", tone: "text-amber-700" }, { label: "Taken over", value: stats.takenOver, note: "human channel", tone: "text-secondary" }];
 
-  const stats = useMemo(() => {
-    const all = items ?? [];
-    const count = (f: (i: QueueItem) => boolean) => all.filter(f).length;
-    return {
-      total: all.length,
-      bands: (["Critical", "High", "Moderate", "Low"] as const).map((b) => [b, count((i) => i.band === b)] as const),
-      nha: count((i) => i.band === null),
-      unackAlerts: count((i) => i.alerts.some((a) => !a.acknowledged)),
-      unassigned: count((i) => !i.assigned_officer_id),
-      takenOver: count((i) => i.status === "taken_over"),
-      takeoverRequested: count((i) => i.takeover_requested && i.status !== "taken_over"),
-      oldestUnassigned: all.filter((i) => !i.assigned_officer_id).sort((a, b) => b.wait_seconds - a.wait_seconds).slice(0, 5),
-    };
-  }, [items]);
-
-  if (error) return <main className="p-6">Operational status could not be loaded.</main>;
-  if (items === null) return <main className="p-6">Loading…</main>;
-
-  return (
-    <main className="mx-auto max-w-5xl space-y-4 p-6">
-      <h1 className="text-xl font-medium">Supervisor — operational status</h1>
-      <p className="text-xs text-neutral-700">Read-only. Reassignment arrives with the supervisor endpoints.</p>
-
-      <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-        {[
-          ["Open cases", stats.total],
-          ["Unacknowledged alerts", stats.unackAlerts],
-          ["Takeover requested, not yet taken", stats.takeoverRequested],
-          ["Unassigned", stats.unassigned],
-          ["Taken over", stats.takenOver],
-          ["Needs Human Assessment", stats.nha],
-          ...stats.bands,
-        ].map(([label, value]) => (
-          <div key={String(label)} className="border border-neutral-300 p-2">
-            <dt className="text-xs text-neutral-700">{label}</dt>
-            <dd className="text-lg tabular-nums">{value}</dd>
-          </div>
-        ))}
-      </dl>
-
-      <section aria-labelledby="oldest-h">
-        <h2 id="oldest-h" className="font-semibold">Longest-waiting unassigned cases</h2>
-        {stats.oldestUnassigned.length === 0 ? <p className="text-sm">None.</p> : (
-          <ul className="mt-1 text-sm">
-            {stats.oldestUnassigned.map((i) => (
-              <li key={i.case_id}>
-                <Link to={`/cases/${i.case_id}`} className="underline">{i.reference}</Link> — waiting {formatWait(i.wait_seconds)},{" "}
-                {i.band ?? "Needs Human Assessment"}{i.alerts.some((a) => !a.acknowledged) ? ", unacknowledged alert" : ""}
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-
-      <section aria-labelledby="assign-h">
-        <h2 id="assign-h" className="font-semibold">Assignments</h2>
-        <ul className="mt-1 text-sm">
-          {items.filter((i) => i.assigned_officer_id).map((i) => (
-            <li key={i.case_id}>{i.reference} — {i.assigned_to} ({i.status.replace("_", " ")})</li>
-          ))}
-          {items.every((i) => !i.assigned_officer_id) && <li>No cases assigned.</li>}
-        </ul>
-      </section>
-    </main>
-  );
+  return <main className="mx-auto max-w-[1500px] space-y-4 p-4 lg:p-6">
+    <header className="panel flex flex-wrap items-center gap-3 p-4"><span className="grid h-11 w-11 place-items-center rounded bg-surface-container text-secondary"><ConsoleIcon name="supervisor" className="h-7 w-7" /></span><div><h1 className="text-headline-md">Supervisor Control & Quality Assurance</h1><p className="text-xs text-on-surface-variant">Station-level operational oversight · refreshes every 10 seconds</p></div><span className="badge badge-success ml-auto">Read-only oversight</span></header>
+    <section className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6" aria-label="Operational metrics">{metricCards.map((m) => <article key={m.label} className="panel p-3"><span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">{m.label}</span><strong className={`mt-2 block text-3xl tabular-nums ${m.tone}`}>{m.value}</strong><span className="text-xs text-on-surface-variant">{m.note}</span></article>)}</section>
+    <div className="grid items-start gap-4 lg:grid-cols-[1.25fr_.75fr]">
+      <section className="panel overflow-hidden" aria-labelledby="oldest-h"><div className="flex items-center justify-between border-b border-outline-variant/50 p-4"><h2 id="oldest-h" className="text-headline-md">Escalation & Unassigned Queue</h2><span className="badge badge-low">{stats.oldestUnassigned.length} shown</span></div>{stats.oldestUnassigned.length === 0 ? <p className="p-5 text-sm">No unassigned cases.</p> : <ul className="divide-y divide-outline-variant/40">{stats.oldestUnassigned.map((i) => <li key={i.case_id} className="bg-surface-container-low p-4 m-3 rounded"><div className="flex flex-wrap items-center gap-2"><Link to={`/cases/${i.case_id}`} className="rounded bg-primary-container px-2 py-1 font-mono text-xs font-semibold text-white">{i.reference}</Link><span className={`badge ${i.band ? `badge-${i.band.toLowerCase()}` : "badge-nha"}`}>{i.band ?? "Needs Human Assessment"}</span>{i.alerts.some((a) => !a.acknowledged) && <span className="badge badge-critical">Unacknowledged alert</span>}</div><dl className="mt-3 grid grid-cols-2 gap-2 text-xs sm:grid-cols-3"><div><dt className="text-on-surface-variant">Wait time</dt><dd className="font-semibold tabular-nums">{formatWait(i.wait_seconds)}</dd></div><div><dt className="text-on-surface-variant">Language</dt><dd>{i.language ?? "—"}</dd></div><div><dt className="text-on-surface-variant">Channel</dt><dd>{i.channel ?? "—"}</dd></div></dl></li>)}</ul>}</section>
+      <div className="space-y-4"><section className="panel p-4" aria-labelledby="load-h"><h2 id="load-h" className="text-headline-md">Operator Load</h2><p className="mt-1 text-xs text-on-surface-variant">Current case ownership only; no performance ranking.</p><ul className="mt-3 space-y-2">{items.filter((i) => i.assigned_officer_id).map((i) => <li key={i.case_id} className="flex items-center gap-3 rounded bg-surface-container-low p-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-surface-container font-semibold">{(i.assigned_to ?? "O").slice(0, 1)}</span><div className="min-w-0"><strong className="block truncate text-sm">{i.assigned_to}</strong><span className="text-xs text-on-surface-variant">{i.reference} · {i.status.replace(/_/g, " ")}</span></div><span className="ml-auto h-2 w-2 rounded-full bg-secondary" /></li>)}{items.every((i) => !i.assigned_officer_id) && <li className="text-sm">No cases assigned.</li>}</ul></section>
+        <section className="panel p-4"><h2 className="text-headline-sm">Queue severity</h2><div className="mt-3 space-y-3">{[["Critical", stats.critical, "bg-error"], ["High", stats.high, "bg-amber-600"], ["Needs Human Assessment", stats.nha, "bg-blue-300"]].map(([label, value, color]) => <div key={String(label)}><div className="flex justify-between text-xs"><span>{label}</span><strong>{value}</strong></div><div className="mt-1 h-1.5 bg-surface-container"><span className={`block h-full ${color}`} style={{ width: `${stats.total ? Math.max(4, Number(value) / stats.total * 100) : 0}%` }} /></div></div>)}</div></section>
+      </div>
+    </div>
+  </main>;
 }

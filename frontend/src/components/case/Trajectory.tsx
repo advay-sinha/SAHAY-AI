@@ -21,7 +21,7 @@ export function Trajectory({
   if (points.length === 0) return null;
   const geo = trajectoryGeometry(points, W, H);
   return (
-    <section aria-labelledby="traj-h" className="border border-neutral-300 p-3">
+    <section aria-labelledby="traj-h" className="panel p-3">
       <h2 id="traj-h" className="text-sm font-semibold">Trajectory</h2>
       <svg viewBox={`0 0 ${W} ${H}`} className="mt-1 h-24 w-full" role="img"
         aria-label="SVI across assessment cycles; gaps are cycles without a score">
