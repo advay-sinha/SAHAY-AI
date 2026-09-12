@@ -27,6 +27,7 @@ The registry is never modified. A human updates it in a reviewed change.
 import argparse
 import json
 import sys
+import zipfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -37,6 +38,24 @@ REPO = Path(__file__).resolve().parents[2]
 DEFAULT_OUT = REPO / "runtime" / "dataset-audit"
 EXIT_OK, EXIT_INTEGRITY, EXIT_GOVERNANCE, EXIT_CONFIG = 0, 2, 3, 4
 ROOT_LABEL = "<" + gov.ROOT_ENV + ">"
+
+
+def archive_check(path: Path, rec: Dict[str, Any]) -> Dict[str, Any]:
+    """Archive safety for one registered file.
+
+    A file that IS a ZIP is always inspected, whatever the registry claims, so a
+    ZIP renamed to .csv cannot slip past. A file that is NOT a ZIP counts as
+    "not an archive" only when the registry explicitly records
+    ``archive_safety_status: not_applicable`` for it (a loose file such as an
+    already-extracted CSV). A registry that expects an archive but finds a
+    non-ZIP is still reported as unsafe: that mismatch needs a human.
+    """
+    if zipfile.is_zipfile(path):
+        return az.inspect_zip(path)
+    if rec.get("archive_safety_status") == "not_applicable":
+        return {"format": "not_an_archive", "safe": True, "findings": [],
+                "scope": "loose file registered as not an archive; no archive checks apply, integrity still checked"}
+    return az.inspect_zip(path)
 
 
 def audit(reg: Dict[str, Any], root: Path) -> Dict[str, Any]:
@@ -63,7 +82,7 @@ def audit(reg: Dict[str, Any], root: Path) -> Dict[str, Any]:
         digest = az.sha256_file(path)
         row.update(expected_bytes=rec["byte_size"], actual_bytes=size, size_match=size == rec["byte_size"],
                    expected_sha256=rec["sha256"], actual_sha256=digest, sha256_match=digest == rec["sha256"])
-        row["archive"] = az.inspect_zip(path)
+        row["archive"] = archive_check(path, rec)
         if not (row["size_match"] and row["sha256_match"]):
             row["status"] = "integrity_mismatch"
         elif not row["archive"]["safe"]:
