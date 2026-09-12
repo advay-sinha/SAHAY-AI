@@ -47,6 +47,6 @@ Registry id `hinglish_hate_speech_local_derivative`. **Status: `licence_pending`
 
 **Approved uses:** none.
 
-**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, training, tuning or evaluation data.
+**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, tuning or evaluation data. Local offline experimental training is authorised only under EXT-119 (`ml/training/README.md`): the dataset stays `licence_pending` and quarantined, and weights derived from it stay private and out of every backend, frontend, mobile or victim-facing component.
 
 **Sensitivity flags:** `real_user_generated_text`, `minors_possible`, `personal_names_not_reliably_redacted`. Private research only; never MVP, product or demo data.

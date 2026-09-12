@@ -262,3 +262,111 @@ Fallback or
 Decision maker:  Advay Sinha, acting as Project Owner, Integration Lead and
                  AI/ML Lead, 2026-09-11.
 ```
+
+```text
+Date:            2026-09-12
+ID and exact
+  version/release:
+                 EXT-119 — Local external-corpus training, MuRIL domain
+                 adaptation, fictional SAHAY supervision and shadow-MVP
+                 qualification using the Task 5 and Task 6 assets already
+                 present beneath the operator-controlled private roots.
+Decision:        APPROVED
+Scope:           Authorizes local, offline experimental training using every
+                 usable privacy-processed text record produced by Task 5:
+                 Reddit Suicide Detection, Dreaddit, EmoInHindi, the local
+                 Hinglish hate-speech derivative and the Hinglish sentiment
+                 dataset. Blank rows, unreadable bytes and missing Git LFS
+                 media must be counted and reported but must not be invented
+                 into usable inputs. CREMA-D remains unavailable because the
+                 local media files are Git LFS placeholders.
+
+                 The approved training design has three separate stages:
+                 (A) MuRIL domain-adaptive masked-language-model training on
+                 all usable processed external text; (B) optional
+                 source-specific auxiliary heads whose labels remain in
+                 dataset namespaces; and (C) a SAHAY multi-label shadow head
+                 trained only on private fictional development examples.
+
+                 External source labels must not be converted automatically
+                 into SAHAY crisis, danger, threat, vulnerability, routing,
+                 diagnosis, SVI, band, D4 or safe/no-alert labels. In
+                 particular, subreddit membership, stress, emotion,
+                 sentiment and hate-speech labels are not SAHAY safety ground
+                 truth. The existing source-label firewall remains enforced.
+
+                 Authorizes a local ML-owned MVP demonstration for typed
+                 fictional text and generated or explicitly approved private
+                 audio. Voice processing must use the Task 6 sequence:
+                 Silero VAD, validated speech intervals, Whisper Small,
+                 deterministic assessment and experimental MuRIL shadow
+                 output. GatedTranscriber remains the only approved
+                 application entry point, and Whisper must be skipped when no
+                 speech is detected.
+
+                 The deterministic crisis pre-check and heuristic pipeline
+                 remain authoritative. Shadow-model outputs may be displayed
+                 side by side for local development but may not independently
+                 change routing, escalation, SVI, D4, evidence links,
+                 guardrails or victim-facing wording.
+
+                 Training inputs, generated fictional records, checkpoints,
+                 optimizer state, predictions, transcripts and reports must
+                 remain beneath explicit private roots outside Git. Training,
+                 reload, evaluation and the local demonstration must operate
+                 offline after approved assets are present.
+
+                 This approval does not authorize backend, frontend or mobile
+                 integration; deployment to victims; a public listener;
+                 uploading data; publishing or redistributing datasets or
+                 trained weights; commercial use; official, independent,
+                 blind or locked evaluation; or claims of clinical validity,
+                 production accuracy or safety certification.
+Reason:          The local MVP requires a functioning multilingual model, and
+                 the Task 5 processed corpora are the available foundation
+                 for English, Hindi and Hinglish domain adaptation. Keeping
+                 external labels source-specific avoids falsely treating
+                 stress, emotion, subreddit origin, sentiment or hate speech
+                 as SAHAY risk labels. Fictional SAHAY-labelled supervision
+                 supplies the separate development-only safety head. Shadow
+                 operation allows the model to be demonstrated and compared
+                 without replacing the deterministic safety controls.
+Licence/cost
+  confirmed:     No new paid service, gated repository or dataset download is
+                 approved. Dataset licensing and privacy approval remain
+                 unresolved, and local processing does not make those issues
+                 disappear. The datasets stay `licence_pending` and
+                 `quarantined_research_artifact`; no redistribution,
+                 publication, commercial permission or ownership claim is
+                 recorded. This is a project-owner risk acceptance for a
+                 private local hackathon experiment only.
+Storage/runtime
+  location:      Existing Task 5 processed inputs beneath
+                 `SAHAY_DATASETS_ROOT`; pinned Task 6 models beneath
+                 `SAHAY_MODELS_ROOT`; generated corpora, training state,
+                 checkpoints and reports beneath `SAHAY_TRAINING_ROOT`.
+                 Executable code must have no machine-specific default and
+                 must refuse private output paths inside a SAHAY checkout.
+Fallback or
+  migration
+  action:        If private inputs, manifests, hashes, model artefacts, GPU
+                 capacity or offline guarantees fail verification, training
+                 must stop without silently downloading replacements. Missing
+                 checkpoints return unavailable, not zero. The deterministic
+                 pipeline remains the fallback and authority. If licensing or
+                 privacy review later refuses a dataset, its derived private
+                 checkpoints must be quarantined and excluded from subsequent
+                 use; the deletion or retraining decision must be recorded.
+Decision maker:  Advay Sinha, acting as Project Owner, Integration Lead and
+                 AI/ML Lead, 2026-09-12.
+Invariant 8
+  clarification: Externally derived training records and model weights may
+                 be used only for private ML research and an
+                 operator-controlled local ML demonstration. They must not be
+                 shipped, imported, loaded or called by backend, frontend,
+                 mobile or another victim-facing MVP component. Any later
+                 Task 8 integration of these weights requires a separate
+                 explicit decision addressing Invariant 8, licensing, privacy,
+                 model behavior and rollback. For this decision, "working MVP"
+                 means the ML-owned local CLI demonstration only.
+```

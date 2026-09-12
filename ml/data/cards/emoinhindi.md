@@ -43,7 +43,7 @@ Registry id `emoinhindi`. **Status: `licence_pending`. No use is approved.** Che
 
 **Approved uses:** none.
 
-**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, training, tuning or evaluation data.
+**Permitted handling today:** registry metadata and checksum verification. With the per-run local exploratory research override only: local conversion into a quarantined research artefact and an `external_exploratory_analysis` run (exploratory firing rates only), with outputs beneath `<SAHAY_DATASETS_ROOT>`. Never product, demo, tuning or evaluation data. Local offline experimental training is authorised only under EXT-119 (`ml/training/README.md`): the dataset stays `licence_pending` and quarantined, and weights derived from it stay private and out of every backend, frontend, mobile or victim-facing component.
 
 **Prohibited uses:**
 - training, evaluation or threshold tuning;

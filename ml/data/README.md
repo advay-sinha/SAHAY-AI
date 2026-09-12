@@ -313,6 +313,36 @@ Portable summary; the machine path is not recorded:
   - `hinglish_sentiment_kaggle`, identified from a header-less CSV whose first row matches the Kaggle metadata by hash.
 - **Under the owner-authorised local exploratory research override, all five text datasets were converted locally as quarantined research artefacts.** An `external_exploratory_analysis` run (exploratory firing rates only) was made on stratified samples. Outputs and numbers stay beneath `<SAHAY_DATASETS_ROOT>/reports/` and are never committed.
 
+### 10.8 EXT-119 local experimental training (Task 7)
+
+EXT-119 (`docs/EXTERNAL_DECISIONS.md`) authorises local, offline experimental training on the five
+processed text datasets. It is a separate, narrower basis than the exploratory override, which still
+refuses training. Nothing about licensing or privacy is resolved: the registry is unchanged, every
+dataset stays `licence_pending`, and every output stays a `quarantined_research_artifact`.
+
+`python -m ml.data.training_corpus build --ext119-local-training --acknowledge "<sentence>"` is the only
+Task 7 code that reads the datasets. Each run needs:
+- the recorded, APPROVED EXT-119 decision;
+- the exact acknowledgement sentence;
+- `SAHAY_DATASETS_ROOT` and `SAHAY_TRAINING_ROOT`, neither of which has a default.
+
+Each run is appended to the private override log. It writes one private segment file:
+- every usable normalised record, checked against its Task 5 manifest hash first;
+- the 3,199 nonblank hate-speech rows that have no label, re-read through the same pinned source and
+  the same privacy redaction, for masked-language modelling only;
+- windows of at most 480 characters;
+- duplicate families weighted `1/size`;
+- family-level validation and auxiliary-test partitions;
+- source labels kept only in their own namespace.
+
+Blank rows, unreadable bytes and the CREMA-D Git LFS pointers are counted, never invented. The
+source-label firewall is unchanged. The trainer (`ml/training`) reads only that private file and
+never a dataset.
+
+The EXT-119 Invariant 8 clarification applies: weights derived from these datasets are for private
+ML research and an operator-run local demonstration only. They must never be shipped, imported,
+loaded or called by a backend, frontend, mobile or other victim-facing component.
+
 ## 11. Reproducibility
 
 ```powershell

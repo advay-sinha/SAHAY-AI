@@ -864,10 +864,12 @@ class TestModelFirewall(unittest.TestCase):
     APP = ("assessment.py", "dialogue", "guardrails", "svi", "nlp", "asr", "tts", "acoustics", "eval", "data")
 
     def test_no_application_module_imports_the_runtime(self):
+        # ml/training and ml/shadow (Task 7, EXT-119) are explicit ML-only tooling that may use the
+        # runtime; test_shadow_training proves no application module imports *them*.
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.runtime|\.\.runtime|\.runtime)\b", re.M)
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
-            if rel.startswith(("runtime/", "tests/")):
+            if rel.startswith(("runtime/", "tests/", "training/", "shadow/")):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 

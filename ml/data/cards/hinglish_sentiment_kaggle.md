@@ -17,7 +17,7 @@ Registry id `hinglish_sentiment_kaggle`. **Status: `licence_pending`. No use is 
 7. **Licence and provenance.** The uploader declares Apache 2.0. The origin of the text is not described, so whether the uploader held rights in it is unknown. Redistribution and commercial use are recorded as unknown.
 8. **Privacy.** Social-media text of undocumented origin; political and communal content is present. URLs, e-mails, handles, phone numbers and long numbers are redacted; personal names are not detected. Never print, log, commit, upload or show to a victim.
 9. **Contamination.** Romanised Hindi overlaps the SAHAY Hinglish lexicons. Register any row viewed during rule design.
-10. **Never.** The locked or blind corpus, training, any evaluation claim beyond `external_exploratory_analysis` exploratory firing rates, or victim-facing output.
+10. **Never.** The locked or blind corpus, any evaluation claim beyond `external_exploratory_analysis` exploratory firing rates, a SAHAY label, or victim-facing output. EXT-119 authorises only local masked-language-model training on its text; its opaque classes train no head.
 11. **References.**
     - https://www.kaggle.com/datasets/ankitlakra24/hinglish-sentiment-analysis
     - https://www.kaggle.com/datasets/ankitlakra24/hinglish-sentiment-analysis/croissant/download
