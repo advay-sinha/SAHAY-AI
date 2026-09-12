@@ -118,6 +118,90 @@ The selection rule was fixed before training, and applies within each seed and a
 3. lower validation loss;
 4. lower seed or earlier epoch.
 
+## Task 7B: targeted corpus hardening and Stage C retraining
+
+The Task 7 checkpoint stays `rejected_for_product_integration`. Task 7B retrains only the Stage C
+head. It reuses the verified Stage A encoder, does not repeat Stage A or Stage B, and adds no
+external record to SAHAY-labelled training.
+
+1. **Error analysis** (`cli error-analysis`). This is ID-only: IDs, languages, scripts, labels,
+   families, slices, FN/FP families and token statistics, never text. It found that crisis misses
+   were mostly Hindi and Hinglish, and concentrated in conditional ("temporal ambiguity"), indirect
+   and "disappear" wording. Other families: coercion confused with ordinary disagreement in both
+   directions, legal help versus legal urgency, spelling variation and multi-label overlap. After
+   this analysis the Task 7 fictional validation and test splits count as exposed development
+   material.
+2. **Targeted corpus** (`cli hardening-build`, `ml/training/hardening.py`).
+   - **Families:** 105 fictional cores in English, Devanagari Hindi and romanised Hinglish. Each
+     core carries its contrast family: direct framings keep its label; quoted, reported, past and
+     negated framings flip it. Figurative, ordinary-disagreement, general-legal and
+     discouraged-help near-misses are their own families. Multi-label records combine two cores
+     from one split and record the reason.
+   - **Size:** 9,924 records.
+   - **Areas:** crisis 34%, coercion 21%, legal 19%, multi-label 13%, controls and other labels 14%.
+   - **Languages:** English 35%, Hindi 28%, Hinglish 38%.
+   - **Contamination screen:** every record is checked against the Task 7 corpus, every exposed
+     fixture file (including `locked.json`) and the private Task 5 hashed keys. Exact, normalised,
+     reordered, verbatim-turn and cross-split duplicates block the whole family; near overlap and
+     shared token windows are warnings. No private blind corpus is configured.
+3. **Freeze before training.** Splits are by family: train 7,492, validation 1,242,
+   `synthetic_hardening_holdout` 1,190. The split files, family lists and template bank are hashed
+   into a timestamped freeze record, which `cli hardening-verify` re-checks in a fresh process. A
+   frozen version cannot be regenerated; a changed holdout needs a new version, with the old one
+   marked exposed.
+4. **Review packet.** A private sample of every family, label, language, contrast type and
+   multi-label combination. Every reviewer field is empty. Human review is not simulated, and it
+   is mandatory before any promotion decision.
+5. **Predeclared experiment** (`cli stage-c7b-plan`, `ml/training/stage_c7b.py`).
+   - **Configurations:** A is BCE with a class-balanced sampler. B is BCE with train-split
+     `pos_weight` bounded to [1, 8]. C is focal loss with gamma 2.0.
+   - **Schedule:** seed 13 for A, B and C, then seeds 42 and 97 for the configuration that wins on
+     validation.
+   - **Settings:** micro-batch 16 with accumulation 2 (reducing Task 7's memory spill), at most 20
+     epochs, patience 3.
+   - **Selection (validation only):** crisis recall, then the minimum recall over crisis, legal and
+     coercion, then macro F1, then no-alert specificity, then validation loss, then seed.
+   - The plan is hashed before training, and code that no longer matches it refuses to run.
+6. **Once-only evaluation** (`cli stage-c7b-evaluate`) on the frozen holdout. It produces the
+   promotion gates, the Task 7 comparison on the same holdout, deterministic invariance evidence and
+   the contaminated regressions.
+
+**Research gates** for `candidate_for_human_review`. They were fixed in the plan and are never
+lowered:
+- crisis recall ≥ 0.80, and ≥ 0.70 in each language;
+- legal-urgency and coercion recall ≥ 0.70;
+- macro F1 ≥ 0.70;
+- no-alert specificity ≥ 0.90;
+- repeat agreement 1.0;
+- no deterministic effect, a prepared review packet, and nothing committed.
+
+Any failed gate keeps `rejected_for_product_integration`. Even a pass gives only
+`candidate_for_human_review`, never any product integration.
+
+**Task 7B result.** Configuration C won phase 1 on validation. Selection across all five runs,
+still on validation only, picked C with seed 13. On the once-evaluated holdout:
+- crisis recall 1.00 in every language, legal-urgency recall 0.73, coercion recall 1.00, no-alert
+  specificity 0.92, repeat agreement 1.0;
+- macro F1 0.6747 under the existing calculation, below the 0.70 gate. The value covers only the 5
+  labels with positive holdout support; immediate danger, isolation and medical urgency are
+  excluded as undefined;
+- continuing-threat recall 0.11 on its 132 positives.
+
+The checkpoint remains rejected for product integration. It missed the macro-F1 gate, and full
+eight-label promotion evaluation was not possible because three labels had no positive holdout
+support (`full_label_coverage: false`, `promotion_metrics_fully_evaluable: false`). No promotion
+conclusion can be made for those three labels, and human review remains pending. See
+`ml/shadow/MODEL_CARD.md`. The gates were not lowered, no configuration was added after seeing
+results, and the frozen holdout was not changed.
+
+**Metric-validity correction** (`cli stage-c7b-correct`). Every per-label metric now reports its
+denominator: precision TP+FP, recall TP+FN, specificity TN+FP. A zero denominator gives `null`
+with a reason, never 0. Macro averages list the labels they include and exclude. Label coverage
+(positive and negative support per label) is part of every report, and a report without full
+coverage can never yield `candidate_for_human_review`. The correction reads the stored per-label
+counts of the once-only evaluation. It re-predicts nothing, leaves the original report and the
+frozen holdout byte-identical, and keeps the previous status file as `STATUS.pre-correction.json`.
+
 ## Three evidence classes, reported separately
 
 - **A. External auxiliary evidence:** masked-language validation loss and perplexity, and Stage B
@@ -149,6 +233,17 @@ python -m ml.training.cli stage-b
 python -m ml.training.cli stage-c --seeds 13 42 97 --tag run1
 python -m ml.training.cli stage-c --seeds 13 42 97 --epochs 20 --patience 3 --tag run2
 python -m ml.training.cli verify-shadow
+python -m ml.training.cli error-analysis
+python -m ml.training.cli hardening-build
+python -m ml.training.cli hardening-verify
+python -m ml.training.cli stage-c7b-plan
+python -m ml.training.cli stage-c7b --phase 1
+python -m ml.training.cli stage-c7b --phase 2
+python -m ml.training.cli stage-c7b-select
+python -m ml.training.cli stage-c7b-evaluate
+python -m ml.training.cli task7b-retention
+python -m ml.training.cli stage-c7b-correct
+python -m ml.shadow.demo --checkpoint-set task7b text --example 4
 python -m ml.training.cli regression
 python -m ml.shadow.demo examples
 python -m ml.shadow.demo text --example 1

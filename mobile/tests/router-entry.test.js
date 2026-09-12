@@ -13,6 +13,8 @@ test("the root layout provides a headerless router stack", () => {
   assert.match(source, /from\s+["']expo-router["']/);
   assert.match(source, /<Stack\b/);
   assert.match(source, /headerShown:\s*false/);
+  assert.equal((source.match(/import \{ SessionProvider \}/g) ?? []).length, 1);
+  assert.equal((source.match(/<SessionProvider>/g) ?? []).length, 1);
 });
 
 test("language selection updates i18n before opening consent", () => {
@@ -24,25 +26,53 @@ test("language selection updates i18n before opening consent", () => {
   assert.match(source, /<LanguageScreen\s+onSelectLanguage=\{selectLanguage\}/);
 });
 
-test("accepting consent creates the session before replacing with home", () => {
+function routeFunction(source, name) {
+  const match = source.match(
+    new RegExp(`(?:async )?function ${name}\\(\\): (?:Promise<void>|void) \\{([\\s\\S]*?)\\r?\\n  \\}`),
+  );
+  assert.ok(match, `${name} is missing`);
+  return match[1];
+}
+
+test("accepting consent opens home only after a granted session is created", () => {
   const source = read("app", "consent.tsx");
-  assert.match(source, /await createSession\(consent\)/);
-  assert.ok(source.indexOf("await createSession(consent)") < source.indexOf("router.replace"));
-  assert.match(source, /onAccept=\{\(\) => decide\("granted"\)\}/);
-  assert.match(source, /consent === "granted" \? "\/home" : "\/handoff"/);
+  const accept = routeFunction(source, "acceptConsent");
+  const start = accept.indexOf('store.startSession("granted", getLanguage())');
+  const home = accept.indexOf('router.replace("/home")');
+  assert.ok(start >= 0, "accept does not create a granted session");
+  assert.ok(home > start, "home opens before session creation");
+  assert.match(accept, /if \(result\.ok && mounted\.current\) router\.replace\(["']\/home["']\)/);
+  assert.match(source, /onAccept=\{acceptConsent\}/);
 });
 
-test("declined consent creates a declined session before handoff", () => {
+test("declined consent continues to the handoff route without waiting", () => {
   const source = read("app", "consent.tsx");
-  assert.match(source, /onDecline=\{\(\) => decide\("declined"\)\}/);
-  assert.match(source, /router\.replace\(consent === "granted" \? "\/home" : "\/handoff"\)/);
+  const decline = routeFunction(source, "declineConsent");
+  assert.match(decline, /void store\.startSession\(["']declined["'], getLanguage\(\)\);/);
+  assert.match(decline, /router\.replace\(["']\/handoff["']\)/);
+  assert.doesNotMatch(decline, /await|\/home/);
+  assert.match(source, /onDecline=\{declineConsent\}/);
 });
 
 test("accept and decline route callbacks remain strictly separated", () => {
   const source = read("app", "consent.tsx");
-  assert.equal((source.match(/decide\("granted"\)/g) ?? []).length, 1);
-  assert.equal((source.match(/decide\("declined"\)/g) ?? []).length, 1);
-  assert.match(source, /createSession\(consent\)/);
+  const accept = routeFunction(source, "acceptConsent");
+  const decline = routeFunction(source, "declineConsent");
+
+  assert.deepEqual(accept.match(/router\.\w+\(["']([^"']+)["']\)/g), ['router.replace("/home")']);
+  assert.deepEqual(decline.match(/router\.\w+\(["']([^"']+)["']\)/g), ['router.replace("/handoff")']);
+  assert.doesNotMatch(accept, /declined/);
+  assert.doesNotMatch(decline, /granted/);
+});
+
+test("a failed granted session shows the error screen with explicit retry and human contact", () => {
+  const source = read("app", "consent.tsx");
+  const retry = routeFunction(source, "retrySession");
+  assert.match(retry, /await store\.retrySessionCreation\(\)/);
+  assert.match(retry, /result\.ok && mounted\.current && result\.session\.consent === "granted"/);
+  assert.match(source, /<ErrorScreen\s+onRequestHuman=\{\(\) => router\.push\(["']\/handoff["']\)\}/);
+  assert.match(source, /onRetry=\{\(\) => \{ void retrySession\(\); \}\}/);
+  assert.doesNotMatch(source, /setTimeout|setInterval|retrySessionCreation\(\)[\s\S]*retrySessionCreation\(\)/);
 });
 
 test("home sends human requests to the handoff route", () => {
@@ -69,14 +99,17 @@ test("home opens the requests route", () => {
   assert.match(source, /onOpenRequests=\{\(\)\s*=>\s*router\.push\(["']\/requests["']\)\}/);
 });
 
-test("the requests route loads only the active session timeline and keeps handoff available", () => {
+test("the requests route reads the session store and keeps handoff available", () => {
   const source = read("app", "requests.tsx");
   assert.match(source, /<MyRequestsScreen/);
-  assert.match(source, /const \{ session, loadTimeline \} = useSession\(\)/);
-  assert.match(source, /loadTimeline\(\)\.then/);
-  assert.match(source, /if \(!active \|\| value === null\) return/);
   assert.match(source, /loadState=\{loadState\}/);
+  assert.match(source, /void store\.loadTimeline\(\);/);
+  assert.match(source, /return \(\) => store\.cancelTimeline\(\);/);
+  assert.match(source, /payload=\{loadState === "ready" \? timeline\.payload : undefined\}/);
+  assert.match(source, /onRetry=\{loadState === "failed" \?/);
   assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
+  // No case identifier can enter from navigation, deep links or user input.
+  assert.doesNotMatch(source, /useLocalSearchParams|useGlobalSearchParams|useSearchParams|params|case_id|caseId/);
   assert.doesNotMatch(source, /fetch\(|WebSocket|Promise\.resolve/);
 });
 

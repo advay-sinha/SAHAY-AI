@@ -7,6 +7,15 @@
     python -m ml.training.cli stage-c [--seeds 13 42 97] [--limit N]
     python -m ml.training.cli regression
     python -m ml.training.cli verify-shadow
+    python -m ml.training.cli error-analysis
+    python -m ml.training.cli hardening-build
+    python -m ml.training.cli hardening-verify
+    python -m ml.training.cli stage-c7b-plan
+    python -m ml.training.cli stage-c7b --phase 1|2
+    python -m ml.training.cli stage-c7b-select
+    python -m ml.training.cli stage-c7b-evaluate
+    python -m ml.training.cli task7b-retention
+    python -m ml.training.cli stage-c7b-correct
 
 Needs ``SAHAY_TRAINING_ROOT`` (private outputs) and ``SAHAY_MODELS_ROOT`` (pinned MuRIL); neither has
 a default. Output is aggregate only: no text, no transcript, no absolute path. Reports and
@@ -85,6 +94,16 @@ def main(argv: Optional[List[str]] = None) -> int:
             p.add_argument("--tag", default="run1", help="alphanumeric run tag")
     sub.add_parser("regression")
     sub.add_parser("verify-shadow")
+    sub.add_parser("error-analysis")
+    sub.add_parser("hardening-build")
+    sub.add_parser("hardening-verify")
+    sub.add_parser("stage-c7b-plan")
+    p7 = sub.add_parser("stage-c7b")
+    p7.add_argument("--phase", type=int, choices=(1, 2), required=True)
+    sub.add_parser("stage-c7b-select")
+    sub.add_parser("stage-c7b-evaluate")
+    sub.add_parser("task7b-retention")
+    sub.add_parser("stage-c7b-correct")
     args = parser.parse_args(argv)
     try:
         with network_blocked() as net:
@@ -106,6 +125,36 @@ def main(argv: Optional[List[str]] = None) -> int:
                 from . import stage_c
                 payload = stage_c.run(paths.training_root(args.training_root), seeds=tuple(args.seeds),
                                       limit=args.limit, epochs=args.epochs, patience=args.patience, tag=args.tag)
+            elif args.command == "hardening-build":
+                from . import hardening
+                root = paths.training_root(args.training_root)
+                keys_path = paths.confined(root, *paths.EXTERNAL_CORPUS.split("/"), "exact_keys.txt")
+                keys = set(keys_path.read_text(encoding="utf-8").split()) if keys_path.is_file() else None
+                r = hardening.build(root, keys)
+                payload = {k: r[k] for k in ("generated", "kept", "contamination", "families", "review_packet")}
+                payload["freeze"] = {k: r["freeze"][k] for k in ("version", "frozen_at", "records", "state")}
+            elif args.command in ("stage-c7b-plan", "stage-c7b", "stage-c7b-select", "stage-c7b-evaluate",
+                                  "task7b-retention", "stage-c7b-correct"):
+                from . import stage_c7b
+                root = paths.training_root(args.training_root)
+                if args.command == "stage-c7b-plan":
+                    payload = stage_c7b.write_plan(root)
+                elif args.command == "stage-c7b":
+                    payload = stage_c7b.run_phase(root, args.phase)
+                elif args.command == "stage-c7b-select":
+                    payload = stage_c7b.select(root)
+                elif args.command == "task7b-retention":
+                    payload = stage_c7b.retention_proposal(root)
+                elif args.command == "stage-c7b-correct":
+                    payload = stage_c7b.correct_holdout_report(root)
+                else:
+                    payload = stage_c7b.evaluate(root)
+            elif args.command == "hardening-verify":
+                from . import hardening
+                payload = hardening.verify_freeze(paths.training_root(args.training_root))
+            elif args.command == "error-analysis":
+                from . import error_analysis
+                payload = error_analysis.run(paths.training_root(args.training_root))
             elif args.command == "verify-shadow":
                 payload = verify_shadow(args.training_root)
             else:

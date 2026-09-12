@@ -1,41 +1,28 @@
-import { useEffect, useState } from "react";
 import { useRouter } from "expo-router";
+import { useEffect } from "react";
 import { MyRequestsScreen } from "../src/screens/MyRequestsScreen";
-import { useSession } from "../src/session/SessionProvider";
-import type { VictimTimeline } from "../src/net/victimPayload";
-import type { MyRequestsLoadState } from "../src/screens/myRequestsState";
+import { useSessionSnapshot, useSessionStore } from "../src/session/SessionProvider";
+import { timelineLoadState } from "../src/session/sessionStore";
 
 export default function RequestsRoute() {
   const router = useRouter();
-  const { session, loadTimeline } = useSession();
-  const [loadState, setLoadState] = useState<MyRequestsLoadState>(session ? "loading" : "unavailable");
-  const [payload, setPayload] = useState<VictimTimeline | undefined>();
-  const [attempt, setAttempt] = useState(0);
+  const store = useSessionStore();
+  const { timeline } = useSessionSnapshot();
 
+  // The store supplies the case from the validated session; this route passes none.
   useEffect(() => {
-    let active = true;
-    if (session === null) {
-      setLoadState("unavailable");
-      setPayload(undefined);
-      return () => { active = false; };
-    }
-    setLoadState("loading");
-    void loadTimeline().then((value) => {
-      if (!active || value === null) return;
-      setPayload(value);
-      setLoadState("ready");
-    }).catch(() => {
-      if (active) setLoadState("failed");
-    });
-    return () => { active = false; };
-  }, [attempt, loadTimeline, session]);
+    void store.loadTimeline();
+    return () => store.cancelTimeline();
+  }, [store]);
+
+  const loadState = timelineLoadState(timeline);
 
   return (
     <MyRequestsScreen
       loadState={loadState}
-      payload={payload}
       onRequestHuman={() => router.push("/handoff")}
-      onRetry={() => setAttempt((value) => value + 1)}
+      onRetry={loadState === "failed" ? () => { void store.loadTimeline(); } : undefined}
+      payload={loadState === "ready" ? timeline.payload : undefined}
     />
   );
 }
