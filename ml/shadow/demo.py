@@ -2,6 +2,7 @@
 
     python -m ml.shadow.demo examples
     python -m ml.shadow.demo text --example 3
+    python -m ml.shadow.demo --checkpoint-set task7b text --example 3
     python -m ml.shadow.demo text --language hinglish --text "<fictional sentence>" [--text "<next turn>"]
     python -m ml.shadow.demo voice --synthetic silence|speechlike --language hi
     python -m ml.shadow.demo voice --audio <private consented 16 kHz mono WAV> --language hi
@@ -98,6 +99,13 @@ def side_by_side(turns: Sequence[Mapping[str, Any]], channel: str, shadow: Shado
     return {"authoritative_deterministic": det, "experimental_shadow": sh, "shadow_vs_deterministic": disagreements}
 
 
+def product_line(sh: Mapping[str, Any]) -> str:
+    """Never an approval: failing any gate shows the fixed rejection line."""
+    if sh.get("deployment_status") == "candidate_for_human_review" and sh.get("promotion_gates_passed"):
+        return "Candidate for human review only; not approved for product integration"
+    return "Not approved for product integration"
+
+
 def render(result: Mapping[str, Any], meta: Mapping[str, Any]) -> str:
     det, sh = result["authoritative_deterministic"], result["experimental_shadow"]
     lines = [BANNER, "", f"Input: {meta['summary']} (text is never echoed)", "",
@@ -111,6 +119,12 @@ def render(result: Mapping[str, Any], meta: Mapping[str, Any]) -> str:
     lines += ["", f"EXPERIMENTAL SHADOW OUTPUT ({sm.MODEL_ID}; uncalibrated; development threshold "
                   f"{sm.THRESHOLD}; cannot change anything above)", f"  status: {sh['status']}"
               + (f" ({sh.get('reason')})" if sh.get("reason") else "")]
+    lines += [f"  checkpoint set          : {sh.get('checkpoint_set', 'task7')} "
+              f"(sha256 {str(sh.get('checkpoint_sha256') or 'n/a')[:16]})",
+              f"  checkpoint status       : {sh.get('deployment_status', 'rejected_for_product_integration')}",
+              f"  promotion gates passed  : {sh.get('promotion_gates_passed')}",
+              f"  promotion fully evaluable: {sh.get('promotion_metrics_fully_evaluable')}",
+              f"  product integration     : {product_line(sh)}"]
     if sh.get("probabilities"):
         for c, prob in sh["probabilities"].items():
             flag = result["shadow_vs_deterministic"].get(c, "")
@@ -172,6 +186,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m ml.shadow.demo", description=__doc__.split("\n")[0])
     parser.add_argument("--training-root", help=f"overrides {paths.TRAINING_ROOT_ENV}")
     parser.add_argument("--json", action="store_true", help="print the aggregate result as JSON")
+    parser.add_argument("--checkpoint-set", choices=("task7", "task7b"), default="task7",
+                        help="which private shadow checkpoint to load (explicit; default task7)")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("examples")
     t = sub.add_parser("text")
@@ -188,7 +204,7 @@ def main(argv: Optional[List[str]] = None) -> int:
         for i, ex in enumerate(EXAMPLES):
             print(f"{i}: {ex['language']}, {len(ex['turns'])} turn(s) (fictional)")
         return 0
-    shadow = ShadowClassifier(args.training_root)
+    shadow = ShadowClassifier(args.training_root, checkpoint_set=args.checkpoint_set)
     try:
         with network_blocked() as net:  # the demonstration is offline: any connection attempt is refused
             out = run_text(args, shadow) if args.command == "text" else run_voice(args, shadow)

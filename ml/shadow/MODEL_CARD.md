@@ -28,6 +28,35 @@
 | Promotion threshold | None: no numeric promotion threshold has been approved |
 | Promotion path | Promotion requires all three: a richer human-reviewed fictional corpus, a new training and evaluation task, and a separate explicit integration decision |
 
+## Task 7B status (targeted corpus hardening, 2026-09-12)
+
+The Task 7 checkpoint above is unchanged and stays `rejected_for_product_integration`. Task 7B
+retrained only the Stage C head, on the frozen targeted fictional corpus `7b-v1`, and loads in the
+local demo only with `--checkpoint-set task7b`.
+
+| Field | Value |
+|---|---|
+| `deployment_status` | `rejected_for_product_integration` |
+| `backend_integration_allowed` | `false` |
+| `frontend_integration_allowed` | `false` |
+| `mobile_integration_allowed` | `false` |
+| `victim_facing_allowed` | `false` |
+| `shadow_local_demo_only` | `true` |
+| Selected checkpoint | Configuration C (focal loss, gamma 2.0), seed 13, epoch 3; chosen on fictional validation only by the predeclared rule |
+| Promotion result | The checkpoint remains rejected for product integration. It missed the macro-F1 gate, and full eight-label promotion evaluation was not possible because three labels had no positive holdout support |
+| Macro F1 (existing calculation) | 0.6747 against the required 0.70: not met. Computed over the 5 labels with positive holdout support (crisis, continuing threat, legal urgency, coercion, explicit human request); immediate danger, isolation and medical urgency are excluded as undefined, not zero-filled |
+| `full_label_coverage` | `false` |
+| `promotion_metrics_fully_evaluable` | `false` |
+| Labels without positive holdout support | `immediate_danger`, `isolation_boycott_displacement`, `medical_urgency`: their recall and F1 are undefined (`null`), and no promotion conclusion can be made for them |
+| Holdout crisis recall | 1.00 overall and 1.00 in each of English, Hindi and Hinglish (Task 7 checkpoint on the same holdout: 0.39) |
+| Holdout legal-urgency and coercion recall | 0.73 and 1.00; coercion specificity 0.83 (162 false positives) |
+| Holdout no-alert specificity | 0.92 |
+| Weakest label | Continuing-threat recall 0.11 on the holdout |
+| Against the deterministic pipeline | Contaminated exposed regression: micro F1 0.59 against 0.91 on dev and 0.63 against 0.87 on candidates. Crisis recall 1.0 on both; the red-team victim-input case `RT-VI-HG-001` still missed |
+| Evidence class | Synthetic development evidence on an agent-generated holdout: not independent, official, blind, human-authored or clinically validated |
+| Human review | The private review packet is prepared; no review has been completed |
+| Crisis pre-check | This checkpoint must not replace, supplement, delay, downgrade or influence the crisis pre-check, or decide escalation |
+
 ## Training data
 
 - **Encoder adaptation (Stage A).** Every usable privacy-processed text record of five external
