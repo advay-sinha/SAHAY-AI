@@ -16,6 +16,7 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import Mock, patch
 
+from backend.tests import disposable_sqlite_subprocess_env
 from backend.tests.test_contract_decisions import DecisionBase
 from backend.tests.test_vertical_slice import HAVE_DEPS
 
@@ -145,8 +146,7 @@ class TestSeedCommandSafety(unittest.TestCase):
     def test_disposable_sqlite_target_preserves_normal_seed_behavior(self):
         with tempfile.TemporaryDirectory() as tmp:
             database = Path(tmp) / "task3-seed.db"
-            env = dict(os.environ)
-            env["DATABASE_URL"] = (
+            env = disposable_sqlite_subprocess_env(
                 "sqlite+aiosqlite:///" + database.as_posix()
             )
             env["SEED_PASSWORD"] = "synthetic-local-seed-password"
