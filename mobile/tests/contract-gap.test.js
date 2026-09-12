@@ -122,7 +122,12 @@ test("every frozen timeline stage has an en and hi label, and no retired stage r
   for (const lang of ["en", "hi"]) {
     const strings = JSON.parse(read("mobile", "src", "i18n", `${lang}.json`));
     const keys = Object.keys(strings)
-      .filter((k) => k.startsWith("timeline.") && !["timeline.title", "timeline.reference"].includes(k))
+      .filter((k) => k.startsWith("timeline.") && ![
+        "timeline.title",
+        "timeline.reference",
+        "timeline.empty",
+        "timeline.loading",
+      ].includes(k))
       .map((k) => k.slice("timeline.".length))
       .sort();
     assert.deepEqual(keys, stages, `${lang}.json timeline labels`);
