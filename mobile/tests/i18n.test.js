@@ -7,20 +7,100 @@
  */
 
 const assert = require("node:assert/strict");
+const crypto = require("node:crypto");
 const fs = require("node:fs");
 const path = require("node:path");
 const test = require("node:test");
 
 const I18N = path.join(__dirname, "..", "src", "i18n");
+const SRC = path.join(__dirname, "..", "src");
 
 function load(name) {
   return JSON.parse(fs.readFileSync(path.join(I18N, name), "utf8"));
+}
+
+function directTranslationKeys(source) {
+  return [...source.matchAll(/\bt\(\s*(["'])([^"']+)\1\s*\)/g)].map((match) => match[2]);
+}
+
+function productionSourceFiles(directory = SRC) {
+  return fs.readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const target = path.join(directory, entry.name);
+    if (entry.isDirectory()) return productionSourceFiles(target);
+    return /\.tsx?$/.test(entry.name) ? [target] : [];
+  });
+}
+
+function executeTranslation(language, key) {
+  const source = fs.readFileSync(path.join(I18N, "index.ts"), "utf8");
+  const implementation = source.match(
+    /export function t\(key: string\): string \{([\s\S]*?)\r?\n\}/,
+  );
+  assert.ok(implementation, "could not load the translation function");
+  return new Function("BUNDLES", "current", "key", implementation[1])(
+    { en: load("en.json"), hi: load("hi.json") },
+    language,
+    key,
+  );
+}
+
+function valueDigest(bundle) {
+  const stableEntries = Object.entries(bundle).sort(([left], [right]) => left.localeCompare(right));
+  return crypto.createHash("sha256").update(JSON.stringify(stableEntries)).digest("hex");
 }
 
 test("hi and en carry the same keys", () => {
   const hi = load("hi.json");
   const en = load("en.json");
   assert.deepEqual(Object.keys(hi).sort(), Object.keys(en).sort());
+});
+
+test("approved locale values remain unchanged", () => {
+  assert.equal(
+    valueDigest(load("en.json")),
+    "685f4a8717669d3d4a0f6ec3d8af35bd6c06fa3c04b0d9318dfbe6d3216bca7c",
+  );
+  assert.equal(
+    valueDigest(load("hi.json")),
+    "b0753895b02ddbbe21f2ff437b993f96656c75932f506ef06dc9d1532a96edab",
+  );
+});
+
+test("AiDisclosure uses the approved persistent-disclosure key in both locales", () => {
+  const source = fs.readFileSync(path.join(SRC, "components", "AiDisclosure.tsx"), "utf8");
+  const keys = directTranslationKeys(source);
+  assert.deepEqual(keys, ["disclosure.persistent"]);
+
+  for (const name of ["en.json", "hi.json"]) {
+    const bundle = load(name);
+    for (const key of keys) assert.ok(key in bundle, `${name} is missing ${key}`);
+  }
+});
+
+test("persistent disclosure translates to its approved text instead of a raw key", () => {
+  const expected = {
+    en: "AI assistant \u00b7 a person reviews everything",
+    hi: "\u090f\u0906\u0908 \u0938\u0939\u093e\u092f\u0915 \u00b7 \u090f\u0915 \u0935\u094d\u092f\u0915\u094d\u0924\u093f \u0938\u092c \u0915\u0941\u091b \u0926\u0947\u0916\u0924\u093e \u0939\u0948",
+  };
+
+  for (const language of ["en", "hi"]) {
+    const translated = executeTranslation(language, "disclosure.persistent");
+    assert.equal(translated, expected[language]);
+    assert.notEqual(translated, "disclosure.persistent");
+  }
+});
+
+test("every direct production translation lookup exists in both locales", () => {
+  const bundles = { en: load("en.json"), hi: load("hi.json") };
+  for (const file of productionSourceFiles()) {
+    const source = fs.readFileSync(file, "utf8");
+    assert.doesNotMatch(source, /ai\.disclosure\.persistent/);
+    for (const key of directTranslationKeys(source)) {
+      for (const language of ["en", "hi"]) {
+        assert.ok(key in bundles[language], `${path.relative(SRC, file)}: ${language} is missing ${key}`);
+      }
+    }
+  }
 });
 
 test("no string is empty in either language", () => {

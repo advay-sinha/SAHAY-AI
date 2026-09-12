@@ -99,7 +99,7 @@ test("MyRequestsScreen keeps disclosure and handoff outside its scrollable timel
   assert.ok(disclosure >= 0 && disclosure < scrollStart, "AI disclosure is not persistent");
   assert.ok(entries > scrollStart && entries < scrollEnd, "long timeline content is not scrollable");
   assert.ok(handoff > scrollEnd, "human-contact control can be buried by the timeline");
-  assert.match(source, /<View style=\{\{ flex: 1, gap: 16, padding: 16 \}\}>/);
+  assert.match(source, /<View style=\{\{ flex: 1, gap: 16, padding: 16, backgroundColor: theme\.colors\.canvas \}\}>/);
   assert.match(source, /<ScrollView[\s\S]*style=\{\{ flex: 1 \}\}/);
 });
 
@@ -120,9 +120,18 @@ test("MyRequestsScreen is localized, accessible, and omits timestamps", () => {
   assert.match(source, /accessibilityLabel=/);
   assert.match(source, /accessibilityRole="button"/);
   assert.match(source, /accessibilityState=/);
-  assert.match(source, /minHeight:\s*48/);
+  assert.match(source, /minHeight:\s*theme\.size\.button/);
   assert.match(source, /allowFontScaling/);
   assert.match(source, /<AiDisclosure\s*\/>/);
   assert.match(source, /<TalkToPersonButton\s+onPress=\{onRequestHuman\}\s*\/>/);
   assert.doesNotMatch(source, /\.sort\(|\.reverse\(|\.ts\b/);
+});
+
+test("timeline renders a connected geometric rail inside one grouped card", () => {
+  const source = read("src", "screens", "MyRequestsScreen.tsx");
+  assert.match(source, /<SurfaceCard style=\{\{ padding: theme\.space\.lg \}\}>[\s\S]*presentation\.entries\.map/);
+  assert.match(source, /index < presentation\.entries\.length - 1/);
+  assert.match(source, /backgroundColor:\s*theme\.colors\.border, flex:\s*1, width:\s*2/);
+  assert.match(source, /importantForAccessibility="no-hide-descendants"/);
+  assert.ok(source.indexOf("<PersistentFooter>") > source.indexOf("</ScrollView>"));
 });
