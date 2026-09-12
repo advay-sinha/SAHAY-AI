@@ -58,7 +58,7 @@ test("hi and en carry the same keys", () => {
 test("approved locale values remain unchanged", () => {
   assert.equal(
     valueDigest(load("en.json")),
-    "685f4a8717669d3d4a0f6ec3d8af35bd6c06fa3c04b0d9318dfbe6d3216bca7c",
+    "eebbc46dd5da033d8acd989faf0e9f8aa8d92066a1e34a62c81bbab5ab010982",
   );
   assert.equal(
     valueDigest(load("hi.json")),
@@ -171,7 +171,7 @@ test("My Requests state labels match the approved translations", () => {
   const expected = {
     en: {
       "timeline.empty": "No requests yet",
-      "timeline.loading": "Loading request",
+      "timeline.loading": "Loading request\u2026",
     },
     hi: {
       "timeline.empty": "\u0905\u092D\u0940 \u0915\u094B\u0908 \u0905\u0928\u0941\u0930\u094B\u0927 \u0928\u0939\u0940\u0902 \u0939\u0948",
@@ -182,6 +182,9 @@ test("My Requests state labels match the approved translations", () => {
     "timeline.empty": 22,
     "timeline.loading": 21,
   };
+  assert.equal(load("en.json")["timeline.loading"].codePointAt(15), 0x2026);
+  assert.equal(load("en.json")["timeline.loading"].length, 16);
+  assert.doesNotMatch(load("en.json")["timeline.loading"], /\.\.\./);
 
   for (const language of ["en", "hi"]) {
     const bundle = load(`${language}.json`);
@@ -191,5 +194,26 @@ test("My Requests state labels match the approved translations", () => {
         assert.equal(bundle[key].length, hindiLengths[key], `${language}:${key}:length`);
       }
     }
+  }
+});
+
+test("the rendered loading presentation shows the exact approved text in both languages", () => {
+  const { selectMyRequestsPresentation } = require("../src/screens/myRequestsState");
+  assert.deepEqual(selectMyRequestsPresentation("loading"), { kind: "loading" });
+
+  const screen = fs.readFileSync(path.join(SRC, "screens", "MyRequestsScreen.tsx"), "utf8");
+  const block = screen.match(/\{presentation\.kind === "loading" \? \(([\s\S]*?)\) : null\}/);
+  assert.ok(block, "loading presentation branch is missing");
+  // The branch renders one key, as both its visible text and its accessible label.
+  assert.deepEqual(directTranslationKeys(block[1]), ["timeline.loading", "timeline.loading"]);
+  assert.match(block[1], /accessibilityLabel=\{t\("timeline\.loading"\)\}/);
+  assert.match(block[1], />\s*\{t\("timeline\.loading"\)\}\s*</);
+
+  const approved = {
+    en: "Loading request…",
+    hi: "अनुरोध लोड हो रहा है…",
+  };
+  for (const language of ["en", "hi"]) {
+    assert.equal(executeTranslation(language, "timeline.loading"), approved[language], language);
   }
 });
