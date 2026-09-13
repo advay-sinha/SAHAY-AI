@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -21,6 +21,9 @@ from sqlalchemy.exc import ArgumentError
 REPO_ROOT = Path(__file__).resolve().parents[3]
 
 _SQLITE_PREFIXES = ("sqlite+aiosqlite:///", "sqlite:///")
+
+#: The only APP_ENV values in which the provisional fixed scripts may be enabled.
+PROVISIONAL_SCRIPT_ENVS = frozenset({"development", "test"})
 _DATABASE_CONFIGURATION_ERROR = "database configuration is invalid"
 
 
@@ -133,6 +136,21 @@ class Settings(BaseSettings):
     TURN_LATENCY_TARGET_MS: int = 3000
     VAD_SILENCE_MS: int = 700
 
+    # Task 5D-L: show the PROVISIONAL, UNREVIEWED candidate fixed scripts as
+    # text-only local-demo turns. Default off; refused outside development/test.
+    PROVISIONAL_FIXED_SCRIPTS_LOCAL_DEMO: bool = False
+
+    @field_validator("PROVISIONAL_FIXED_SCRIPTS_LOCAL_DEMO")
+    @classmethod
+    def _provisional_scripts_are_development_only(cls, value: bool, info: ValidationInfo) -> bool:
+        # A field validator, so a refusal echoes only this boolean, never another
+        # setting such as DATABASE_URL. APP_ENV is declared first, so it is in
+        # info.data when valid; an invalid or missing APP_ENV also refuses.
+        if value and info.data.get("APP_ENV") not in PROVISIONAL_SCRIPT_ENVS:
+            raise ValueError(
+                "PROVISIONAL_FIXED_SCRIPTS_LOCAL_DEMO is permitted only when APP_ENV is development or test"
+            )
+        return value
 
     @field_validator("AUDIO_STORAGE_PATH")
     @classmethod

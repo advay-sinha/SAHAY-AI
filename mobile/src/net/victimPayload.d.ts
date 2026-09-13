@@ -43,6 +43,8 @@ export const SESSION_STATES: readonly [
   "SH",
 ];
 
+export const AUDIO_KINDS: readonly ["none", "streaming", "prerecorded"];
+
 export const CONSENT_STATUSES: readonly ["granted", "declined", "pending"];
 
 export const TIMELINE_STAGES: readonly [

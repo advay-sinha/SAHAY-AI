@@ -1,4 +1,4 @@
-# Frozen contracts — v3
+# Frozen contracts — v4
 
 > **Local MVP infrastructure profile:** SQLite through SQLAlchemy replaces PostgreSQL for the current build; a local background runner replaces Redis/RQ; local retrieval replaces pgvector. Provider interfaces must preserve a later migration path.
 
@@ -9,6 +9,8 @@ Agreed Day 1 (v1). Changed only via an issue labelled `type:contract` with **all
 Every team builds against this file, not against another team's current code.
 
 **v3, 2026-09-12.** PC-11 freezes and approves first-frame WebSocket authentication, durable chat acknowledgements, atomic human-request acknowledgements, and REST-based reconnect recovery for the controlled MVP. Query-token authentication and WebSocket event replay are removed.
+
+**v4, 2026-09-13.** PC-12 adds the exact value `"none"` to the required `assistant.turn` `audio` field for text-only assistant turns in the controlled MVP. No other event or response changes.
 
 ---
 
@@ -46,7 +48,7 @@ Malformed JSON, binary frames, unknown types, missing/extra keys, or invalid ide
 ## 2. Events — victim client MAY receive
 
 ```
-assistant.turn    {turn_id, text, lang, intent, audio:"streaming"|"prerecorded"}
+assistant.turn    {turn_id, text, lang, intent, audio:"none"|"streaming"|"prerecorded"}
 transcript.line   {turn_id, speaker:"victim"|"assistant", text, lang, ts}
 session.status    {state, consent, lang, human_joined:bool}
 timeline.update   {stage, label, ts}
@@ -54,6 +56,11 @@ officer.message   {turn_id, text, lang, ts, origin:"human_officer"}
 ```
 
 **The server enforces this allowlist** (`backend/app/ws/events.py` `VICTIM_ALLOWED`). The mobile mirror is `mobile/src/types/events.ts` `ALLOWED_EVENT_TYPES`, and `backend/tests/test_contract_mirror.py` asserts the two lists and this section agree.
+
+**`assistant.turn` `audio` (PC-12).** The field is required, non-nullable and exactly one of `"none"`, `"streaming"` or `"prerecorded"`; any other value is rejected by every mirror.
+- `"none"` means the event carries displayable text and makes no claim that audio exists. It must never trigger audio capture, playback, streaming, synthesis or asset lookup.
+- Provisional, unreviewed fixed scripts always use `"none"`, never `"streaming"` or `"prerecorded"`.
+- `"prerecorded"` is reserved for separately approved fixed scripts whose audio assets have been verified; that path remains future work.
 
 **`officer.message` (PC-07).** This event exists only after a verified takeover:
 - The sender is an authenticated executive who has claimed the case.

@@ -7,7 +7,9 @@ const EVENT_TYPES = Object.freeze([
 ]);
 
 const LANGUAGES = Object.freeze(["hi", "en"]);
-const AUDIO_KINDS = Object.freeze(["streaming", "prerecorded"]);
+// PC-12: "none" is displayable text with no audio claim. It never starts capture,
+// playback, streaming, synthesis or an asset lookup.
+const AUDIO_KINDS = Object.freeze(["none", "streaming", "prerecorded"]);
 const TRANSCRIPT_SPEAKERS = Object.freeze(["victim", "assistant"]);
 const SESSION_STATES = Object.freeze([
   "S0",
@@ -206,6 +208,7 @@ function parseSocketMessage(raw, sessionId) {
 }
 
 module.exports = {
+  AUDIO_KINDS,
   CONSENT_STATUSES,
   EVENT_TYPES,
   SESSION_STATES,

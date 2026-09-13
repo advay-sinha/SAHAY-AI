@@ -6,7 +6,10 @@ The reply path, in order (root CLAUDE.md invariants 1 and 2):
   2. synchronous crisis pre-check           -- before anything else decides
   3. deterministic dialogue policy          -- chooses one approved intent
   4. assistant text: a fallback for a question intent, or NOTHING when the
-     intent is an unapproved fixed script (S0, S9, SX, SH fail closed)
+     intent is an unapproved fixed script (S0, S9, SX, SH fail closed). The
+     one exception is the default-off, development/test-only Task 5D-L flag,
+     which shows PROVISIONAL, UNREVIEWED candidate text as text-only turns
+     (services/fixed_scripts.py).
   5. commit, publish victim-safe + executive events
   6. schedule the assessment cycle          -- background; never awaited here
 
@@ -36,7 +39,7 @@ from ..core.config import get_settings
 from ..core.enums import CONSENT_STATUSES, SESSION_CHANNELS
 from ..core.errors import BadRequest, Conflict, NotFound
 from ..models import Alert, Case, Consent, HumanRequest, Session, Turn
-from . import audit
+from . import audit, fixed_scripts
 from .consent import CONSENT_DECLINED, CONSENT_GRANTED, CONSENT_PENDING
 from .turn_loop import FixedScriptUnavailable, plan_turn
 
@@ -166,6 +169,10 @@ async def create_session(
         session.state = State.SH_HUMAN_HANDOFF.value
         await audit.record(db, "routed_to_human", case_id=case.id, detail={"reason": "consent_declined"})
     else:
+        # Task 5D-L: the provisional S0 text, only with granted consent (AI is
+        # muted for any other consent status) and only behind the local-demo flag.
+        if consent == CONSENT_GRANTED:
+            await fixed_scripts.show(db, out, session, case, State.S0_OPENING)
         session.state = State.S1_FREE_NARRATIVE.value
 
     out.add("session.status", status_payload(session, consent))
@@ -304,6 +311,8 @@ async def submit_turn(
     # 3-4. policy, then text only if it may be spoken
     assistant_text: Optional[str] = None
     intent = ""
+    previous_state = session.state
+    provisional_state: Optional[State] = None
     try:
         plan = plan_turn(session.state, slots, text, flags, get_provider(get_settings().LLM_PROVIDER))
         next_state = plan["next_state"]
@@ -314,6 +323,10 @@ async def submit_turn(
         next_state, intent = decision["next_state"], decision["intent"]
         await audit.record(db, "fixed_script.unavailable", case_id=case.id,
                            detail={"state": next_state, "turn_id": victim.id})
+        # Task 5D-L: only SX is shown from a victim turn, once, on entry. SH is
+        # shown by request_human, and S9 only after session end persistence.
+        if next_state == State.SX_CRISIS.value and previous_state != State.SX_CRISIS.value:
+            provisional_state = State.SX_CRISIS
 
     session.state = next_state
 
@@ -323,9 +336,12 @@ async def submit_turn(
                      was_fallback=True, review_status="draft", created_at=audit.now())
         db.add(reply)
         await db.flush()
+        # PC-12: no audio asset exists for any assistant text, so none is claimed.
         out.add("assistant.turn", {"turn_id": reply.id, "text": reply.text, "lang": reply.lang,
-                                   "intent": intent, "audio": "prerecorded"})
+                                   "intent": intent, "audio": "none"})
         out.add("transcript.line", transcript_payload(reply))
+    elif provisional_state is not None:
+        await fixed_scripts.show(db, out, session, case, provisional_state)
 
     # Crisis: forced Critical, alert, takeover request. Never resumes intake.
     if pre["crisis"]:
@@ -388,14 +404,23 @@ async def request_human(
                 return out
             raise Conflict("duplicate human request") from None
         out.persisted_id = row.id
+    previous_state = session.state
     if session.state != State.SX_CRISIS.value:
         session.state = State.SH_HUMAN_HANDOFF.value
     case.needs_human = True
     dedupe = f"human.requested:{session_id}:{request_id}" if request_id else f"human.requested:{case.id}"
     await audit.record(db, "human.requested", case_id=case.id, dedupe_key=dedupe,
                        detail={"request_id": request_id} if request_id else None)
-    # SH is a fixed script and is not approved: nothing is spoken.
+    # SH is a fixed script and is not approved: nothing approved is spoken.
     await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "SH"})
+    # Task 5D-L: the provisional SH text says no officer has joined, so it is shown
+    # only on first entry to SH, never over SX, never after a verified takeover,
+    # and only with granted consent.
+    if (previous_state not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value)
+            and session.state == State.SH_HUMAN_HANDOFF.value
+            and not session.human_joined and case.status != "taken_over"
+            and consent == CONSENT_GRANTED):
+        await fixed_scripts.show(db, out, session, case, State.SH_HUMAN_HANDOFF)
     out.add("session.status", status_payload(session, consent))
     return out
 
@@ -410,6 +435,18 @@ async def end_session(db: AsyncSession, session_id: str) -> Tuple[Case, Outbound
         session.ended_at = audit.now()
         await audit.record(db, "session.ended", case_id=case.id)
         await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "S9"})
+        await db.flush()
+        # Task 5D-L: the provisional S9 closing, once, after the end is persisted in
+        # this transaction. SX, SH and a verified takeover need a different closing
+        # policy, and "What you shared has been recorded" needs a recorded victim turn.
+        if (consent == CONSENT_GRANTED and not session.human_joined and case.status != "taken_over"
+                and session.state not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value)
+                and fixed_scripts.provisional_enabled()):
+            if any(t.speaker == "victim" for t in await _turns(db, session_id)):
+                await fixed_scripts.show(db, out, session, case, State.S9_CLOSING)
+            else:
+                await audit.record(db, fixed_scripts.SUPPRESSED, case_id=case.id,
+                                   detail={"state": "S9", "reason": "nothing_recorded"})
     row = await audit.timeline(db, case.id, "under_review")
     if row is not None:
         out.add("timeline.update", audit.timeline_payload(row))

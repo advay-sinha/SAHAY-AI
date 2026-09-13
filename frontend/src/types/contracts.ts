@@ -5,7 +5,7 @@
  * it without a `type:contract` issue and the leads' approval is contract
  * drift. No `any` is permitted on a contract shape.
  *
- * Contract v3 (2026-09-12): PC-01..PC-11 decisions applied.
+ * Contract v4 (2026-09-13): PC-01..PC-12 decisions applied.
  */
 
 /* -------------------------------------------------------------------------
@@ -59,12 +59,16 @@ export interface ErrorResponse {
  * The console receives these too, as the two-sided transcript.
  * ---------------------------------------------------------------------- */
 
+/** PC-12: "none" is text only and makes no audio-availability claim. */
+export const ASSISTANT_AUDIO = ["none", "streaming", "prerecorded"] as const;
+export type AssistantAudio = (typeof ASSISTANT_AUDIO)[number];
+
 export interface AssistantTurn {
   turn_id: string;
   text: string;
   lang: Lang;
   intent: string;
-  audio: "streaming" | "prerecorded";
+  audio: AssistantAudio;
 }
 
 export interface TranscriptLine {

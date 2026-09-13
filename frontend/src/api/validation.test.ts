@@ -78,6 +78,20 @@ describe("exact WebSocket response validation", () => {
     expect(validateSocketEvent({ type: "chat.ack" })).toBeNull();
   });
 
+  it("accepts exactly the three assistant.turn audio values and keeps the field required (PC-12)", () => {
+    const turn = { type: "assistant.turn", turn_id: "turn-1", text: "Fictional text.", lang: "en",
+      intent: "acknowledge", audio: "none" };
+    for (const audio of ["none", "streaming", "prerecorded"]) {
+      expect(validateSocketEvent({ ...turn, audio })).toEqual({ ...turn, audio });
+    }
+    for (const audio of ["", "None", "silent", null, 0, undefined]) {
+      expect(validateSocketEvent({ ...turn, audio })).toBeNull();
+    }
+    const { audio: _required, ...withoutAudio } = turn;
+    expect(validateSocketEvent(withoutAudio)).toBeNull();
+    expect(validateSocketEvent({ ...turn, svi: 9 })).toBeNull();
+  });
+
   it("mirrors the exact canonical recommendation event without REST-only status", () => {
     const recommendation = {
       type: "action.recommended", action_id: "action-1", action_type: "internal_review",

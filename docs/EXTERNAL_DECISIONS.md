@@ -370,3 +370,33 @@ Invariant 8
                  model behavior and rollback. For this decision, "working MVP"
                  means the ML-owned local CLI demonstration only.
 ```
+
+```text
+Date:            2026-09-13
+ID and exact
+  version/release:
+                 EXT-120 — environment variable
+                 PROVISIONAL_FIXED_SCRIPTS_LOCAL_DEMO (boolean, default false)
+Decision:        APPROVED
+Scope:           Controlled MVP Task 5D-L only. Lets the backend show the eight
+                 Task 5C candidate S0/S9/SH/SX texts as PROVISIONAL, UNREVIEWED,
+                 local-demo-only, text-only assistant turns (PC-12
+                 `audio:"none"`). Settings refuse `true` unless APP_ENV is
+                 `development` or `test`; production, demo, local, staging and
+                 unknown environments fail validation. `fixed_scripts_ready` and
+                 audio readiness stay false. This narrows the EXT-117 exclusion
+                 on writing/activating fixed scripts for this flag only; it
+                 approves no script, reviewer, audio asset or voice.
+Reason:          Local demonstration of the candidate wording without
+                 claiming review, approval or audio.
+Licence/cost
+  confirmed:     No package, download, service, credential or network access.
+Storage/runtime
+  location:      Local `.env` only; `.env.example` documents it as `false`.
+Fallback or
+  migration
+  action:        Leave it false (the default). The fail-closed behaviour of
+                 `FIXED_SCRIPTS_REVIEW.md` then applies unchanged.
+Decision maker:  Project Owner acting as Integration Lead, via prompt.txt on
+                 2026-09-13.
+```

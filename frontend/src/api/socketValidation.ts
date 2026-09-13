@@ -1,5 +1,5 @@
 import {
-  ALERT_SEVERITIES, ALERT_TYPES, BANDS, CONSENT_STATUSES, SESSION_STATES, TIMELINE_STAGES,
+  ALERT_SEVERITIES, ALERT_TYPES, ASSISTANT_AUDIO, BANDS, CONSENT_STATUSES, SESSION_STATES, TIMELINE_STAGES,
   type Role, type SocketEvent,
 } from "../types/contracts";
 
@@ -37,7 +37,7 @@ export function validateSocketEvent(value: unknown): SocketEvent | null {
     case "assistant.turn":
       valid = exact(value, ["type", "turn_id", "text", "lang", "intent", "audio"])
         && string(value.turn_id) && string(value.text) && oneOf(["hi", "en"], value.lang)
-        && string(value.intent) && oneOf(["streaming", "prerecorded"], value.audio);
+        && string(value.intent) && oneOf(ASSISTANT_AUDIO, value.audio);
       break;
     case "transcript.line":
       valid = exact(value, ["type", "turn_id", "speaker", "text", "lang", "ts"])

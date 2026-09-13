@@ -29,6 +29,7 @@ from ml.data import governance as gov
 from ml.data import inventory as inv
 from ml.data import label_firewall as fw
 from ml.eval import contamination as ct
+from ml.tests.source_scan import iter_source_files
 
 ML = Path(__file__).resolve().parents[1]
 REPO = ML.parent
@@ -735,7 +736,7 @@ class TestIsolation(unittest.TestCase):
     def test_no_application_module_imports_external_data(self):
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.data|\.\.data|\.data)\b", re.M)
         offenders = []
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("data/", "tests/")):
                 continue
@@ -753,8 +754,8 @@ class TestIsolation(unittest.TestCase):
     def test_no_messaging_export_path_or_parser_exists(self):
         word = "whats" + "app"
         for base in (ML, REPO / "data-scripts"):
-            for path in base.rglob("*"):
-                if path.is_file() and path.suffix in (".py", ".md", ".json", ".txt", ".ps1"):
+            for path in iter_source_files(base, "*"):
+                if path.suffix in (".py", ".md", ".json", ".txt", ".ps1"):
                     self.assertNotIn(word, path.read_text(encoding="utf-8", errors="ignore").casefold(),
                                      path.relative_to(REPO).as_posix())
 
@@ -1222,7 +1223,7 @@ class TestProductIsolation(unittest.TestCase):
     def test_no_ml_application_module_imports_the_external_modules(self):
         pattern = re.compile(r"^\s*(from|import)\s+\S*(external_corpus|external_analysis|external_report|"
                              r"label_firewall|inventory)\b", re.M)
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("data/", "tests/")):
                 continue

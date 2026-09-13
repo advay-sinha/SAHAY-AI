@@ -4,6 +4,7 @@ const path = require("node:path");
 const test = require("node:test");
 
 const {
+  AUDIO_KINDS,
   CONSENT_STATUSES,
   EVENT_TYPES,
   SESSION_STATES,
@@ -227,6 +228,33 @@ test("rejects invalid enumerated event values", () => {
       `${type}.${key}`,
     );
   }
+});
+
+test("assistant.turn audio accepts exactly none, streaming and prerecorded (PC-12)", () => {
+  assert.deepEqual([...AUDIO_KINDS], ["none", "streaming", "prerecorded"]);
+  for (const audio of AUDIO_KINDS) {
+    const event = { ...VALID_EVENTS["assistant.turn"], audio };
+    assert.deepEqual(validateVictimEvent(event), event, audio);
+  }
+  for (const audio of ["", "None", "NONE", " none", "silent", "text", null, 0, false, {}, []]) {
+    assert.equal(
+      validateVictimEvent({ ...VALID_EVENTS["assistant.turn"], audio }),
+      null,
+      JSON.stringify(audio),
+    );
+  }
+  const { audio: _required, ...withoutAudio } = VALID_EVENTS["assistant.turn"];
+  assert.equal(validateVictimEvent(withoutAudio), null);
+});
+
+test("assistant.turn audio values match the frozen contract section 2", () => {
+  const contract = fs.readFileSync(
+    path.join(__dirname, "..", "..", "docs", "contracts", "CONTRACTS.md"),
+    "utf8",
+  );
+  const line = contract.match(/^assistant\.turn\s+\{[^}]*audio:([^}]*)\}/m);
+  assert.ok(line, "assistant.turn is absent from the contract");
+  assert.deepEqual([...line[1].matchAll(/"([^"]+)"/g)].map((item) => item[1]), [...AUDIO_KINDS]);
 });
 
 test("officer.message accepts only human_officer origin", () => {

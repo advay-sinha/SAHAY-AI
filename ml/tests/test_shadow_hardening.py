@@ -18,6 +18,7 @@ from ml.eval.schema import DETECTOR_CATEGORIES
 from ml.guardrails import crisis_check
 from ml.runtime.offline import network_blocked
 from ml.shadow import classifier as sc, demo, model as sm
+from ml.tests.source_scan import iter_source_files
 from ml.training import fictional, hardening as hx, metrics, paths, stage_c7b as s7
 
 ML = Path(__file__).resolve().parents[1]
@@ -609,7 +610,7 @@ class TestStatusAndIsolation(unittest.TestCase):
 class TestTask7BFirewall(unittest.TestCase):
     def test_no_application_module_imports_the_new_modules(self):
         pattern = re.compile(r"^\s*(from|import)\s+\S*(hardening|stage_c7b|error_analysis)\b", re.M)
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("training/", "tests/")):
                 continue

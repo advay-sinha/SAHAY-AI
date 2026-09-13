@@ -23,6 +23,7 @@ from ml.eval.predict import predict
 from ml.eval.schema import DETECTOR_CATEGORIES
 from ml.guardrails import crisis_check
 from ml.shadow import classifier as sc, demo, model as sm
+from ml.tests.source_scan import iter_source_files
 from ml.training import fictional as fic, metrics, paths, stage_a
 
 ML = Path(__file__).resolve().parents[1]
@@ -424,7 +425,7 @@ class TestShadowFirewall(unittest.TestCase):
     def test_no_application_module_imports_training_or_shadow(self):
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.(training|shadow)|\.\.(training|shadow)|\.(training|shadow))\b",
                              re.M)
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("training/", "shadow/", "tests/")):
                 continue

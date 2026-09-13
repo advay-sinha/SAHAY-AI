@@ -26,6 +26,34 @@ Until a record is marked `APPROVED` with a named reviewer and a review date:
 Nothing unreviewed can reach synthesis. Do not add a placeholder string to make
 a demo run.
 
+### Provisional local-demo exception (Task 5D-L, EXT-120, PC-12)
+
+The records above stay `NOT_WRITTEN` and every statement in the list above
+still holds. Separately, `ml/dialogue/scripts/provisional.py` holds the eight
+Task 5C candidate texts, copied byte for byte from the candidate packet after
+their hashes were verified. They are **provisional, unreviewed and local-demo
+only**; no reviewer, approval or date is recorded for any of them.
+
+`backend/app/services/fixed_scripts.py` may show them only when
+`PROVISIONAL_FIXED_SCRIPTS_LOCAL_DEMO=true`, which settings refuse unless
+`APP_ENV` is `development` or `test`. When shown:
+
+- they are text only, `audio:"none"`, never `"prerecorded"` or `"streaming"`;
+  there is no audio asset and audio readiness is false;
+- a text whose hash no longer matches is suppressed and audited;
+- S0 and SH appear only with granted consent; SH only on first entry, never
+  over SX or after a verified takeover; SX once on crisis entry, with crisis
+  routing, Critical, the alert and the takeover request unchanged; S9 once,
+  after session end is persisted, never after SX, SH or takeover, and only when
+  a victim turn was recorded;
+- S9 receives the session's own persisted reference through the single
+  `{reference_no}` slot after ownership, format (`^SAH-[0-9A-F]{6}$`) and
+  equality checks; any failure suppresses S9 and records a reason code;
+- the turn is persisted with `review_status="provisional_unreviewed"`, and the
+  audit records the script hash, never victim text.
+
+This exception does not satisfy the approval gate below.
+
 ## Candidate review packet
 
 Task 5C candidate wording is recorded in

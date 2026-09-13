@@ -19,6 +19,7 @@ from ml.guardrails import crisis_check, validate
 from ml.guardrails.lexicons.output_rules import CATEGORY_SEVERITY, RULES
 from ml.guardrails.normalize import fold, tokens
 from ml.guardrails.rules import check, hits
+from ml.tests.source_scan import iter_source_files
 
 ML = Path(__file__).resolve().parents[1]
 CORPUS = ML / "eval" / "corpus"
@@ -422,7 +423,7 @@ class TestInvariants(unittest.TestCase):
             redteam.run(load("redteam_hardening.json"))
         self.assertTrue(net["ok"], net)
         self.assertEqual(checks.external_corpus_access(opened), [])
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             # ml/data is the dataset-governance package (archive audit tooling);
             # it is never imported by the pipeline, which the check below proves.

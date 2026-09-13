@@ -112,6 +112,8 @@ function selectDisplayMessages(values, consent, aiPermitted) {
   for (const value of values) {
     const event = validateVictimEvent(value);
     if (event?.type === "assistant.turn") {
+      // Only the text is displayed. `audio` (including PC-12 "none") never
+      // starts capture, playback, streaming, synthesis or an asset lookup.
       if (consent === "granted" && aiPermitted === true) {
         selected.push({
           id: `assistant:${event.turn_id}`,

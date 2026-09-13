@@ -6,15 +6,24 @@ These scripts never install packages or download external files. They use depend
 - `start-backend.ps1` — starts FastAPI from `backend/.venv`.
 - `start-frontend.ps1` — starts Vite from installed dependencies.
 - `start-mobile.ps1` — starts Expo from installed dependencies.
-- `verify-local.ps1` — runs the verification gate in two tiers. Tier 1 needs no
-  installed dependency; Tier 2 reports `BLOCKED` if a virtual environment or
-  `node_modules` is missing, rather than weakening the check. Nine checks, all
-  passing as of 2026-09-10 with EXT-001 installed.
+- `verify-local.ps1` — runs the verification gate in two tiers. Every Python
+  check uses the component virtual environments: `backend/.venv` for backend
+  checks and `ml/.venv` for the ML suite. There is no fallback to a bare system
+  Python; if either venv is missing the script stops before any check with a
+  setup instruction (exit 2). Tier 2 reports `BLOCKED` if `node_modules` is
+  missing, and a `BLOCKED` or `FAIL` result makes the gate exit non-zero. The
+  backend's pinned Ruff lints both `backend/` and `ml/`, because
+  `ml/requirements-dev.txt` carries no linter.
 - `reset-db.ps1` — a test/demo utility that deletes only a guarded local SQLite
   file and reseeds deterministically. It never targets PostgreSQL. Prompts for
   confirmation. Requires the approved backend dependencies.
 
 ## What runs with nothing installed
+
+These manual commands exercise the standard-library modules without any venv.
+They are a quick smoke check, not the gate: backend tests that need the pinned
+packages skip or fail under a bare interpreter, so `verify-local.ps1` runs them
+in the component venvs instead.
 
 ```powershell
 python -m unittest discover -s ml/tests -t .

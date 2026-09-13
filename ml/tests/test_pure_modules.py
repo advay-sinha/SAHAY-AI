@@ -9,6 +9,8 @@ import ast
 import pathlib
 import unittest
 
+from ml.tests.source_scan import iter_source_files
+
 ML_ROOT = pathlib.Path(__file__).resolve().parents[1]
 PURE_PACKAGES = ("dialogue", "guardrails", "svi")
 
@@ -28,7 +30,7 @@ FORBIDDEN_CALLS = {"open", "exec", "eval", "compile", "__import__"}
 
 def pure_files():
     for package in PURE_PACKAGES:
-        yield from sorted((ML_ROOT / package).rglob("*.py"))
+        yield from iter_source_files(ML_ROOT / package)
 
 
 class TestPurity(unittest.TestCase):

@@ -21,6 +21,7 @@ from ml.data import audit_external
 from ml.data import governance as gov
 from ml.eval import checks
 from ml.eval.evaluate import evaluate
+from ml.tests.source_scan import iter_source_files
 
 ML = Path(__file__).resolve().parents[1]
 REPO = ML.parent
@@ -371,7 +372,7 @@ class TestExternalDataBoundary(unittest.TestCase):
     def test_dataset_paths_do_not_appear_in_application_modules(self):
         markers = ("SAHAY_DATASETS_ROOT", "SAHAY-AI-Datasets", "dreaddit", "emoinhindi", "corpus/text/")
         offenders = []
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("data/", "tests/")) or rel == "eval/checks.py":
                 continue

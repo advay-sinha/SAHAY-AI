@@ -132,6 +132,51 @@ class TestMobileAllowlistMirror(unittest.TestCase):
             self.assertIn('"human_officer"', read(path), msg=str(path))
 
 
+class TestAssistantAudioMirror(unittest.TestCase):
+    """PC-12: the assistant.turn audio values agree in every copy."""
+
+    EXPECTED = ["none", "streaming", "prerecorded"]
+
+    def test_the_contract_lists_exactly_the_approved_values(self):
+        line = re.search(r"^assistant\.turn\s+\{[^}]*audio:([^}]*)\}", contract_section(read(CONTRACTS_MD), 2),
+                         re.MULTILINE)
+        self.assertIsNotNone(line)
+        self.assertEqual(re.findall(r'"([^"]+)"', line.group(1)), self.EXPECTED)
+
+    def test_backend_schema_matches(self):
+        schemas = read(SCHEMAS_PY)
+        values = re.search(r"(?m)^ASSISTANT_AUDIO = \((.*?)\)$", schemas).group(1)
+        self.assertEqual(re.findall(r'"([^"]+)"', values), self.EXPECTED)
+        self.assertRegex(schemas, r"(?m)^AssistantAudio = Literal\[ASSISTANT_AUDIO\]$")
+        self.assertRegex(schemas, r"(?m)^    audio: AssistantAudio$")
+
+    def test_console_and_mobile_mirrors_match(self):
+        self.assertEqual(ts_ordered_array(read(CONTRACTS_TS), "ASSISTANT_AUDIO"), self.EXPECTED)
+        self.assertIn("oneOf(ASSISTANT_AUDIO, value.audio)", read(REPO_ROOT / "frontend" / "src" / "api" /
+                                                                   "socketValidation.ts"))
+        payload = read(REPO_ROOT / "mobile" / "src" / "net" / "victimPayload.js")
+        kinds = re.search(r"AUDIO_KINDS = Object\.freeze\(\[(.*?)\]\)", payload).group(1)
+        self.assertEqual(re.findall(r'"([^"]+)"', kinds), self.EXPECTED)
+        mobile_type = re.search(r"interface AssistantTurn \{.*?audio: ([^;]+);", read(MOBILE_EVENTS_TS), re.DOTALL)
+        self.assertEqual(re.findall(r'"([^"]+)"', mobile_type.group(1)), self.EXPECTED)
+
+    def test_the_backend_schema_keeps_audio_required_and_rejects_unknown_values(self):
+        try:
+            from pydantic import ValidationError
+
+            from backend.app.schemas.contracts import AssistantTurn
+        except ImportError:
+            self.skipTest("EXT-001 backend packages not installed (Tier 1 run)")
+        base = {"turn_id": "t", "text": "x", "lang": "en", "intent": "acknowledge"}
+        for audio in self.EXPECTED:
+            self.assertEqual(AssistantTurn(**base, audio=audio).audio, audio)
+        for bad in ("", "None", "silent", None):
+            with self.assertRaises(ValidationError):
+                AssistantTurn(**base, audio=bad)
+        with self.assertRaises(ValidationError):
+            AssistantTurn(**base)
+
+
 class TestEnumMirror(unittest.TestCase):
     """PC-10: CONTRACTS.md section 9 vs core/enums.py vs contracts.ts."""
 

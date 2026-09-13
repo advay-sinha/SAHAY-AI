@@ -31,6 +31,7 @@ from ml.runtime.offline import NetworkBlocked, network_blocked
 from ml.runtime.pipeline import GatedTranscriber
 from ml.runtime.text_encoder import ENCODER_ROLES, MAX_BATCH, TextEncoder
 from ml.runtime.vad import SileroVAD
+from ml.tests.source_scan import iter_source_files
 
 ML = Path(__file__).resolve().parents[1]
 REPO = ML.parent
@@ -801,10 +802,10 @@ class TestBenchmarkBoundary(RootCase):
         self.assertTrue(callable(asr_mod._transcribe_ungated_for_benchmark))
 
     def test_only_the_benchmark_references_the_bypass(self):
-        users = sorted(p.relative_to(ML).as_posix() for p in ML.rglob("*.py")
+        users = sorted(p.relative_to(ML).as_posix() for p in iter_source_files(ML)
                        if "tests" not in p.parts and "_transcribe_ungated_for_benchmark" in p.read_text("utf-8"))
         self.assertEqual(users, ["runtime/asr.py", "runtime/benchmark.py"])
-        decode_users = sorted(p.relative_to(ML).as_posix() for p in ML.rglob("*.py")
+        decode_users = sorted(p.relative_to(ML).as_posix() for p in iter_source_files(ML)
                               if "tests" not in p.parts and "._decode(" in p.read_text("utf-8"))
         self.assertEqual(decode_users, ["runtime/asr.py"])
 
@@ -867,7 +868,7 @@ class TestModelFirewall(unittest.TestCase):
         # ml/training and ml/shadow (Task 7, EXT-119) are explicit ML-only tooling that may use the
         # runtime; test_shadow_training proves no application module imports *them*.
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.runtime|\.\.runtime|\.runtime)\b", re.M)
-        for path in ML.rglob("*.py"):
+        for path in iter_source_files(ML):
             rel = path.relative_to(ML).as_posix()
             if rel.startswith(("runtime/", "tests/", "training/", "shadow/")):
                 continue

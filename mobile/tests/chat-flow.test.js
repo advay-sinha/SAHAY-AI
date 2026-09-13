@@ -136,6 +136,24 @@ test("AI messages and labels require granted consent and explicit permission", (
   assert.deepEqual(selectDisplayMessages([assistantEvent()], "declined", true), []);
 });
 
+test("a text-only assistant turn (audio none) is displayed as text and nothing else", () => {
+  const event = { ...assistantEvent(), audio: "none" };
+  assert.deepEqual(selectDisplayMessages([event], "granted", true), [
+    { id: "assistant:assistant-1", labelKey: "chat.assistant", text: "assistant text" },
+  ]);
+  assert.deepEqual(selectDisplayMessages([event], "declined", true), []);
+  assert.deepEqual(selectDisplayMessages([{ ...event, audio: "silent" }], "granted", true), []);
+});
+
+test("assistant-turn display never reaches an audio path", () => {
+  for (const file of [["src", "screens", "chatState.js"], ["src", "screens", "ChatScreen.tsx"],
+    ["app", "chat.tsx"], ["src", "net", "victimPayload.js"]]) {
+    const source = read(...file);
+    assert.doesNotMatch(source, /from\s+["'][^"']*audio\/|require\(["'][^"']*audio\//, file.join("/"));
+    assert.doesNotMatch(source, /expo-audio|expo-av|expo-speech|Audio\.Sound|AudioPlayer|PlaybackQueue/, file.join("/"));
+  }
+});
+
 test("only a runtime-validated human officer receives the human label", () => {
   assert.deepEqual(selectDisplayMessages([officerEvent()], "declined", false), [
     { id: "human_officer:officer-1", labelKey: "chat.human_officer", text: "officer text" },

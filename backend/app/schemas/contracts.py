@@ -29,6 +29,9 @@ ConsentStatus = Literal[CONSENT_STATUSES]
 AlertType = Literal[ALERT_TYPES]
 AlertSeverity = Literal[ALERT_SEVERITIES]
 TimelineStage = Literal[TIMELINE_STAGES]
+#: PC-12. "none" is a text-only turn that claims no audio; the field stays required.
+ASSISTANT_AUDIO = ("none", "streaming", "prerecorded")
+AssistantAudio = Literal[ASSISTANT_AUDIO]
 
 
 class VictimSafeModel(BaseModel):
@@ -45,7 +48,7 @@ class AssistantTurn(VictimSafeModel):
     text: str
     lang: Lang
     intent: str
-    audio: Literal["streaming", "prerecorded"]
+    audio: AssistantAudio
 
 
 class TranscriptLine(VictimSafeModel):

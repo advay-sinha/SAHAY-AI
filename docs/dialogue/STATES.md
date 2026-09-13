@@ -51,3 +51,9 @@ One sentence. Plain words. One question, and only the one the state licenses.
 > The decisions that must be settled before any wording is drafted are listed in
 > `docs/dialogue/FIXED_SCRIPTS_REVIEW.md`. The code fails closed until a script
 > is recorded with a named reviewer and a review date.
+>
+> Task 5C candidate wording (S0, S9, SH, SX; English and Hindi) is pending review
+> in `FIXED_SCRIPTS_CANDIDATE_REVIEW.md`. Task 5D-L lets that exact wording appear
+> as **provisional, unreviewed, local-demo-only, text-only** turns behind a
+> default-off development/test flag; it approves nothing, and
+> `fixed_scripts_ready` stays false. See the exception in `FIXED_SCRIPTS_REVIEW.md`.

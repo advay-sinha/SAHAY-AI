@@ -1,4 +1,4 @@
-# Contract changes PC-01 to PC-11 — lead decisions
+# Contract changes PC-01 to PC-12 — lead decisions
 
 `CONTRACTS.md` is frozen and changes only with the leads' approval. The items below were proposed on 2026-09-10 while the vertical slice was built. **The leads decided all ten on 2026-09-11**, and the decisions are applied in the same change as `CONTRACTS.md` v2.
 
@@ -15,12 +15,28 @@
 | PC-09 `POST /sessions` response | **APPROVED AND FROZEN** | Implemented. CONTRACTS §4 |
 | PC-10 enumerations and error shape | **FROZEN** (HANDOVER vocabulary) | Implemented; centralised in `backend/app/core/enums.py`. CONTRACTS §9 |
 | PC-11 WebSocket auth and acknowledgements | **APPROVED** | Frozen for the controlled MVP. CONTRACTS §1 |
+| PC-12 `assistant.turn` `audio:"none"` | **APPROVED (Project Owner / Integration Lead)** | Controlled MVP, text-only assistant turns. CONTRACTS §2 |
 
 Approvers (D-11): the leads for AI/ML and Safety, Backend, Executive Web, and Mobile/Victim Experience (`.github/CODEOWNERS`, `docs/TEAM-OPERATIONS.md`).
 
 ## PC-11 — WebSocket authentication and durable acknowledgements — **APPROVED**
 
 Approved 2026-09-12 for the controlled MVP. The exact authentication, chat, human-request, reconnect, close-code, privacy, ownership and test requirements are frozen in `CONTRACTS.md` section 1. Backend owns authentication, authorization, persistence and acknowledgement semantics. Mobile owns in-memory victim identifiers and acknowledgement-driven UI. Executive Web owns first-frame console authentication and validated inbound events. All three mirrors move together; there is no query-token transition and no event replay.
+
+## PC-12 — Text-only `assistant.turn` audio value — **APPROVED**
+
+Approved 2026-09-13 by the Project Owner acting as Integration Lead, for the controlled MVP (Task 5D-L). Individual D-11 lead sign-offs are not recorded here and are not implied.
+
+**Why.** The victim app displays assistant text only from `assistant.turn`, whose `audio` field allowed only `"streaming"` or `"prerecorded"`. Provisional fixed scripts have no audio at all, so either value would be a false claim.
+
+**Decision.**
+- Add the exact value `"none"`. Allowed values become exactly `"none"`, `"streaming"`, `"prerecorded"`.
+- The field stays required; it is not optional or nullable. Unknown values stay rejected.
+- `"none"` means displayable text with no audio-availability claim. It never triggers audio capture, playback, streaming, synthesis or asset lookup.
+- Provisional fixed scripts must use `"none"` and never `"streaming"` or `"prerecorded"`. Approved prerecorded scripts remain a separate, future, reviewed path.
+- No other victim event or response is widened. Voice transport, Whisper, generated TTS and D4 remain disconnected.
+
+**Mirrors moved together.** `CONTRACTS.md` §2, `backend/app/schemas/contracts.py`, `mobile/src/net/victimPayload.js`, `mobile/src/types/events.ts`, `frontend/src/types/contracts.ts`, `frontend/src/api/socketValidation.ts`; `backend/tests/test_contract_mirror.py` asserts they agree.
 
 ---
 

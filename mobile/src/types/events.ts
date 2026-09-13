@@ -19,7 +19,8 @@ export interface AssistantTurn {
   text: string;
   lang: Lang;
   intent: string;
-  audio: "streaming" | "prerecorded";
+  /** PC-12: "none" is text only and never triggers any audio path. */
+  audio: "none" | "streaming" | "prerecorded";
 }
 
 export interface TranscriptLine {
