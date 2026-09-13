@@ -26,6 +26,14 @@ Until a record is marked `APPROVED` with a named reviewer and a review date:
 Nothing unreviewed can reach synthesis. Do not add a placeholder string to make
 a demo run.
 
+## Candidate review packet
+
+Task 5C candidate wording is recorded in
+[`FIXED_SCRIPTS_CANDIDATE_REVIEW.md`](FIXED_SCRIPTS_CANDIDATE_REVIEW.md).
+Every candidate remains `PENDING`; the packet is not an approval record and
+does not make any script speakable. This canonical record remains the approval
+gate.
+
 ---
 
 ## S0 OPENING — decisions required
