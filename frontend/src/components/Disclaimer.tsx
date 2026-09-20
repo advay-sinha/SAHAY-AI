@@ -6,7 +6,7 @@ import { ASSESSMENT_DISCLAIMER } from "../types/contracts";
  */
 export function Disclaimer() {
   return (
-    <p role="note" className="border-t border-neutral-300 pt-2 text-xs text-neutral-700">
+    <p role="note" className="text-[10px] text-inherit">
       {ASSESSMENT_DISCLAIMER}
     </p>
   );

@@ -25,6 +25,10 @@ VICTIM_ALLOWED: FrozenSet[str] = frozenset(
         "transcript.line",
         "session.status",
         "timeline.update",
+        # PC-07 (lead decision 2026-09-11): text written by the human officer
+        # after a verified takeover. Origin is always "human_officer"; it is
+        # published only by services/casework.officer_message.
+        "officer.message",
     }
 )
 

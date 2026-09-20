@@ -8,6 +8,13 @@ anonymised labels are committed.
 
 ## Files
 
+> **External datasets** are governed by `ml/data/`:
+> - the registry is `ml/data/registry/datasets.json`;
+> - the audit is `python -m ml.data.audit_external`;
+> - cards are in `ml/data/cards/`.
+>
+> `dataset_registry.yaml` below is the earlier planning list, kept for history; the JSON registry supersedes it for datasets that exist locally. Its licence entries are unverified.
+
 - `dataset_registry.yaml` — every dataset considered, with status, licence,
   scope, checksum and limitations. `status: proposed` is not approval; approval
   lives in `docs/EXTERNAL_DECISIONS.md`.

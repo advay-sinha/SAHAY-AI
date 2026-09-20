@@ -63,7 +63,12 @@ class TestEnvExampleIsValid(unittest.TestCase):
 
     def test_env_example_commits_no_secret(self):
         values = parse_env_file(REPO_ROOT / ".env.example")
-        for key in ("SECRET_KEY", "LLM_API_KEY"):
+        for key in (
+            "SECRET_KEY",
+            "LLM_API_KEY",
+            "SUPABASE_PROJECT_REF",
+            "REMOTE_DEMO_SEED_CONFIRMATION",
+        ):
             self.assertEqual(values.get(key, ""), "", msg=f"{key} must be blank in .env.example")
 
 
@@ -72,27 +77,58 @@ class TestPathsAnchorToRepoRoot(unittest.TestCase):
     def test_relative_sqlite_url_resolves_under_repo_runtime(self):
         from backend.app.core.config import Settings
 
-        s = Settings(_env_file=None, DATABASE_URL="sqlite+aiosqlite:///./runtime/db/x.db")
-        target = pathlib.Path(s.DATABASE_URL.split("///", 1)[1])
+        s = Settings(
+            _env_file=None,
+            APP_ENV="test",
+            DATABASE_URL="sqlite+aiosqlite:///./runtime/db/x.db",
+        )
+        target = pathlib.Path(s.database_url().split("///", 1)[1])
         self.assertEqual(target.resolve(), (REPO_ROOT / "runtime" / "db" / "x.db").resolve())
         self.assertNotIn(os.sep + "backend" + os.sep + "runtime", str(target.resolve()))
 
     def test_memory_and_non_sqlite_urls_are_left_alone(self):
         from backend.app.core.config import Settings
 
-        mem = Settings(_env_file=None, DATABASE_URL="sqlite+aiosqlite:///:memory:")
-        self.assertTrue(mem.DATABASE_URL.endswith(":memory:"))
+        mem = Settings(_env_file=None, APP_ENV="test", DATABASE_URL="sqlite+aiosqlite:///:memory:")
+        self.assertTrue(mem.database_url().endswith(":memory:"))
         pg = Settings(_env_file=None, DATABASE_URL="postgresql+asyncpg://u:p@h/db")
-        self.assertEqual(pg.DATABASE_URL, "postgresql+asyncpg://u:p@h/db")
+        self.assertEqual(pg.database_url(), "postgresql+asyncpg://u:***@h/db?ssl=require".replace("***", "p"))
 
     def test_relative_audio_path_resolves_under_repo_runtime(self):
         from backend.app.core.config import Settings
 
-        s = Settings(_env_file=None, AUDIO_STORAGE_PATH="./runtime/audio")
+        s = Settings(
+            _env_file=None,
+            APP_ENV="test",
+            DATABASE_URL="sqlite+aiosqlite:///:memory:",
+            AUDIO_STORAGE_PATH="./runtime/audio",
+        )
         self.assertEqual(
             pathlib.Path(s.AUDIO_STORAGE_PATH).resolve(),
             (REPO_ROOT / "runtime" / "audio").resolve(),
         )
+
+
+class TestDisposableSqliteSubprocessEnvironment(unittest.TestCase):
+    def test_overrides_both_database_targets_without_mutating_parent(self):
+        from backend.tests import disposable_sqlite_subprocess_env
+
+        parent = {
+            "APP_ENV": "development",
+            "DATABASE_URL": "inherited-runtime-marker",
+            "MIGRATION_DATABASE_URL": "inherited-migration-marker",
+            "UNCHANGED": "yes",
+        }
+        original = dict(parent)
+        database_url = "sqlite+aiosqlite:///C:/synthetic/disposable.db"
+
+        child = disposable_sqlite_subprocess_env(database_url, parent=parent)
+
+        self.assertEqual(parent, original)
+        self.assertEqual(child["APP_ENV"], "test")
+        self.assertEqual(child["DATABASE_URL"], database_url)
+        self.assertEqual(child["MIGRATION_DATABASE_URL"], database_url)
+        self.assertEqual(child["UNCHANGED"], "yes")
 
 
 @unittest.skipUnless(HAVE_APP_DEPS, "EXT-001 backend packages not installed (Tier 1 run)")

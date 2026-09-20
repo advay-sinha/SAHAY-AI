@@ -35,6 +35,15 @@ def abstention_reasons(
         reasons.append("poor_audio_quality")
     if bool(quality.get("low_language_confidence", False)):
         reasons.append("low_language_confidence")
+    # Text-channel equivalents of poor audio. Both only ever ADD abstention.
+    if bool(quality.get("poor_input_quality", False)):
+        reasons.append("poor_input_quality")
+    if bool(quality.get("conflicting_evidence", False)):
+        reasons.append("conflicting_evidence")
+    # PC-08: an audio channel whose acoustic dimension was not measured
+    # (runtime failure, no model) abstains; it is never renormalised.
+    if bool(quality.get("acoustic_not_measured", False)):
+        reasons.append("acoustic_not_measured")
 
     return reasons
 

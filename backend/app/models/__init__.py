@@ -9,9 +9,11 @@ from .tables import (  # noqa: F401
     DecisionAI,
     DecisionHuman,
     LatencyMetric,
+    Override,
     PolicyChunk,
     Recommendation,
     Session,
+    TimelineEvent,
     Turn,
     User,
 )

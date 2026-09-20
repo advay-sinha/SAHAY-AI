@@ -23,6 +23,8 @@ python-multipart==0.0.20
 SQLAlchemy==2.0.36
 # Async SQLite driver for sqlite+aiosqlite.
 aiosqlite==0.20.0
+# Async PostgreSQL driver for PostgreSQL/Supabase through SQLAlchemy.
+asyncpg==0.31.0
 # Migrations from day one so a later PostgreSQL move is controlled.
 alembic==1.14.0
 

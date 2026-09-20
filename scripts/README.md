@@ -10,8 +10,9 @@ These scripts never install packages or download external files. They use depend
   installed dependency; Tier 2 reports `BLOCKED` if a virtual environment or
   `node_modules` is missing, rather than weakening the check. Nine checks, all
   passing as of 2026-09-10 with EXT-001 installed.
-- `reset-db.ps1` — deletes the local SQLite files and reseeds deterministically.
-  Prompts for confirmation. Requires EXT-001.
+- `reset-db.ps1` — a test/demo utility that deletes only a guarded local SQLite
+  file and reseeds deterministically. It never targets PostgreSQL. Prompts for
+  confirmation. Requires the approved backend dependencies.
 
 ## What runs with nothing installed
 

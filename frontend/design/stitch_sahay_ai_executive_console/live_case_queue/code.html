@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=Noto+Sans:wght@100..900&display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"surface-container-lowest":"#ffffff","secondary-fixed":"#89f5e7","secondary-fixed-dim":"#6bd8cb","on-tertiary-container":"#c76c00","on-error-container":"#93000a","outline-variant":"#c6c6cd","primary-fixed":"#dae2fd","on-tertiary":"#ffffff","on-surface":"#0b1c30","surface-dim":"#cbdbf5","surface":"#f8f9ff","inverse-surface":"#213145","on-primary":"#ffffff","surface-tint":"#565e74","error-container":"#ffdad6","surface-variant":"#d3e4fe","tertiary-fixed-dim":"#ffb77d","background":"#f8f9ff","on-secondary":"#ffffff","on-error":"#ffffff","primary":"#000000","tertiary-container":"#2f1500","tertiary-fixed":"#ffdcc3","tertiary":"#000000","surface-container-highest":"#d3e4fe","on-surface-variant":"#45464d","on-background":"#0b1c30","on-primary-container":"#7c839b","surface-container-high":"#dce9ff","on-secondary-container":"#006f66","surface-container-low":"#eff4ff","secondary-container":"#86f2e4","secondary":"#006a61","on-secondary-fixed-variant":"#005049","surface-container":"#e5eeff","on-tertiary-fixed-variant":"#6e3900","outline":"#76777d","primary-fixed-dim":"#bec6e0","surface-bright":"#f8f9ff","on-primary-fixed-variant":"#3f465c","on-secondary-fixed":"#00201d","inverse-on-surface":"#eaf1ff","primary-container":"#131b2e","on-tertiary-fixed":"#2f1500","on-primary-fixed":"#131b2e","inverse-primary":"#bec6e0","error":"#ba1a1a"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-5":"1.25rem","space-6":"1.5rem","space-3":"0.75rem","gutter-default":"1rem","space-10":"2.5rem","space-2":"0.5rem","margin-screen":"1.5rem","space-1":"0.25rem","gutter-compact":"0.5rem","space-4":"1rem","space-8":"2rem","space-12":"3rem"},"fontFamily":{"headline-sm":["Inter"],"headline-md":["Inter"],"label-sm":["Inter"],"headline-xl":["Inter"],"headline-lg":["Inter"],"body-sm":["Noto Sans"],"label-md":["Inter"],"body-lg":["Noto Sans"],"body-md":["Noto Sans"],"code-sm":["Noto Sans"]},"fontSize":{"headline-sm":["16px",{"lineHeight":"24px","letterSpacing":"-0.005em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"label-sm":["11px",{"lineHeight":"14px","letterSpacing":"0.03em","fontWeight":"600"}],"headline-xl":["32px",{"lineHeight":"40px","letterSpacing":"-0.02em","fontWeight":"700"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.015em","fontWeight":"600"}],"body-sm":["12px",{"lineHeight":"16px","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"600"}],"body-lg":["16px",{"lineHeight":"24px","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","fontWeight":"400"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"500"}]}}}}</script></head><body class="bg-surface font-body-md text-body-md text-on-surface antialiased"><header class="fixed top-0 left-0 right-0 h-16 bg-primary-container z-50 px-gutter-default flex items-center justify-between shadow-[0_1px_8px_rgba(0,0,0,0.2)]"><div class="flex items-center gap-space-4"><div class="flex items-center gap-space-3"><img alt="Profile" class="w-8 h-8 rounded-full object-cover" src="https://lh3.googleusercontent.com/aida/AEtjO1V2-PiypMnSaTyMJv6s3VGVsCANBD2IoK0glu_GITNR_l3mNK1x8R4UKPV0QZuvUV0RRIDOcICCvY8ZnNQzBStPtSPXwwLk87wxJyOYn8Q-K6C9FGNygOhbEKOpAOgntihlG65bfaIX6GoDjW14IxdfSw7bK3o4lL7BQTGX-tAf_8shP5TmqSo__NloVrJqdHJ4Dsd6uWf6y3RFVko44dvvOFb7NF78cGLXolv1imYWXOqsESApja_qTG6P"/><div class="flex flex-col"><span class="text-on-primary font-headline-sm text-headline-sm tracking-tight leading-none">SAHAY-AI</span><span class="text-on-primary-container font-label-sm text-label-sm uppercase tracking-wider">Executive Console</span></div></div><div class="h-6 w-px bg-outline-variant/30 hidden lg:block"></div><span class="hidden lg:inline-flex items-center px-space-2 py-space-1 rounded bg-surface-container-highest/20 text-secondary-fixed font-label-sm text-label-sm border border-secondary/40 font-semibold">HELPLINE 14566 • NATIONAL ATROCITIES MONITORING</span></div><div class="flex-1 max-w-xl mx-space-4 hidden md:flex items-center gap-space-3"><div class="relative flex-1 flex items-center bg-inverse-surface/80 rounded border border-outline-variant/40 px-space-3 py-space-1"><span class="material-symbols-outlined text-on-primary-container mr-space-2 text-[18px]">search</span><input class="bg-transparent w-full text-on-primary font-body-sm text-body-sm placeholder:text-on-primary-container focus:outline-none" placeholder="Global Case Lookup (Ref #, Complainant ID, FIR Number, Tag)..." type="text"/><kbd class="hidden sm:inline-block px-space-1 bg-primary-container text-on-primary-container rounded font-code-sm text-code-sm border border-outline-variant/30">Ctrl+K</kbd></div><div class="flex items-center gap-space-2 px-space-2 py-space-1 rounded bg-inverse-surface/60 border border-outline-variant/30 text-secondary-fixed font-code-sm text-code-sm whitespace-nowrap"><span class="w-2 h-2 rounded-full bg-secondary-fixed animate-pulse"></span><span>Operational • 38ms</span></div></div><div class="flex items-center gap-space-3"><div class="hidden xl:flex items-center gap-space-2 px-space-2 py-space-1 rounded bg-inverse-surface/50 border border-outline-variant/20 text-on-primary-container font-label-sm text-label-sm"><span class="material-symbols-outlined text-[16px] text-secondary-fixed">sync</span><span>Queue Sync Active • 14 Live Calls</span></div><button class="p-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" title="Toggle Audio Alert Chime"><span class="material-symbols-outlined text-[20px]">volume_up</span></button><button class="relative p-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" title="Alert Notifications"><span class="material-symbols-outlined text-[20px]">notifications</span><span class="absolute top-1 right-1 w-4 h-4 rounded-full bg-error text-on-error font-label-sm text-label-sm flex items-center justify-center font-bold">3</span></button><div class="h-6 w-px bg-outline-variant/30 hidden sm:block"></div><span class="hidden 2xl:inline-block px-space-2 py-space-1 rounded bg-secondary/20 text-secondary-fixed border border-secondary/50 font-label-sm text-label-sm font-semibold">SHIFT ACTIVE (08:00 - 16:00 IST)</span><div class="flex items-center gap-space-3 pl-space-2"><div class="flex flex-col text-right hidden sm:flex"><span class="text-on-primary font-label-md text-label-md leading-tight">Off. R. Deshmukh</span><span class="text-on-primary-container font-label-sm text-label-sm">Lead Evaluator • EXEC-4109</span></div><select aria-label="Operational Role Selector" class="bg-inverse-surface text-on-primary font-label-sm text-label-sm px-space-2 py-space-1 rounded border border-outline-variant/40 focus:outline-none focus:border-secondary-fixed"><option value="exec">Role: Executive</option><option value="sup">Role: Supervisor</option></select></div></div></header><aside class="fixed left-0 top-16 bottom-10 w-64 bg-primary-container z-40 flex flex-col border-r border-outline-variant/20"><div class="px-space-4 py-space-3 border-b border-outline-variant/20 flex items-center justify-between"><span class="font-label-sm text-label-sm uppercase tracking-wider text-on-primary-container font-semibold">Operational Console</span><span class="px-space-1 rounded bg-surface-container-highest/20 text-on-primary-container font-code-sm text-code-sm">v2.4</span></div><nav class="flex-1 px-space-2 py-space-3 space-y-space-1 overflow-y-auto" data-active-classes="bg-inverse-surface text-secondary-fixed font-bold border-l-2 border-secondary-fixed"><a aria-current="page" class="flex items-center justify-between px-space-3 py-space-2 rounded transition-colors bg-inverse-surface text-secondary-fixed font-bold border-l-2 border-secondary-fixed" data-path="live-queue" href="#"><div class="flex items-center gap-space-3"><span class="material-symbols-outlined text-[20px]">view_list</span><span class="font-label-md text-label-md">Live Queue</span></div><div class="flex items-center gap-space-1"><span class="px-space-1 rounded bg-error text-on-error font-label-sm text-label-sm font-bold" title="2 Critical unacknowledged">!2</span><span class="px-space-2 py-0.5 rounded bg-inverse-surface text-on-primary font-label-sm text-label-sm font-bold">18</span></div></a><a class="flex items-center justify-between px-space-3 py-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" data-path="my-active-cases" href="#"><div class="flex items-center gap-space-3"><span class="material-symbols-outlined text-[20px]">assignment_ind</span><span class="font-label-md text-label-md">My Active Cases</span></div><span class="px-space-2 py-0.5 rounded bg-secondary/30 text-secondary-fixed font-label-sm text-label-sm font-bold">3</span></a><a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" data-path="case-review-workspace" href="#"><span class="material-symbols-outlined text-[20px]">fact_check</span><span class="font-label-md text-label-md">Case Review Workspace</span></a><a class="flex items-center justify-between px-space-3 py-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" data-path="follow-ups-and-re-checks" href="#"><div class="flex items-center gap-space-3"><span class="material-symbols-outlined text-[20px]">history_toggle_off</span><span class="font-label-md text-label-md">Follow-ups & Re-checks</span></div><span class="px-space-2 py-0.5 rounded bg-inverse-surface text-on-primary-container font-label-sm text-label-sm font-bold">7</span></a><a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" data-path="audit-trail-and-ledger" href="#"><span class="material-symbols-outlined text-[20px]">verified_user</span><span class="font-label-md text-label-md">Audit Trail & Ledger</span></a><a class="flex items-center gap-space-3 px-space-3 py-space-2 rounded text-on-primary-container hover:bg-inverse-surface hover:text-on-primary transition-colors" data-path="supervisor-operations" href="#"><span class="material-symbols-outlined text-[20px]">admin_panel_settings</span><span class="font-label-md text-label-md">Supervisor Operations</span></a></nav><div class="p-space-3 border-t border-outline-variant/20 bg-primary-container"><div class="flex items-center justify-between text-on-primary-container font-label-sm text-label-sm mb-space-1"><span>STATION NODE</span><span class="font-code-sm text-code-sm text-secondary-fixed">DEL-HQ-04</span></div><div class="flex items-center gap-space-2 text-on-primary-container font-body-sm text-body-sm"><span class="material-symbols-outlined text-[16px] text-secondary">lock</span><span>End-to-End Encrypted Triage</span></div></div></aside><div class="pl-64 pb-10 min-h-screen flex flex-col"><main class="w-full pt-16 px-gutter-default py-space-4 flex-1 bg-surface"><div class="flex flex-col w-full space-y-space-4">
+<!-- Triage Summary Metric Banners -->
+<div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-space-3">
+<!-- Active In-Queue Card -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Live Active Triage</span>
+<span class="flex h-2 w-2 relative">
+<span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-secondary opacity-75"></span>
+<span class="relative inline-flex rounded-full h-2 w-2 bg-secondary"></span>
+</span>
+</div>
+<div class="flex items-baseline gap-space-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">18</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">cases pending</span>
+</div>
+<div class="mt-space-2 pt-space-2 bg-surface-container-low/50 px-space-2 py-space-1 rounded flex items-center justify-between text-on-surface-variant font-code-sm text-code-sm">
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">phone_in_talk</span> 4 Voice</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">chat</span> 9 Chat</span>
+<span class="flex items-center gap-1"><span class="material-symbols-outlined text-[14px]">language</span> 5 Web</span>
+</div>
+</div>
+<!-- Critical Danger / Overrides -->
+<div class="bg-error/10 p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-error font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">warning</span> Critical Danger
+        </span>
+<span class="px-space-1 py-0.5 rounded bg-error text-on-error font-label-sm text-label-sm font-bold animate-pulse">1 Unack</span>
+</div>
+<div class="flex items-baseline gap-space-2">
+<span class="font-headline-xl text-headline-xl text-error font-bold">02</span>
+<span class="font-label-sm text-label-sm text-error/80">Hard SVI Overrides</span>
+</div>
+<div class="mt-space-2 text-error font-label-sm text-label-sm flex items-center justify-between">
+<span>Immediate physical hazard</span>
+<span class="font-code-sm font-bold">Chime: Active</span>
+</div>
+</div>
+<!-- High Band SVI -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">High Band SVI</span>
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold">Tier 2</span>
+</div>
+<div class="flex items-baseline gap-space-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">05</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Score 55 - 74</span>
+</div>
+<div class="mt-space-2 flex items-center gap-1 text-on-surface-variant font-body-sm text-body-sm">
+<span class="material-symbols-outlined text-[14px] text-secondary">verified_user</span>
+<span>Standard legal/security escort</span>
+</div>
+</div>
+<!-- Needs Human Assessment -->
+<div class="bg-surface-container-high/60 p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant font-semibold">Assessment Needed</span>
+<span class="material-symbols-outlined text-[16px] text-tertiary-container">tune</span>
+</div>
+<div class="flex items-baseline gap-space-2">
+<span class="font-headline-xl text-headline-xl text-on-surface">03</span>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Score Suppressed</span>
+</div>
+<div class="mt-space-2 text-on-surface-variant font-body-sm text-body-sm flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-on-tertiary-container"></span>
+<span>ASR acoustic noise & dialect shift</span>
+</div>
+</div>
+<!-- Mean Triage Decision Time (MTDT) -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Mean Triage Speed</span>
+<span class="font-code-sm text-code-sm text-secondary font-semibold">Target <90s</span>
+</div>
+<div class="flex items-baseline gap-space-2">
+<span class="font-headline-xl text-headline-xl text-secondary">74s</span>
+<span class="font-label-sm text-label-sm text-secondary">Optimal flow</span>
+</div>
+<div class="mt-space-2 w-full bg-surface-container-high rounded-full h-1.5 overflow-hidden">
+<div class="bg-secondary h-full rounded-full" style="width: 82%"></div>
+</div>
+</div>
+</div>
+<!-- Operational Alert & Acoustic Chime Banner -->
+<div class="bg-primary-container text-on-primary rounded-lg p-space-3 shadow-md flex flex-wrap items-center justify-between gap-space-3">
+<div class="flex items-center gap-space-3">
+<div class="p-space-2 bg-error text-on-error rounded-md flex items-center justify-center animate-pulse">
+<span class="material-symbols-outlined text-[20px]">e911_emergency</span>
+</div>
+<div class="flex flex-col">
+<div class="flex items-center gap-space-2">
+<span class="font-headline-sm text-headline-sm tracking-tight text-on-primary">HIGH PRIORITY QUEUE ALERT ACTIVE</span>
+<span class="px-space-2 py-0.5 rounded bg-error/40 text-error-container font-code-sm text-code-sm font-bold">#CASE-2024-8841 UNTRIAGED</span>
+</div>
+<span class="font-body-sm text-body-sm text-on-primary-container">Ongoing armed threat reported in live call. NHAA Protocol stipulates operator claim within 90 seconds.</span>
+</div>
+</div>
+<!-- Audio Ping and Mode Control -->
+<div class="flex items-center gap-space-2">
+<div class="flex items-center gap-space-2 px-space-3 py-space-1.5 bg-inverse-surface rounded text-on-primary font-label-md text-label-md">
+<span class="material-symbols-outlined text-[18px] text-secondary-fixed">volume_up</span>
+<span>Audible Alerts: <strong>ON</strong> (High Pitch)</span>
+</div>
+<button class="px-space-3 py-space-1.5 bg-surface-container-highest/30 hover:bg-surface-container-highest/50 text-secondary-fixed font-label-sm text-label-sm rounded transition-colors flex items-center gap-1" id="testAudioBtn">
+<span class="material-symbols-outlined text-[16px]">spatial_audio</span>
+<span>Test Soundwave Ping</span>
+</button>
+<button class="px-space-3 py-space-1.5 bg-secondary text-on-secondary font-label-sm text-label-sm rounded hover:bg-secondary/90 transition-colors font-semibold flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">check_circle</span>
+<span>Acknowledge All</span>
+</button>
+</div>
+</div>
+<!-- Navigation View Tabs -->
+<div class="flex items-center justify-between bg-surface-container-lowest rounded-lg p-space-1 shadow-sm">
+<div class="flex items-center gap-1 overflow-x-auto">
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded bg-inverse-surface text-secondary-fixed font-label-md text-label-md font-bold transition-all shadow-sm">
+<span class="material-symbols-outlined text-[18px]">stream</span>
+<span>All Live</span>
+<span class="px-space-1.5 py-0.2 rounded bg-secondary-fixed/20 text-secondary-fixed font-code-sm text-code-sm">18</span>
+</button>
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-all">
+<span>Unassigned</span>
+<span class="px-space-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-code-sm text-code-sm">11</span>
+</button>
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-all">
+<span>Mine (Executive)</span>
+<span class="px-space-1.5 py-0.2 rounded bg-secondary/20 text-secondary font-code-sm text-code-sm font-bold">3</span>
+</button>
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-all">
+<span>Follow-up & Re-checks</span>
+<span class="px-space-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-code-sm text-code-sm">4</span>
+</button>
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-all">
+<span class="w-2 h-2 rounded-full bg-on-tertiary-container"></span>
+<span>Needs Assessment</span>
+<span class="px-space-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-code-sm text-code-sm">3</span>
+</button>
+<button class="flex items-center gap-space-2 px-space-3 py-space-2 rounded hover:bg-surface-container text-on-surface-variant font-label-md text-label-md transition-all">
+<span>Consent Declined</span>
+<span class="px-space-1.5 py-0.2 rounded bg-surface-container text-on-surface-variant font-code-sm text-code-sm">1</span>
+</button>
+</div>
+<!-- Quick Refresh Trigger -->
+<div class="hidden xl:flex items-center gap-space-2 pr-space-2 text-on-surface-variant font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-[16px] animate-spin text-secondary">autorenew</span>
+<span>Live Polling: 3s</span>
+</div>
+</div>
+<!-- Granular Filter Workspace Strip -->
+<div class="bg-surface-container-low rounded-lg p-space-3 shadow-sm flex flex-wrap items-center justify-between gap-space-3">
+<div class="flex flex-wrap items-center gap-space-2 flex-1">
+<!-- Search inside table -->
+<div class="relative min-w-[240px] flex-1 max-w-sm">
+<span class="material-symbols-outlined absolute left-space-2 top-2.5 text-on-surface-variant text-[18px]">search</span>
+<input class="w-full h-9 pl-8 pr-3 bg-surface-container-lowest rounded text-on-surface font-body-sm text-body-sm placeholder:text-on-surface-variant/70 focus:outline-none focus:ring-1 focus:ring-secondary shadow-sm" placeholder="Filter reference ID, trigger utterance..." type="text"/>
+</div>
+<!-- Alert Type Filter -->
+<div class="relative">
+<select aria-label="Filter by Alert Type" class="h-9 px-space-3 bg-surface-container-lowest rounded text-on-surface font-label-sm text-label-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-secondary appearance-none pr-8 cursor-pointer">
+<option>Alert Type: All Active Signals</option>
+<option>Immediate Physical Danger</option>
+<option>Crisis Utterance / Suicidal Risk</option>
+<option>Ongoing Armed Threat</option>
+<option>Medical Urgency</option>
+<option>Inability to Speak Freely</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- SVI Band Filter -->
+<div class="relative">
+<select aria-label="Filter by SVI Band" class="h-9 px-space-3 bg-surface-container-lowest rounded text-on-surface font-label-sm text-label-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-secondary appearance-none pr-8 cursor-pointer">
+<option>SVI Band: All Severity Levels</option>
+<option>Critical (75 - 100)</option>
+<option>High (55 - 74)</option>
+<option>Moderate (30 - 54)</option>
+<option>Low (0 - 29)</option>
+<option>Needs Human Review Only</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Language Filter -->
+<div class="relative">
+<select aria-label="Filter by Language" class="h-9 px-space-3 bg-surface-container-lowest rounded text-on-surface font-label-sm text-label-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-secondary appearance-none pr-8 cursor-pointer">
+<option>Language: All Demographics</option>
+<option>Hindi (हिन्दी)</option>
+<option>English</option>
+<option>Hinglish</option>
+<option>Marathi (मराठी)</option>
+<option>Tamil (தமிழ்)</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+<!-- Intake Channel Filter -->
+<div class="relative">
+<select aria-label="Filter by Channel" class="h-9 px-space-3 bg-surface-container-lowest rounded text-on-surface font-label-sm text-label-sm shadow-sm focus:outline-none focus:ring-1 focus:ring-secondary appearance-none pr-8 cursor-pointer">
+<option>Channel: All Ingestion Lines</option>
+<option>Voice IVR / Mobile (14566)</option>
+<option>Chat (WhatsApp Bot)</option>
+<option>Web Direct Citizen Portal</option>
+</select>
+<span class="material-symbols-outlined absolute right-2 top-2 text-[18px] text-on-surface-variant pointer-events-none">expand_more</span>
+</div>
+</div>
+<!-- Filter Actions -->
+<div class="flex items-center gap-space-2">
+<button class="h-9 px-space-3 bg-surface-container-lowest hover:bg-surface-container text-on-surface-variant font-label-sm text-label-sm rounded transition-colors shadow-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">filter_alt_off</span>
+<span>Clear</span>
+</button>
+<button class="h-9 px-space-3 bg-surface-container-high hover:bg-surface-container-highest text-on-surface font-label-sm text-label-sm rounded transition-colors shadow-sm flex items-center gap-1 font-semibold">
+<span class="material-symbols-outlined text-[16px]">bookmark_add</span>
+<span>Save Preset</span>
+</button>
+</div>
+</div>
+<!-- Primary High-Density Queue Data Register -->
+<div class="bg-surface-container-lowest rounded-lg shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<!-- Table Header -->
+<thead>
+<tr class="bg-surface-container-low text-on-surface-variant font-label-sm text-label-sm tracking-wider uppercase select-none">
+<th class="py-space-2.5 px-space-3 w-16">Priority</th>
+<th class="py-space-2.5 px-space-3">Ref & Channel</th>
+<th class="py-space-2.5 px-space-3">Dialect & Region</th>
+<th class="py-space-2.5 px-space-3">Session Timing</th>
+<th class="py-space-2.5 px-space-3 min-w-[190px]">SVI Band & AI Conf.</th>
+<th class="py-space-2.5 px-space-3">Safety Signals & Triggers</th>
+<th class="py-space-2.5 px-space-3">Consent & Audit</th>
+<th class="py-space-2.5 px-space-3">Assignment</th>
+<th class="py-space-2.5 px-space-3 text-right">Operational CTA</th>
+</tr>
+</thead>
+<tbody class="font-body-sm text-body-sm text-on-surface">
+<!-- ROW 1: CRITICAL UNACKNOWLEDGED ALERT (Pinned Hard Override) -->
+<tr class="bg-error/5 hover:bg-error/10 transition-colors relative">
+<!-- Priority Indicator Column -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-error rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-error text-[20px] animate-bounce">e911_emergency</span>
+<span class="font-code-sm text-[10px] text-error font-extrabold uppercase">CRIT-1</span>
+</div>
+</div>
+</td>
+<!-- Case Ref & Channel -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8841</span>
+<span class="px-space-1 py-0.5 rounded bg-error text-on-error font-code-sm text-[10px] font-bold uppercase">LIVE NOW</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">phone_in_talk</span>
+<span>Voice Line • IVR-14566</span>
+</div>
+</div>
+</td>
+<!-- Lang & Region -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Hindi / Hinglish</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dist. Sitapur, Uttar Pradesh</span>
+<span class="font-code-sm text-code-sm text-outline">Geo-node: UP-CENTRAL-09</span>
+</div>
+</td>
+<!-- Wait & Session Duration -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-error font-semibold font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-[14px]">hourglass_top</span>
+<span>Wait: 01m 12s</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-code-sm text-code-sm">
+<span class="material-symbols-outlined text-[14px] text-secondary">mic</span>
+<span>Stream: 04m 18s</span>
+</div>
+</div>
+</td>
+<!-- SVI Band & Confidence -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<span class="px-space-1.5 py-0.5 rounded bg-error text-on-error font-code-sm text-code-sm font-bold">CRITICAL 88/100</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Conf: 94%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error h-full rounded-full" style="width: 88%"></div>
+</div>
+<span class="font-label-sm text-label-sm text-error font-semibold uppercase tracking-tight">HARD OVERRIDE: ARMED THREAT</span>
+</div>
+</td>
+<!-- Safety Signals / Triggers -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-wrap gap-1 max-w-xs">
+<span class="px-space-1.5 py-0.5 rounded bg-error/20 text-error font-label-sm text-label-sm font-bold flex items-center gap-0.5">
+<span class="material-symbols-outlined text-[13px]">crisis_alert</span> Immediate Threat
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+                  Turn #14 Acoustic Climax
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-error-container text-on-error-container font-label-sm text-label-sm">
+                  IPC 506 / SC-ST Sec. 3(1)(r)
+                </span>
+</div>
+</td>
+<!-- Consent & Verification -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm font-bold">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+<span>Audio Consent Granted</span>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">14566-REC-VERIFIED</span>
+</div>
+</td>
+<!-- Assignment -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="px-space-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold">
+                  UNASSIGNED
+                </span>
+</div>
+</td>
+<!-- Operational CTA -->
+<td class="py-space-2 px-space-3 align-top text-right">
+<div class="flex flex-col items-end gap-1">
+<button class="px-space-3 py-1.5 bg-secondary hover:bg-secondary/90 text-on-secondary font-label-md text-label-md rounded font-bold shadow transition-all flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">pan_tool</span>
+<span>Claim & Immediate Triage</span>
+</button>
+<button class="text-on-surface-variant hover:text-on-surface font-label-sm text-label-sm flex items-center gap-1 pr-1">
+<span class="material-symbols-outlined text-[14px]">volume_off</span>
+<span>Mute Audio Alarm</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- ROW 2: CRITICAL ACKNOWLEDGED ROW -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<!-- Priority Indicator -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-error/70 rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-error text-[18px]">report</span>
+<span class="font-code-sm text-[10px] text-error font-semibold">CRIT-2</span>
+</div>
+</div>
+</td>
+<!-- Case Ref & Channel -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8839</span>
+</div>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">forum</span>
+<span>WhatsApp Business API</span>
+</div>
+</div>
+</td>
+<!-- Dialect & Region -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">English / Hindi</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dist. Morena, Madhya Pradesh</span>
+<span class="font-code-sm text-code-sm text-outline">Chambal Rural Zone</span>
+</div>
+</td>
+<!-- Wait / Session Timing -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Wait: 02m 45s</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Session: 08m 10s</span>
+</div>
+</td>
+<!-- SVI Band & Confidence -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<span class="px-space-1.5 py-0.5 rounded bg-error/80 text-on-error font-code-sm text-code-sm font-bold">CRITICAL 79/100</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Conf: 89%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-error/80 h-full rounded-full" style="width: 79%"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant font-medium">Override: Eviction Hazard</span>
+</div>
+</td>
+<!-- Safety Signals -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-wrap gap-1 max-w-xs">
+<span class="px-space-1.5 py-0.5 rounded bg-error/15 text-error font-label-sm text-label-sm font-semibold">
+                  Physical Danger
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+                  Police Escort Reqd.
+                </span>
+</div>
+</td>
+<!-- Consent -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm font-semibold">
+<span class="material-symbols-outlined text-[15px]">lock</span>
+<span>Digital OTP Confirmed</span>
+</div>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Aadhaar Linked Proxy</span>
+</div>
+</td>
+<!-- Assignment -->
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Off. K. Sharma</span>
+<span class="font-code-sm text-code-sm text-secondary font-medium">Active in Triage (04m)</span>
+</div>
+</td>
+<!-- Action -->
+<td class="py-space-2 px-space-3 align-top text-right">
+<button class="px-space-3 py-1.5 bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-label-md rounded font-semibold transition-colors">
+                Monitor / Intervene
+              </button>
+</td>
+</tr>
+<!-- ROW 3: HIGH SVI ROW -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-on-tertiary-container rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-on-tertiary-container text-[18px]">priority_high</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant font-semibold">HIGH</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8845</span>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">phone_iphone</span>
+<span>Mobile Cellular Call</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Hindi (Haryanvi Dialect)</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dist. Rohtak, Haryana</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Wait: 03m 10s</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Session: 05m 22s</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface font-code-sm text-code-sm font-bold">HIGH 68/100</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Conf: 91%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-on-tertiary-container h-full rounded-full" style="width: 68%"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Algorithmic Baseline</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-wrap gap-1 max-w-xs">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+                  Ongoing Intimidation
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-secondary/15 text-secondary font-label-sm text-label-sm font-semibold">
+                  Legal Aid Timeline
+                </span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Consent Granted</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<span class="px-space-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold">
+                UNASSIGNED
+              </span>
+</td>
+<td class="py-space-2 px-space-3 align-top text-right">
+<button class="px-space-3 py-1.5 bg-primary text-on-primary hover:bg-primary/80 font-label-md text-label-md rounded font-semibold transition-colors">
+                Claim Case
+              </button>
+</td>
+</tr>
+<!-- ROW 4: NEEDS HUMAN ASSESSMENT ROW (Suppressed Numeric Score) -->
+<tr class="bg-surface-container-high/30 hover:bg-surface-container-high/50 transition-colors">
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-surface-variant rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-secondary text-[18px]">graphic_eq</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant font-bold">HUMAN</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8847</span>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-outline">cell_tower</span>
+<span>Voice 2G Mobile Line</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Bundelkhandi / Hindi</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dist. Jhansi, Bundelkhand</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Wait: 01m 55s</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Session: 03m 40s</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col space-y-1">
+<span class="px-space-2 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-bold text-center">
+                  NEEDS HUMAN ASSESSMENT
+                </span>
+<div class="p-space-1 bg-surface-container-lowest rounded text-on-surface-variant font-code-sm text-[11px] leading-tight flex flex-col gap-0.5">
+<span class="text-error font-medium">Low ASR Quality: 42%</span>
+<span>Dialect Shift: Conf <60%</span>
+<span class="font-semibold text-on-surface">SVI Score Suppressed</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-wrap gap-1 max-w-xs">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-semibold">
+                  Acoustic Anomaly
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-label-sm text-label-sm">
+                  Speech Freedom Unverified
+                </span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px]">verified</span>
+<span>Granted</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-bold text-on-surface">Off. R. Deshmukh</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Queued in Workspace</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top text-right">
+<button class="px-space-3 py-1.5 bg-inverse-surface text-secondary-fixed hover:bg-inverse-surface/90 font-label-md text-label-md rounded font-semibold transition-colors">
+                Acoustic Review & Score
+              </button>
+</td>
+</tr>
+<!-- ROW 5: CONSENT DECLINED ROW -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-outline rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-outline text-[18px]">lock_person</span>
+<span class="font-code-sm text-[10px] text-outline font-semibold">RESTRICT</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8849</span>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">laptop_chromebook</span>
+<span>Web Direct Citizen Form</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">English</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">State Portal Ingestion</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Wait: 04m 20s</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Session: Completed</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="px-space-2 py-0.5 rounded bg-surface-container-high text-on-surface-variant font-code-sm text-code-sm font-semibold">
+                  ANALYSIS SUPPRESSED
+                </span>
+<span class="font-body-sm text-body-sm text-outline mt-1 italic">DPDP Act: Consent Withheld</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface font-label-sm text-label-sm font-bold">
+                Officer Direct Handling Only
+              </span>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1 text-error font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px]">do_not_disturb</span>
+<span>Withheld / Restricted</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<span class="px-space-2 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-label-sm text-label-sm font-semibold">
+                UNASSIGNED
+              </span>
+</td>
+<td class="py-space-2 px-space-3 align-top text-right">
+<button class="px-space-3 py-1.5 bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-label-md rounded font-semibold transition-colors">
+                Open Direct Form
+              </button>
+</td>
+</tr>
+<!-- ROW 6: MODERATE SVI ROW -->
+<tr class="bg-surface-container-lowest hover:bg-surface-container-low transition-colors">
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1">
+<span class="w-1.5 h-10 bg-secondary/60 rounded-full block"></span>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined text-secondary text-[18px]">info</span>
+<span class="font-code-sm text-[10px] text-on-surface-variant font-semibold">MOD</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-bold text-on-surface">#CASE-2024-8842</span>
+<div class="flex items-center gap-1 text-on-surface-variant font-label-sm text-label-sm mt-0.5">
+<span class="material-symbols-outlined text-[15px] text-secondary">forum</span>
+<span>WhatsApp Citizen Bot</span>
+</div>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-md text-label-md font-semibold text-on-surface">Hinglish / Marathi</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Dist. Pune, Maharashtra</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-code-sm text-code-sm text-on-surface-variant">Wait: 05m 02s</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Session: 11m 40s</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col space-y-1">
+<div class="flex items-center justify-between">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-code-sm text-code-sm font-bold">MODERATE 46/100</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Conf: 88%</span>
+</div>
+<div class="w-full bg-surface-container h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary/70 h-full rounded-full" style="width: 46%"></div>
+</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Standard Advisory Track</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-wrap gap-1 max-w-xs">
+<span class="px-space-1.5 py-0.5 rounded bg-surface-container-high text-on-surface font-label-sm text-label-sm">
+                  Discriminatory Boycott
+                </span>
+<span class="px-space-1.5 py-0.5 rounded bg-secondary/15 text-secondary font-label-sm text-label-sm">
+                  Counselling Reqd.
+                </span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex items-center gap-1 text-secondary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[15px]">check_circle</span>
+<span>Consent Granted</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top">
+<div class="flex flex-col">
+<span class="font-label-sm text-label-sm font-semibold text-on-surface">Off. A. Verma</span>
+<span class="font-code-sm text-code-sm text-on-surface-variant">Assigned</span>
+</div>
+</td>
+<td class="py-space-2 px-space-3 align-top text-right">
+<button class="px-space-3 py-1.5 bg-surface-container-highest hover:bg-surface-container text-on-surface font-label-md text-label-md rounded font-semibold transition-colors">
+                View Case
+              </button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Table Bottom Bar & Pagination Controls -->
+<div class="p-space-3 bg-surface-container-low flex flex-wrap items-center justify-between gap-space-3">
+<div class="flex items-center gap-space-3">
+<span class="font-label-sm text-label-sm text-on-surface-variant">Showing <strong>1-6</strong> of <strong>18</strong> active live triage queues</span>
+<div class="h-4 w-px bg-outline-variant/40"></div>
+<!-- Legend Indicator Tags -->
+<div class="hidden lg:flex items-center gap-space-2 text-on-surface-variant font-label-sm text-label-sm">
+<span class="font-semibold text-on-surface">SVI Legend:</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-error"></span> Critical (75-100)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-on-tertiary-container"></span> High (55-74)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-secondary"></span> Moderate (30-54)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-outline"></span> Low (0-29)</span>
+<span class="flex items-center gap-1"><span class="w-2 h-2 rounded bg-surface-variant"></span> Manual Review</span>
+</div>
+</div>
+<div class="flex items-center gap-space-2">
+<button class="h-8 px-space-2 bg-surface-container-lowest text-on-surface-variant rounded font-label-sm text-label-sm opacity-50 cursor-not-allowed">
+          Previous
+        </button>
+<span class="h-8 px-space-3 bg-inverse-surface text-on-primary rounded font-code-sm text-code-sm flex items-center font-bold">1</span>
+<button class="h-8 px-space-3 bg-surface-container-lowest text-on-surface hover:bg-surface-container rounded font-code-sm text-code-sm">2</button>
+<button class="h-8 px-space-3 bg-surface-container-lowest text-on-surface hover:bg-surface-container rounded font-code-sm text-code-sm">3</button>
+<button class="h-8 px-space-2 bg-surface-container-lowest text-on-surface hover:bg-surface-container rounded font-label-sm text-label-sm">
+          Next
+        </button>
+</div>
+</div>
+</div>
+<!-- Real-time Auditable Triage Telemetry Deck -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-space-3 pt-space-2">
+<!-- Algorithmic Model Health -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Inference Node Latency</span>
+<span class="font-code-sm text-code-sm text-secondary font-bold">99.98% Uptime</span>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<span class="font-headline-md text-headline-md text-on-surface">38ms</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Transformer Triage SVI V4.1</span>
+</div>
+<div class="text-right font-code-sm text-code-sm text-on-surface-variant">
+<div>Queue Influx: 2.4/min</div>
+<div class="text-secondary font-semibold">0 Throttling Events</div>
+</div>
+</div>
+</div>
+<!-- Human Verification Ratio -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">Human-in-the-Loop Ratio</span>
+<span class="px-space-1 rounded bg-secondary/10 text-secondary font-code-sm text-code-sm font-semibold">NHAA Mandate</span>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<span class="font-headline-md text-headline-md text-on-surface">100%</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">Every dispatch officer-validated</span>
+</div>
+<div class="text-right font-code-sm text-code-sm text-on-surface-variant">
+<div>Manual Overrides: 4.1%</div>
+<div class="text-on-surface font-semibold">Ledger Signed</div>
+</div>
+</div>
+</div>
+<!-- Active Field Liaisons -->
+<div class="bg-surface-container-lowest p-space-3 rounded-lg shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between mb-space-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-on-surface-variant">State Liaison Relays</span>
+<span class="flex items-center gap-1 font-label-sm text-label-sm text-secondary">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span> 28 State Nodes Connected
+        </span>
+</div>
+<div class="flex items-center justify-between">
+<div>
+<span class="font-headline-md text-headline-md text-on-surface">14 Direct Relays</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant block">SP/DM Desks on Live Standby</span>
+</div>
+<div class="text-right font-code-sm text-code-sm text-on-surface-variant">
+<div>Avg Escalation Ack: 4.2m</div>
+<div class="text-secondary font-semibold">Standard Green</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+  (function() {
+    const audioBtn = document.getElementById('testAudioBtn');
+    if (audioBtn) {
+      audioBtn.addEventListener('click', function() {
+        // Synthesize audible testing tone via Web Audio API without external files
+        try {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (AudioContext) {
+            const ctx = new AudioContext();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(880, ctx.currentTime); // High pitch notification chime
+            gain.gain.setValueAtTime(0.08, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
+
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.35);
+          }
+        } catch (e) {
+          console.log('Audio notification simulation triggered');
+        }
+      });
+    }
+  })();
+</script></main></div><footer class="fixed bottom-0 left-0 right-0 h-10 bg-primary-container border-t border-outline-variant/30 z-50 px-gutter-default flex items-center justify-center"><div class="flex items-center gap-space-2 text-center max-w-7xl mx-auto overflow-hidden text-ellipsis whitespace-nowrap"><span class="material-symbols-outlined text-[18px] text-tertiary-fixed-dim flex-shrink-0">gavel</span><span class="font-label-sm text-label-sm tracking-normal text-on-primary-container">STATUTORY DISCLAIMER: This assessment is an assistive prioritisation aid generated by an AI system. It is not a clinical, legal or forensic determination. All decisions rest with the reviewing officer under NHAA Protocol 2024.</span></div></footer></body></html>

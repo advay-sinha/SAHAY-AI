@@ -52,7 +52,7 @@ class TestTimelineProjection(unittest.TestCase):
         self.assertNotIn("some_future_score", projected[0])
 
     def test_a_clean_entry_survives_intact(self):
-        entry = timeline_entry("recorded", "Your account has been recorded", "2026-09-10T10:00:00Z")
+        entry = timeline_entry("under_review", "Your request is being reviewed", "2026-09-10T10:00:00Z")
         self.assertEqual(project([entry])[0], entry)
 
 

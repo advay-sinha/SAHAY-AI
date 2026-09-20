@@ -1,0 +1,245 @@
+{
+ "schema": "sahay-blind-coverage-plan",
+ "plan_version": "1.0.0",
+ "corpus_version": "v1",
+ "description": "Coverage TARGET for the first independent human-authored safety evaluation set. This file holds counts and rationale only: no scenario text, no labels tied to a narrative, no reviewer record. It is a specification for human authors, not permission for any tool to generate samples.",
+ "total_min": 180,
+ "no_stereotype_rule": "Difficulty must come from linguistic structure (negation, scope, register, script, code-switching, turn order), never from caste, religion, region, gender, disability or occupation stereotypes. A sample whose only difficulty is a demographic marker must be rejected in review.",
+ "languages": [
+  {
+   "language": "en",
+   "script": ["latin"],
+   "min": 60,
+   "why": "English is the console language and the fallback intake language. It is also where the detectors are strongest, so it sets the ceiling the other two languages are measured against."
+  },
+  {
+   "language": "hi",
+   "script": ["devanagari"],
+   "min": 60,
+   "why": "Hindi in Devanagari is the primary victim language for NHAA 14566 intake and the only one where ASR, lexicon and detector error compound. It needs its own critical-miss number, not a share of an aggregate."
+  },
+  {
+   "language": "hinglish",
+   "script": ["latin", "mixed"],
+   "min": 60,
+   "why": "Romanised and code-switched Hindi is what people actually type on a phone. Every published critical miss so far was a transliteration or misspelling case, so this slice must carry its own statistics."
+  }
+ ],
+ "categories": [
+  {
+   "category": "crisis_self_harm",
+   "min_total": 18,
+   "min_per_language": 6,
+   "why": "The highest-consequence detector. A critical-miss rate needs enough positives per language to be more than an anecdote, and the two-reviewer rule applies to every one of them."
+  },
+  {
+   "category": "immediate_danger",
+   "min_total": 18,
+   "min_per_language": 6,
+   "why": "The second hard override. Present-tense danger must be separable from future threat, which requires positives in all three languages."
+  },
+  {
+   "category": "continuing_threat",
+   "min_total": 21,
+   "min_per_language": 6,
+   "why": "The most common real pattern (threats after a complaint) and the easiest to confuse with immediate danger, so it needs the largest non-critical count."
+  },
+  {
+   "category": "medical_urgency",
+   "min_total": 15,
+   "min_per_language": 4,
+   "why": "Injury language is short, often understated and frequently missed, and it drives a different escalation route than threat."
+  },
+  {
+   "category": "isolation_boycott_displacement",
+   "min_total": 18,
+   "min_per_language": 5,
+   "why": "Statute-specific vocabulary with heavy regional variation, where the published failures were regional-word false negatives."
+  },
+  {
+   "category": "legal_urgency",
+   "min_total": 18,
+   "min_per_language": 5,
+   "why": "Most intake is legal-procedural. Under-representing it makes the false-escalation rate look better than it is."
+  },
+  {
+   "category": "communication_safety_coercion",
+   "min_total": 18,
+   "min_per_language": 5,
+   "why": "Determines whether the assistant may keep talking at all, and is the category most often defeated by conditional phrasing."
+  },
+  {
+   "category": "explicit_human_request",
+   "min_total": 15,
+   "min_per_language": 5,
+   "why": "An invariant: a request for a person must always be honoured, in every language and register, including polite and indirect forms."
+  },
+  {
+   "category": "low_distress_information_request",
+   "min_total": 18,
+   "min_per_language": 6,
+   "why": "Plain questions with no danger. Without them the false-escalation denominator is empty and any precision claim is meaningless."
+  },
+  {
+   "category": "expected_abstention",
+   "min_total": 12,
+   "min_per_language": 4,
+   "why": "Cases where the correct behaviour is needs_human with no score. Abstention is an invariant and must be measured, not assumed."
+  },
+  {
+   "category": "no_alert_control",
+   "min_total": 24,
+   "min_per_language": 8,
+   "why": "Samples where every detector must stay silent. These are the only samples that can show whether hardening rules over-fire."
+  },
+  {
+   "category": "multi_label",
+   "min_total": 30,
+   "min_per_language": 10,
+   "why": "Real disclosures carry several dimensions at once. Single-label samples cannot expose evidence-attribution errors or SVI weighting errors."
+  }
+ ],
+ "slices": [
+  {
+   "slice": "explicit_negation",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Risk vocabulary that is plainly denied. The cheapest way to produce a false escalation and the first thing a keyword system gets wrong."
+  },
+  {
+   "slice": "clause_scoped_negation",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "A negation in one clause and a real disclosure in the next. Proves whether negation handling respects clause boundaries instead of the whole turn."
+  },
+  {
+   "slice": "conditional_language",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "Conditional phrasing is neither a denial nor present intent. A published coercion failure came from a conditional being read as a negation."
+  },
+  {
+   "slice": "quoted_speech",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Risk words inside quotation marks belong to another speaker. Quoted-speech false escalations are already a known failure class."
+  },
+  {
+   "slice": "attributed_speech",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "Reported speech without quotation marks is harder than quoted speech and must be scoped the same way."
+  },
+  {
+   "slice": "danger_plus_attributed_language",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "The trap case: genuine danger to the caller AND attributed risk words. Suppressing the attributed phrase must not suppress the real alert."
+  },
+  {
+   "slice": "past_tense_disclosure",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "A past attempt or past assault changes priority but is not present intent. Both over- and under-reaction are failures here."
+  },
+  {
+   "slice": "indirect_language",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Danger stated by implication. A published critical miss was exactly this shape."
+  },
+  {
+   "slice": "code_switching",
+   "min_total": 12,
+   "min_per_language": 3,
+   "languages": ["en", "hi", "hinglish"],
+   "why": "Switching mid-sentence breaks phrase patterns anchored in one language. It is the normal register, not an edge case."
+  },
+  {
+   "slice": "romanised_hindi",
+   "min_total": 12,
+   "min_per_language": 0,
+   "languages": ["hinglish"],
+   "why": "Hindi written in Latin script has no single spelling. Two published critical misses were transliteration variants."
+  },
+  {
+   "slice": "misspellings",
+   "min_total": 12,
+   "min_per_language": 3,
+   "why": "People in distress type badly, and one character can defeat an exact phrase rule. Misspelt crisis text has already produced a critical miss."
+  },
+  {
+   "slice": "regional_vocabulary",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Boycott, water-denial and displacement vocabulary varies by region, and published isolation false negatives were regional words."
+  },
+  {
+   "slice": "polite_understated_danger",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Severity is often expressed with apology and understatement. A system tuned on explicit wording systematically under-reacts to it."
+  },
+  {
+   "slice": "multiple_weak_dimensions",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "Several mild signals that should aggregate. Tests the SVI weighting rather than any single detector."
+  },
+  {
+   "slice": "conflicting_reassurance",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "A disclosure followed by reassurance. Determines whether reassurance can cancel evidence it should not."
+  },
+  {
+   "slice": "adversarial_roleplay",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "Roleplay framing around risk words must neither trigger a false critical route nor let a real disclosure through."
+  },
+  {
+   "slice": "prompt_injection",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "Attempts to set the score, reveal the band or override instructions. Invariant 3 forbids ever answering, and this must be measured in all three languages."
+  },
+  {
+   "slice": "embedded_instructions",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "Instruction-shaped text inside an otherwise genuine victim turn: the instruction must be ignored and the disclosure still assessed."
+  },
+  {
+   "slice": "multi_turn_evidence",
+   "min_total": 15,
+   "min_per_language": 4,
+   "why": "Evidence spread over turns is the normal case in intake and the only way to test state carry-over."
+  },
+  {
+   "slice": "later_turn_evidence",
+   "min_total": 10,
+   "min_per_language": 3,
+   "why": "The decisive turn arrives last. Catches pipelines that assess only the first or the current utterance."
+  },
+  {
+   "slice": "repeated_or_corrected_information",
+   "min_total": 8,
+   "min_per_language": 2,
+   "why": "A caller restates or corrects themself. Tests whether a correction supersedes the earlier claim."
+  },
+  {
+   "slice": "safe_near_miss",
+   "min_total": 12,
+   "min_per_language": 4,
+   "why": "Text that is lexically close to a critical case but genuinely safe. The sharpest available test of precision, and the class most likely to regress after hardening."
+  }
+ ],
+ "notes": [
+  "Counts are minimums. A sample may satisfy several categories and several slices at once, so the sums exceed 180 by design.",
+  "Category membership is taken from the FROZEN human labels. Slice membership is author-declared structural metadata, corrected in review only when a reviewer flags it as wrong; it is accounting, never evidence.",
+  "Language totals are hard: a shortfall in any one language blocks the freeze rather than being absorbed by the other two.",
+  "min_per_language 0 with an explicit languages list means the slice is only meaningful in those languages and the total is what binds.",
+  "This plan is versioned. Changing a minimum bumps plan_version and needs the same lead approval as a contract change."
+ ]
+}

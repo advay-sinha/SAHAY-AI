@@ -91,7 +91,7 @@ test("mobile/src never imports the console contract mirror", () => {
   assert.deepEqual(offences, [], `mobile imported from frontend: ${offences.join(", ")}`);
 });
 
-test("the four victim events are the only ones the app knows about", () => {
+test("the five victim events are the only ones the app knows about", () => {
   const events = fs.readFileSync(path.join(SRC, "types", "events.ts"), "utf8");
   const match = events.match(/ALLOWED_EVENT_TYPES\s*=\s*\[([\s\S]*?)\]/);
   assert.ok(match, "ALLOWED_EVENT_TYPES is missing from src/types/events.ts");
@@ -99,6 +99,7 @@ test("the four victim events are the only ones the app knows about", () => {
   const listed = [...match[1].matchAll(/"([^"]+)"/g)].map((m) => m[1]).sort();
   assert.deepEqual(listed, [
     "assistant.turn",
+    "officer.message",
     "session.status",
     "timeline.update",
     "transcript.line",

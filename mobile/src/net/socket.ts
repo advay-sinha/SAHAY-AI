@@ -5,13 +5,8 @@
  * filters by role; this is defence in depth, not the primary control.
  */
 
-import { ALLOWED_EVENT_TYPES, type VictimEvent } from "../types/events";
-
-type EventType = (typeof ALLOWED_EVENT_TYPES)[number];
-
-function isAllowed(type: unknown): type is EventType {
-  return typeof type === "string" && (ALLOWED_EVENT_TYPES as readonly string[]).includes(type);
-}
+import type { VictimEvent } from "../types/events";
+import { dispatchVictimEvent } from "./victimPayload";
 
 export interface SessionSocketOptions {
   baseUrl: string;
@@ -44,16 +39,7 @@ export class SessionSocket {
         this.options.onAudio?.(message.data);
         return;
       }
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(String(message.data));
-      } catch {
-        return;
-      }
-      if (typeof parsed !== "object" || parsed === null) return;
-      const type = (parsed as { type?: unknown }).type;
-      if (!isAllowed(type)) return; // never render anything outside the allowlist
-      this.options.onEvent(parsed as VictimEvent);
+      dispatchVictimEvent(String(message.data), this.options.onEvent);
     };
 
     this.socket = socket;

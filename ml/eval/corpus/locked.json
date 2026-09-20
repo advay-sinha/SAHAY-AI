@@ -1,0 +1,8 @@
+{
+ "schema": "sahay-ml-labels",
+ "schema_version": "1.0.0",
+ "corpus_version": "2026.09.11-1",
+ "split": "locked",
+ "description": "Locked evaluation set. EMPTY: no sample has the required real reviews yet. Move a candidate here only after its reviews are recorded (ml/eval/README.md).",
+ "samples": []
+}

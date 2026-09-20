@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Secure Officer Sign-In | SAHAY-AI Executive Console</title>
+  <!-- Google Fonts: Inter & Noto Sans Devanagari -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'Noto Sans Devanagari', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              navy: '#0b1329',
+              dark: '#0f172a',
+              card: '#131e3a',
+              border: '#1e293b',
+              accent: '#2563eb',
+              teal: '#0d9488',
+              amber: '#d97706',
+              red: '#dc2626'
+            },
+            surface: {
+              DEFAULT: '#f8fafc',
+              subtle: '#f1f5f9',
+              card: '#ffffff',
+              border: '#e2e8f0',
+              borderDark: '#cbd5e1'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      font-family: 'Inter', 'Noto Sans Devanagari', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col justify-between selection:bg-blue-100 selection:text-blue-900">
+
+  <!-- Top Operational Header Utility Bar -->
+  <header class="w-full bg-[#0b1329] border-b border-slate-800 text-slate-300 py-2.5 px-6 flex items-center justify-between text-xs select-none">
+    <div class="flex items-center space-x-3">
+      <!-- Abstract Shield & Dialogue Emblem -->
+      <div class="flex items-center space-x-2.5">
+        <svg class="w-6 h-6 text-blue-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <path d="M8 10h8" stroke-width="1.75"/>
+          <path d="M8 14h5" stroke-width="1.75"/>
+        </svg>
+        <div class="flex items-baseline space-x-2">
+          <span class="font-bold tracking-tight text-white text-sm">SAHAY-AI</span>
+          <span class="text-slate-400 font-mono text-[11px] uppercase tracking-wider">Executive Console</span>
+        </div>
+      </div>
+      <span class="text-slate-600">|</span>
+      <span class="text-slate-400 font-normal">India National Helpline Against Atrocities (NHAA 14566)</span>
+    </div>
+
+    <div class="flex items-center space-x-4">
+      <!-- Live Server Heartbeat Indicator -->
+      <div class="flex items-center space-x-1.5 px-2.5 py-0.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-slate-300 font-mono text-[11px]">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>GATEWAY: SECURE TLS 1.3</span>
+      </div>
+      <!-- Shift Roster Notice -->
+      <div class="text-slate-400 hidden sm:flex items-center space-x-1 font-mono text-[11px]">
+        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" stroke-width="2"></circle>
+          <polyline points="12 6 12 12 16 14" stroke-width="2"></polyline>
+        </svg>
+        <span>SHIFT: ALPHA-01 (08:00 - 16:00 IST)</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Layout: Responsive Split Screen -->
+  <main class="flex-1 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex items-center justify-center">
+    <div class="w-full grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+
+      <!-- Left Operational Information & Protocol Column (5 cols on Desktop) -->
+      <div class="lg:col-span-6 space-y-6">
+        <!-- Badge & Identity Header -->
+        <div class="space-y-3">
+          <div class="inline-flex items-center space-x-2 px-2.5 py-1 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs font-medium">
+            <span class="w-1.5 h-1.5 rounded-full bg-blue-600"></span>
+            <span>RESTRICTED PUBLIC SECTOR ACCESS · NHAA PROTOCOL 2024</span>
+          </div>
+
+          <h1 class="text-2xl sm:text-3xl font-bold tracking-tight text-slate-900 leading-tight">
+            Operational Decision-Support &amp; Rapid Case Triage Console
+          </h1>
+          <p class="text-slate-600 text-sm sm:text-base leading-relaxed">
+            Real-time multi-dialect speech analysis, automated Stress Vulnerability Indexing (SVI), and rapid crisis routing for sworn helpline triage officers.
+          </p>
+        </div>
+
+        <!-- System Architecture Operational Pillars (Matching existing console design) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          <!-- Item 1: Human in the loop -->
+          <div class="p-3.5 rounded-lg bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-1.5">
+            <div class="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+              <svg class="w-4 h-4 text-teal-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+              </svg>
+              <span>Human-in-the-Loop Sovereign</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-normal">
+              AI provides assistive prioritisation aids; final statutory determination stays strictly with human executive officers.
+            </p>
+          </div>
+
+          <!-- Item 2: Explainable SVI -->
+          <div class="p-3.5 rounded-lg bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-1.5">
+            <div class="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+              <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+              </svg>
+              <span>Explainable SVI Assessment</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-normal">
+              9-dimension linguistic vulnerability scores backed by exact turn-by-turn bilingual transcript citations.
+            </p>
+          </div>
+
+          <!-- Item 3: 90-Second Target -->
+          <div class="p-3.5 rounded-lg bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-1.5">
+            <div class="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+              <svg class="w-4 h-4 text-amber-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span>&lt;90s Rapid Triage SLA</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-normal">
+              Optimised information density to rapidly triage, evaluate safety indicators, and dispatch police/medical aid.
+            </p>
+          </div>
+
+          <!-- Item 4: Cryptographic Audit Ledger -->
+          <div class="p-3.5 rounded-lg bg-white border border-slate-200 shadow-sm flex flex-col justify-between space-y-1.5">
+            <div class="flex items-center space-x-2 text-slate-900 font-semibold text-xs">
+              <svg class="w-4 h-4 text-slate-700 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span>Immutable Audit Ledger</span>
+            </div>
+            <p class="text-[11px] text-slate-500 leading-normal">
+              Every machine recommendation, human override, and written rationale is SHA-256 hashed into the audit trail.
+            </p>
+          </div>
+        </div>
+
+        <!-- Mandatory Statutory Case Disclaimer (Verbatim from existing screens) -->
+        <div class="p-3 rounded-md bg-slate-100/90 border border-slate-300/80 text-[11px] text-slate-600 flex items-start space-x-2.5">
+          <svg class="w-4 h-4 text-slate-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <div class="space-y-0.5">
+            <span class="font-semibold text-slate-800">Statutory Supervisory Notice:</span>
+            <p class="leading-relaxed text-slate-600">
+              “This assessment is an assistive prioritisation aid generated by an AI system. It is not a clinical, legal or forensic determination. All decisions rest with the reviewing officer under NHAA Protocol 2024.”
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Form Column: Authentication Card (6 cols on Desktop) -->
+      <div class="lg:col-span-6 flex justify-center lg:justify-end">
+        <div class="w-full max-w-[460px] bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+
+          <!-- Card Header / Title -->
+          <div class="space-y-1 border-b border-slate-100 pb-4">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-mono font-medium text-slate-500 uppercase tracking-wide">Officer Access Portal</span>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-medium bg-slate-100 text-slate-700 border border-slate-200">
+                v2.4-STABLE
+              </span>
+            </div>
+            <h2 class="text-xl font-bold tracking-tight text-slate-900">Sign in to your console</h2>
+            <p class="text-xs text-slate-500">
+              Enter your government-issued credentials to access the active case queue.
+            </p>
+          </div>
+
+          <!-- Role-Aware Scope Selector (Executive vs Supervisor as explicitly specified in prompt) -->
+          <div class="space-y-1.5">
+            <label class="block text-xs font-medium text-slate-700">Operational Role</label>
+            <div class="grid grid-cols-2 gap-2 p-1 bg-slate-100 rounded-lg border border-slate-200">
+              <button type="button" id="role-exec" onclick="selectRole('executive')" class="flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-xs border border-slate-200/80 transition-all">
+                <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                </svg>
+                <span>Triage Executive</span>
+              </button>
+              <button type="button" id="role-sup" onclick="selectRole('supervisor')" class="flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all">
+                <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+                <span>Shift Supervisor</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Authentication Form -->
+          <form id="loginForm" onsubmit="handleLoginSubmit(event)" class="space-y-4" novalidate>
+            
+            <!-- Contextual Banner: Notice or Subtle Error Notification -->
+            <div id="authAlert" class="hidden p-3 rounded-md bg-red-50 border border-red-200 text-xs text-red-700 flex items-start space-x-2">
+              <svg class="w-4 h-4 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+              </svg>
+              <div class="flex-1">
+                <span class="font-semibold" id="authAlertTitle">Authentication Failed:</span>
+                <span id="authAlertMsg" class="block text-[11px] text-red-600 mt-0.5">The officer ID or secure passcode is unrecognised.</span>
+              </div>
+            </div>
+
+            <!-- Officer ID / Username Input -->
+            <div class="space-y-1.5">
+              <label for="officerId" class="block text-xs font-semibold text-slate-700 flex items-center justify-between">
+                <span>Government Officer ID / Email</span>
+                <span class="text-[11px] font-mono text-slate-400 font-normal">e.g. OFF-8841@nhaa.gov.in</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                  </svg>
+                </div>
+                <input 
+                  type="text" 
+                  id="officerId" 
+                  name="officerId" 
+                  value="priya.sharma@nhaa.gov.in"
+                  class="w-full pl-9 pr-3 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-md shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors font-mono"
+                  placeholder="officer.id@nhaa.gov.in" 
+                  required
+                />
+              </div>
+              <p id="officerIdError" class="hidden text-[11px] text-red-600 font-medium">Please enter a valid government email or Officer ID.</p>
+            </div>
+
+            <!-- Password Input with Toggle -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <label for="password" class="block text-xs font-semibold text-slate-700">Security Passcode / Token</label>
+                <a href="#forgot" onclick="alert('For security compliance under NHAA Protocol, passcodes must be reset by your Regional Lead Officer or System Admin.'); return false;" class="text-[11px] text-blue-600 hover:text-blue-700 hover:underline font-medium">
+                  Forgot passcode?
+                </a>
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                  </svg>
+                </div>
+                <input 
+                  type="password" 
+                  id="password" 
+                  name="password" 
+                  value="••••••••••••"
+                  class="w-full pl-9 pr-10 py-2 text-xs text-slate-900 bg-white border border-slate-300 rounded-md shadow-2xs placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-blue-600 transition-colors font-mono"
+                  placeholder="••••••••••••" 
+                  required
+                />
+                <!-- Visibility Toggle Button -->
+                <button 
+                  type="button" 
+                  id="togglePasswordBtn" 
+                  onclick="togglePasswordVisibility()" 
+                  class="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+                  aria-label="Toggle password visibility"
+                >
+                  <svg id="eyeIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                  </svg>
+                  <svg id="eyeOffIcon" class="w-4 h-4 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
+                  </svg>
+                </button>
+              </div>
+              <p id="passwordError" class="hidden text-[11px] text-red-600 font-medium">Security passcode is required.</p>
+            </div>
+
+            <!-- Multi-Factor Token / Station Badge Field (Public-sector reality) -->
+            <div class="space-y-1.5 pt-0.5">
+              <div class="flex items-center justify-between">
+                <label for="stationToken" class="block text-xs font-semibold text-slate-700">Station Hardware PIN / Token</label>
+                <span class="text-[11px] font-mono text-emerald-600 flex items-center space-x-1">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                  <span>FIDO2 KEY DETECTED</span>
+                </span>
+              </div>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <input 
+                  type="text" 
+                  id="stationToken" 
+                  name="stationToken" 
+                  value="STN-DEL-4029-YUBI"
+                  class="w-full pl-9 pr-3 py-2 text-xs text-slate-900 bg-slate-50 border border-slate-300 rounded-md shadow-2xs font-mono text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  placeholder="Auto-detected hardware token"
+                  readonly
+                />
+              </div>
+            </div>
+
+            <!-- Checkbox Options: Remember Session on Station -->
+            <div class="flex items-center justify-between pt-1">
+              <label class="flex items-center space-x-2 cursor-pointer select-none">
+                <input 
+                  type="checkbox" 
+                  id="rememberStation" 
+                  name="rememberStation" 
+                  checked
+                  class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 focus:ring-offset-0"
+                />
+                <span class="text-xs text-slate-600">Retain session on this authorized workstation</span>
+              </label>
+            </div>
+
+            <!-- Primary Action Button with Loading Indicator -->
+            <div class="pt-2">
+              <button 
+                type="submit" 
+                id="submitBtn"
+                class="w-full py-2.5 px-4 rounded-md bg-[#0f172a] hover:bg-slate-800 active:bg-slate-950 text-white font-medium text-xs sm:text-sm tracking-wide shadow-sm flex items-center justify-center space-x-2 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900"
+              >
+                <!-- Spinner Icon (hidden by default) -->
+                <svg id="loadingSpinner" class="hidden animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span id="btnText">Sign In to Case Console</span>
+                <svg id="btnArrow" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                </svg>
+              </button>
+            </div>
+          </form>
+
+          <!-- Authorized Use & Security Policy Warning Footer -->
+          <div class="border-t border-slate-100 pt-4 space-y-2 text-center sm:text-left">
+            <div class="flex items-start space-x-2 text-[11px] text-slate-500">
+              <svg class="w-3.5 h-3.5 text-slate-400 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+              </svg>
+              <p class="leading-relaxed">
+                Notice: All keystrokes, triage claims, and case ledger audits are logged under the Information Technology Act (India). Unauthorised access is strictly prohibited.
+              </p>
+            </div>
+            
+            <div class="flex items-center justify-between pt-2 text-[11px] text-slate-500 border-t border-slate-100">
+              <span>Station Helpdesk: <strong class="text-slate-700 font-mono">ext. 1450</strong></span>
+              <a href="#adminHelp" onclick="alert('Contact the Regional Control Centre Supervisor or IT Systems Officer at control.room@nhaa.gov.in'); return false;" class="text-blue-600 hover:underline">
+                Contact Administrator
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- Global Operational Footer -->
+  <footer class="w-full bg-white border-t border-slate-200 py-3 px-6 text-xs text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+    <div class="flex items-center space-x-4">
+      <span>Ministry of Social Justice and Empowerment · Government of India</span>
+      <span class="text-slate-300 hidden sm:inline">|</span>
+      <span class="hidden sm:inline">National Helpline Against Atrocities (NHAA 14566)</span>
+    </div>
+    <div class="flex items-center space-x-3 font-mono text-[11px] text-slate-400">
+      <span>SERVER: DEL-NODE-04</span>
+      <span>·</span>
+      <span>LATENCY: 34ms</span>
+      <span>·</span>
+      <span class="text-emerald-600 font-semibold">ALL SYSTEMS NOMINAL</span>
+    </div>
+  </footer>
+
+  <!-- Interactive JavaScript for Role selection, password toggle, and loading feedback -->
+  <script>
+    let activeRole = 'executive';
+
+    function selectRole(role) {
+      activeRole = role;
+      const execBtn = document.getElementById('role-exec');
+      const supBtn = document.getElementById('role-sup');
+      const officerInput = document.getElementById('officerId');
+
+      if (role === 'executive') {
+        execBtn.className = "flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-xs border border-slate-200/80 transition-all";
+        execBtn.querySelector('svg').className = "w-3.5 h-3.5 text-blue-600";
+
+        supBtn.className = "flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all";
+        supBtn.querySelector('svg').className = "w-3.5 h-3.5 text-slate-500";
+        officerInput.value = "priya.sharma@nhaa.gov.in";
+      } else {
+        supBtn.className = "flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-semibold bg-white text-slate-900 shadow-xs border border-slate-200/80 transition-all";
+        supBtn.querySelector('svg').className = "w-3.5 h-3.5 text-blue-600";
+
+        execBtn.className = "flex items-center justify-center space-x-1.5 py-1.5 px-3 rounded-md text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-white/60 transition-all";
+        execBtn.querySelector('svg').className = "w-3.5 h-3.5 text-slate-500";
+        officerInput.value = "rajesh.kumar.sup@nhaa.gov.in";
+      }
+    }
+
+    function togglePasswordVisibility() {
+      const pwdInput = document.getElementById('password');
+      const eyeIcon = document.getElementById('eyeIcon');
+      const eyeOffIcon = document.getElementById('eyeOffIcon');
+
+      if (pwdInput.type === 'password') {
+        pwdInput.type = 'text';
+        eyeIcon.classList.add('hidden');
+        eyeOffIcon.classList.remove('hidden');
+      } else {
+        pwdInput.type = 'password';
+        eyeIcon.classList.remove('hidden');
+        eyeOffIcon.classList.add('hidden');
+      }
+    }
+
+    function handleLoginSubmit(event) {
+      event.preventDefault();
+      const officerId = document.getElementById('officerId').value.trim();
+      const password = document.getElementById('password').value.trim();
+      const submitBtn = document.getElementById('submitBtn');
+      const btnText = document.getElementById('btnText');
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      const btnArrow = document.getElementById('btnArrow');
+      const authAlert = document.getElementById('authAlert');
+
+      // Reset errors
+      authAlert.classList.add('hidden');
+
+      if (!officerId) {
+        document.getElementById('officerIdError').classList.remove('hidden');
+        return;
+      } else {
+        document.getElementById('officerIdError').classList.add('hidden');
+      }
+
+      // Simulate Authentication Handshake
+      submitBtn.disabled = true;
+      submitBtn.classList.add('opacity-85', 'cursor-wait');
+      btnText.textContent = "Verifying Officer Credentials & Key...";
+      loadingSpinner.classList.remove('hidden');
+      btnArrow.classList.add('hidden');
+
+      setTimeout(() => {
+        // Success state demonstration
+        btnText.textContent = "Identity Authenticated · Launching Workspace...";
+        loadingSpinner.className = "w-4 h-4 text-emerald-400";
+        submitBtn.classList.remove('bg-[#0f172a]');
+        submitBtn.classList.add('bg-emerald-700');
+
+        setTimeout(() => {
+          // Reset demo button after 2 seconds
+          submitBtn.disabled = false;
+          submitBtn.classList.remove('opacity-85', 'cursor-wait', 'bg-emerald-700');
+          submitBtn.classList.add('bg-[#0f172a]');
+          btnText.textContent = "Sign In to Case Console";
+          loadingSpinner.classList.add('hidden');
+          btnArrow.classList.remove('hidden');
+        }, 2200);
+      }, 1200);
+    }
+  </script>
+</body>
+</html>

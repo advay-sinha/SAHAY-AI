@@ -39,9 +39,19 @@ class TestAllowlist(unittest.TestCase):
         for event in EXECUTIVE_ONLY:
             self.assertTrue(is_allowed(ROLE_SUPERVISOR, event), msg=event)
 
-    def test_victim_may_receive_the_four_victim_events(self):
+    def test_victim_may_receive_the_five_victim_events(self):
         for event in VICTIM_ALLOWED:
             self.assertTrue(is_allowed(ROLE_VICTIM, event), msg=event)
+
+    def test_officer_message_reaches_the_victim_but_never_with_assessment_data(self):
+        # PC-07: allowed only as the plain human-officer message.
+        clean = {"turn_id": "t9", "text": "An officer is here.", "lang": "en",
+                 "ts": "2026-09-11T00:00:00+00:00", "origin": "human_officer"}
+        self.assertIn("officer.message", VICTIM_ALLOWED)
+        self.assertIsNotNone(filter_event(ROLE_VICTIM, "officer.message", clean))
+        for leak in ({"band": "High"}, {"svi": 50}, {"alert": {"severity": "high"}}, {"confidence": 0.9}):
+            with self.assertRaises(LeakageError, msg=leak):
+                filter_event(ROLE_VICTIM, "officer.message", {**clean, **leak})
 
     def test_the_two_sets_do_not_overlap(self):
         self.assertEqual(VICTIM_ALLOWED & EXECUTIVE_ONLY, frozenset())
@@ -94,6 +104,14 @@ class TestFanOut(unittest.TestCase):
         subscribers = [("victim-1", ROLE_VICTIM), ("exec-1", ROLE_EXECUTIVE)]
         delivery = fan_out(subscribers, "assistant.turn", {"turn_id": "t1", "text": "ok", "lang": "hi"})
         self.assertEqual(set(delivery), {"victim-1", "exec-1"})
+
+    def test_a_payload_can_never_rename_the_event(self):
+        # Regression: the frozen alert.safety shape has its own `type` field,
+        # which used to overwrite "alert.safety" in the delivered frame.
+        event = filter_event(ROLE_EXECUTIVE, "alert.safety", {"type": "threat", "severity": "high"})
+        self.assertEqual(event["type"], "alert.safety")
+        spoof = filter_event(ROLE_VICTIM, "session.status", {"type": "dimension.update", "state": "S1"})
+        self.assertEqual(spoof["type"], "session.status")
 
     def test_every_delivered_event_carries_its_type(self):
         delivery = fan_out([("exec-1", ROLE_EXECUTIVE)], "escalation.packet", {"case_id": "c1"})

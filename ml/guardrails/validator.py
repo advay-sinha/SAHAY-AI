@@ -14,12 +14,13 @@ mean the model still chose the words.
 from typing import Any, Dict, Optional
 
 from ..dialogue import intents as _intents
+from . import rules as _rules
 from .banned_patterns import BANNED
 from .lexicons.prohibitions import MAX_CHARS, MAX_QUESTION_MARKS, PROHIBITED
 
 __all__ = ["validate"]
 
-VALIDATOR_VERSION = "guardrails-v1"
+VALIDATOR_VERSION = "guardrails-v1.1"
 
 _LANG_INDEX = {"en": 0, "hi": 1}
 
@@ -38,16 +39,18 @@ def _reject(reason: str, intent: str, lang: str, detail: str = "") -> Dict[str, 
 
 
 def _prohibited_hit(text: str, lang: str) -> Optional[str]:
-    """Return the prohibition reason a text violates, checking both languages.
+    """Return "reason|marker-id" for the first prohibition a text violates.
 
     Both language lists are always checked: a Hindi turn containing an English
-    promise is still a promise.
+    promise is still a promise. The id is positional ("en3", "hi0"), so a
+    rejection reason never repeats the prohibited words themselves.
     """
     folded = text.casefold()
     for reason, (markers_en, markers_hi) in PROHIBITED.items():
-        for marker in tuple(markers_en) + tuple(markers_hi):
-            if marker.casefold() in folded:
-                return f"{reason}|{marker}"
+        for lang_code, markers in (("en", markers_en), ("hi", markers_hi)):
+            for index, marker in enumerate(markers):
+                if marker.casefold() in folded:
+                    return f"{reason}|{lang_code}{index}"
     return None
 
 
@@ -98,14 +101,21 @@ def validate(text: Optional[str], intent: str, lang: str) -> Dict[str, Any]:
     # 6. Content prohibitions from STATES.md, checked in both languages.
     hit = _prohibited_hit(candidate, lang)
     if hit:
-        reason, marker = hit.split("|", 1)
-        return _reject(reason, intent, lang, marker)
+        reason, marker_id = hit.split("|", 1)
+        return _reject(reason, intent, lang, marker_id)
 
     # 7. A question intent must still be asking its licensed question, not a
     #    different one. The model may rephrase; it may not substitute.
     licensed = _intents.licensed_question(intent, lang)
     if licensed is not None and "?" not in candidate:
         return _reject("licensed_question_missing", intent, lang)
+
+    # 8. Category phrase rules over normalised text, in English, Hindi and
+    #    romanised Hindi / Hinglish (ml/guardrails/lexicons/output_rules.py).
+    #    The reason carries the category and rule id only, never the words.
+    rule = _rules.check(candidate)
+    if rule:
+        return _reject(rule["category"], intent, lang, rule["rule_id"])
 
     return {
         "ok": True,
