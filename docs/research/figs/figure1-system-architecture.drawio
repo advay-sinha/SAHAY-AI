@@ -1,0 +1,143 @@
+<mxfile host="app.diagrams.net" agent="SAHAY-AI whole-deck report" version="24.7.17">
+  <diagram id="sahay-fig1" name="Figure 1 - System architecture">
+    <mxGraphModel dx="1400" dy="850" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="850" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============ zone labels ============ -->
+        <mxCell id="zone-clients" value="CLIENTS" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1F4E79;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="60" width="200" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-reply" value="REPLY PATH (synchronous, sub-3 s budget)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1F4E79;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="60" width="420" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-assess" value="ASSESSMENT PATH (parallel, never blocks a reply)" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1F4E79;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="315" width="460" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-research" value="RESEARCH ONLY, OUTSIDE THE PRODUCT" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#5F6368;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="560" y="462" width="400" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ============ clients ============ -->
+        <mxCell id="app" value="&lt;b&gt;Expo victim app&lt;/b&gt;&lt;br&gt;consent, talk, chat, timeline" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="110" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="portal" value="&lt;b&gt;Portal chat&lt;/b&gt;&lt;br&gt;text channel" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="230" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="ivrs" value="&lt;b&gt;Telephony / IVRS&lt;/b&gt;&lt;br&gt;adapter stub&lt;br&gt;(not connected)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=#F1F2F3;strokeColor=#5F6368;strokeWidth=1.5;fontSize=11;fontColor=#3C4043;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="360" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ gateway ============ -->
+        <mxCell id="gw" value="&lt;b&gt;Session gateway - FastAPI&lt;/b&gt;&lt;br&gt;auth, consent,&lt;br&gt;turn orchestration" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="300" y="220" width="190" height="100" as="geometry" />
+        </mxCell>
+
+        <!-- ============ reply path ============ -->
+        <mxCell id="pre" value="&lt;b&gt;Crisis pre-check&lt;/b&gt;&lt;br&gt;synchronous,&lt;br&gt;before dialogue policy" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#FBEBEA;strokeColor=#B3261E;strokeWidth=1.5;fontSize=11;fontColor=#6E1711;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="110" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="fsm" value="&lt;b&gt;Dialogue FSM&lt;/b&gt;&lt;br&gt;12 states" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="110" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="val" value="&lt;b&gt;LLM phrasing&lt;/b&gt;&lt;br&gt;+ validator&lt;br&gt;+ TTS" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="110" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ assessment path ============ -->
+        <mxCell id="det" value="&lt;b&gt;Detectors&lt;/b&gt;&lt;br&gt;D1-D9 + extraction" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="360" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="svi" value="&lt;b&gt;SVI engine&lt;/b&gt;&lt;br&gt;overrides, abstention" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="360" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="pkt" value="&lt;b&gt;Recommendations&lt;/b&gt;&lt;br&gt;+ escalation packet" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="360" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ storage, console, shadow ============ -->
+        <mxCell id="shadow" value="&lt;b&gt;MuRIL shadow model&lt;/b&gt;&lt;br&gt;research CLI only" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;dashed=1;dashPattern=6 4;fillColor=#F1F2F3;strokeColor=#5F6368;strokeWidth=1.5;fontSize=11;fontColor=#3C4043;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="560" y="500" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="db" value="&lt;b&gt;Supabase PostgreSQL&lt;/b&gt;&lt;br&gt;15 tables, TLS only" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F1ECF7;strokeColor=#6A3D9A;strokeWidth=1.5;fontSize=11;fontColor=#3E2360;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="820" y="500" width="190" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="con" value="&lt;b&gt;Executive console&lt;/b&gt;&lt;br&gt;queue, packet,&lt;br&gt;decisions, audit" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=11;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="1080" y="500" width="190" height="80" as="geometry" />
+        </mxCell>
+
+        <!-- ============ notes ============ -->
+        <mxCell id="note-fanout" value="role-filtered fan-out: no score, band, dimension or alert ever reaches a victim client" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#B3261E;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="790" y="450" width="480" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="legend" value="&lt;b&gt;Legend&lt;/b&gt;&amp;nbsp;&amp;nbsp;solid = live path in the MVP&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;dashed = not connected (telephony) or research-only (shadow model)&lt;br&gt;red = safety-critical&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;green = human-facing surface&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;purple = storage" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#5F6368;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="620" width="700" height="44" as="geometry" />
+        </mxCell>
+
+        <!-- ============ edges: clients to gateway ============ -->
+        <mxCell id="e-app-gw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.35;entryDx=0;entryDy=0;" edge="1" parent="1" source="app" target="gw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-portal-gw" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.6;entryDx=0;entryDy=0;" edge="1" parent="1" source="portal" target="gw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-ivrs-gw" value="not connected in the MVP" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;dashPattern=6 4;strokeColor=#5F6368;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.9;entryDx=0;entryDy=0;" edge="1" parent="1" source="ivrs" target="gw">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ edges: reply path ============ -->
+        <mxCell id="e-gw-pre" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.3;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gw" target="pre">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-pre-fsm" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pre" target="fsm">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-fsm-val" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="fsm" target="val">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-val-app" value="assistant turn to the victim" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=0.5;exitY=0;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="val" target="app">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1175" y="50" />
+              <mxPoint x="135" y="50" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+
+        <!-- ============ edges: assessment path ============ -->
+        <mxCell id="e-gw-det" value="queued, parallel" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="gw" target="det">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="395" y="400" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-det-svi" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="det" target="svi">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-svi-pkt" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="svi" target="pkt">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-pkt-con" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkt" target="con">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-pkt-db" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.25;exitY=1;exitDx=0;exitDy=0;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="pkt" target="db">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1128" y="540" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-db-con" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=1;exitY=0.75;exitDx=0;exitDy=0;entryX=0;entryY=0.75;entryDx=0;entryDy=0;" edge="1" parent="1" source="db" target="con">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-det-shadow" value="shadow only, changes nothing" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;dashed=1;dashPattern=6 4;strokeColor=#5F6368;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="det" target="shadow">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

@@ -1,0 +1,91 @@
+<mxfile host="app.diagrams.net" agent="SAHAY-AI whole-deck report" version="24.7.17">
+  <diagram id="sahay-fig4" name="Figure 4 - Case lifecycle">
+    <mxGraphModel dx="1200" dy="700" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <!-- ============ titles ============ -->
+        <mxCell id="zone-state" value="CASE STATE - every transition after the first is a human action" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#1F4E79;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="40" y="36" width="620" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="zone-actions" value="OFFICER ACTIONS - executive tokens only; a supervisor token is read-only and gets 403" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontStyle=1;fontColor=#2E7D32;letterSpacing=1;" vertex="1" parent="1">
+          <mxGeometry x="30" y="212" width="760" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ============ state row ============ -->
+        <mxCell id="s1" value="&lt;b&gt;&lt;font face=&quot;Courier New&quot;&gt;open&lt;/font&gt;&lt;/b&gt;&lt;br&gt;in the queue" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="40" y="80" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s2" value="&lt;b&gt;&lt;font face=&quot;Courier New&quot;&gt;claimed&lt;/font&gt;&lt;/b&gt;&lt;br&gt;by one officer" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="320" y="80" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" value="&lt;b&gt;&lt;font face=&quot;Courier New&quot;&gt;taken_over&lt;/font&gt;&lt;/b&gt;&lt;br&gt;assistant muted" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="600" y="80" width="200" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" value="&lt;b&gt;&lt;font face=&quot;Courier New&quot;&gt;closed&lt;/font&gt;&lt;/b&gt;" style="rounded=1;arcSize=10;whiteSpace=wrap;html=1;fillColor=#EAF1F8;strokeColor=#1F4E79;strokeWidth=1.5;fontSize=11;fontColor=#12314B;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="880" y="80" width="200" height="70" as="geometry" />
+        </mxCell>
+
+        <!-- ============ action row ============ -->
+        <mxCell id="a1" value="&lt;b&gt;alert acknowledged&lt;/b&gt;&lt;br&gt;idempotent, audited" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=10;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="30" y="250" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" value="&lt;b&gt;confirm / modify / reject&lt;/b&gt;&lt;br&gt;each recommendation" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=10;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="310" y="250" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" value="&lt;b&gt;band override&lt;/b&gt;&lt;br&gt;reason mandatory" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=10;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="590" y="250" width="220" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" value="&lt;b&gt;officer message&lt;/b&gt;&lt;br&gt;to the complainant" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#EAF3EB;strokeColor=#2E7D32;strokeWidth=1.5;fontSize=10;fontColor=#1B3A1D;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="870" y="250" width="220" height="60" as="geometry" />
+        </mxCell>
+
+        <!-- ============ victim-safe timeline ============ -->
+        <mxCell id="tl" value="&lt;b&gt;victim-safe timeline&lt;/b&gt;&lt;br&gt;request received&amp;nbsp;&amp;rarr; under review &amp;rarr; officer assigned &amp;rarr; action taken &amp;rarr; follow-up scheduled &amp;rarr; closed&lt;br&gt;plain language, no pathway, no score" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#F1ECF7;strokeColor=#6A3D9A;strokeWidth=1.5;fontSize=10;fontColor=#3E2360;verticalAlign=middle;align=center;" vertex="1" parent="1">
+          <mxGeometry x="320" y="400" width="560" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="note-tl" value="only a human confirm or modify adds the &quot;action taken&quot; step" style="text;html=1;align=center;verticalAlign=middle;fontSize=10;fontStyle=2;fontColor=#5F6368;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="320" y="492" width="560" height="24" as="geometry" />
+        </mxCell>
+        <mxCell id="legend4" value="&lt;b&gt;Legend&lt;/b&gt;&amp;nbsp;&amp;nbsp;blue = case state&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;green = action a human officer takes&amp;nbsp;&amp;nbsp;|&amp;nbsp;&amp;nbsp;purple = the only path that reaches the complainant" style="text;html=1;align=left;verticalAlign=middle;fontSize=10;fontColor=#5F6368;whiteSpace=wrap;" vertex="1" parent="1">
+          <mxGeometry x="40" y="560" width="840" height="24" as="geometry" />
+        </mxCell>
+
+        <!-- ============ state transitions ============ -->
+        <mxCell id="e-s1-s2" value="claim" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s1" target="s2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s2-s3" value="takeover" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2" target="s3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s3-s4" value="close" style="edgeStyle=orthogonalEdgeStyle;rounded=1;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;fontSize=9;fontStyle=2;fontColor=#5F6368;exitX=1;exitY=0.5;exitDx=0;exitDy=0;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ state to actions (the fan) ============ -->
+        <mxCell id="e-s2-a1" style="edgeStyle=none;rounded=0;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.8;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2" target="a1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s2-a2" style="edgeStyle=none;rounded=0;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2" target="a2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s2-a3" style="edgeStyle=none;rounded=0;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s2" target="a3">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-s3-a4" style="edgeStyle=none;rounded=0;html=1;strokeColor=#4D4D4D;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.2;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="s3" target="a4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+        <!-- ============ actions to the victim-safe timeline ============ -->
+        <mxCell id="e-a2-tl" style="edgeStyle=none;rounded=0;html=1;strokeColor=#6A3D9A;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.25;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a2" target="tl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e-a4-tl" style="edgeStyle=none;rounded=0;html=1;strokeColor=#6A3D9A;strokeWidth=1.5;endArrow=block;endFill=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.85;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="a4" target="tl">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

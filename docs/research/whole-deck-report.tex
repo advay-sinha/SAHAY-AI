@@ -1,0 +1,1648 @@
+% !TEX program = pdflatex
+% SAHAY-AI whole-deck report: problem statement SIH26093, solution, evidence, roadmap.
+% Build: pdflatex (run three times for TOC, refs and float placement).
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[a4paper,margin=2.2cm,headheight=14pt]{geometry}
+\usepackage{microtype}
+\emergencystretch=1.5em  % last-resort stretch, keeps narrow table cells from overflowing
+\usepackage{amsmath,amssymb}
+\usepackage{booktabs,tabularx,array,multirow,longtable}
+\usepackage[table]{xcolor}
+
+\definecolor{sahayblue}{HTML}{1F4E79}
+\definecolor{sahaygreen}{HTML}{2E7D32}
+\definecolor{sahayred}{HTML}{B3261E}
+\definecolor{sahayorange}{HTML}{D97706}
+\definecolor{sahaygray}{HTML}{5F6368}
+\definecolor{sahaypurple}{HTML}{6A3D9A}
+\definecolor{selrow}{HTML}{E8F0F8}
+
+\usepackage{caption}
+\captionsetup{font=small,labelfont={bf,color=sahayblue},skip=4pt}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt,parsep=0pt}
+\usepackage{pgfplots}
+\pgfplotsset{compat=1.18}
+\usepackage{tikz}
+\usetikzlibrary{positioning,arrows.meta,calc,fit,backgrounds,shapes.geometric}
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+\usepackage{fancyhdr}
+\usepackage{float}
+\usepackage{titlesec}
+\usepackage{needspace}
+\newcommand{\sectionbreak}{\needspace{10\baselineskip}}
+\titleformat{\section}{\Large\bfseries\color{sahayblue}}{\thesection}{0.6em}{}
+\titleformat{\subsection}{\large\bfseries\color{sahayblue!85!black}}{\thesubsection}{0.5em}{}
+\titleformat{\subsubsection}{\normalsize\bfseries}{\thesubsubsection}{0.5em}{}
+\usepackage[colorlinks=true,linkcolor=sahayblue,citecolor=sahaygreen,urlcolor=sahayblue]{hyperref}
+\urlstyle{same}
+
+% Typewriter identifiers that may break after underscores; \filepath breaks paths at / . _ -
+\newcommand{\codeus}{\textunderscore\allowbreak}
+\DeclareRobustCommand{\code}[1]{{\ttfamily\let\_\codeus #1}}
+\DeclareUrlCommand\filepath{\urlstyle{tt}}
+
+% Float placement: more floats per text page, float pages stacked from the top.
+\renewcommand{\topfraction}{0.9}
+\renewcommand{\bottomfraction}{0.8}
+\renewcommand{\textfraction}{0.07}
+\renewcommand{\floatpagefraction}{0.75}
+\setcounter{topnumber}{3}
+\setcounter{totalnumber}{5}
+\makeatletter
+\setlength{\@fptop}{0pt}
+\setlength{\@fpsep}{14pt plus 4pt}
+\setlength{\@fpbot}{0pt plus 1fil}
+\makeatother
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{sahaygray}SAHAY-AI --- Whole-deck report v1.0}
+\fancyhead[R]{\small\color{sahaygray}PS SIH26093 \textbullet{} MVP evidence, not a clinical claim}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+\newcommand{\yes}{\textcolor{sahaygreen}{\textbf{Met}}}
+\newcommand{\partly}{\textcolor{sahayorange}{\textbf{Partial}}}
+\newcommand{\defer}{\textcolor{sahaygray}{\textbf{Deferred}}}
+\newcommand{\bydesign}{\textcolor{sahaypurple}{\textbf{By design}}}
+\newcommand{\pass}{\textcolor{sahaygreen}{\textbf{pass}}}
+\newcommand{\fail}{\textcolor{sahayred}{\textbf{fail}}}
+\newcommand{\na}{\textcolor{sahaygray}{n/a}}
+
+\newtcolorbox{keybox}[1][]{enhanced,breakable,colback=sahayblue!4,colframe=sahayblue,
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries\small,#1}
+\newtcolorbox{warnbox}[1][]{enhanced,breakable,colback=sahayred!4,colframe=sahayred,
+  boxrule=0.6pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries\small,#1}
+\newtcolorbox{quotebox}[1][]{enhanced,breakable,colback=sahaygray!6,colframe=sahaygray!55,
+  boxrule=0.5pt,arc=2pt,left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\bfseries\small,#1}
+
+\pgfplotsset{
+  sahay/.style={
+    tick label style={font=\scriptsize},
+    label style={font=\footnotesize},
+    legend style={font=\scriptsize,draw=sahaygray!50},
+    grid=major, grid style={sahaygray!20},
+  }
+}
+
+\hypersetup{
+  pdftitle={SAHAY-AI whole-deck report: problem statement SIH26093, solution, evidence and post-MVP roadmap},
+  pdfauthor={SAHAY-AI team},
+  pdfsubject={Smart India Hackathon 2026 PS SIH26093 - NHAA 14566},
+}
+
+\begin{document}
+\pagenumbering{alph}
+
+%======================================================================
+\begin{titlepage}
+\centering
+{\small\color{sahaygray} Smart India Hackathon 2026 \textbullet{} Problem Statement \textbf{SIH26093} \textbullet{} Ministry of Social Justice and Empowerment\par}
+\vspace{2.0cm}
+{\fontsize{34}{40}\selectfont\bfseries\color{sahayblue} SAHAY-AI\par}
+\vspace{0.45cm}
+{\LARGE Whole-Deck Report\par}
+\vspace{0.25cm}
+{\large Problem statement, solution, architecture, flows, evidence,\\[2pt]
+benchmark comparison, feasibility, viability and post-MVP roadmap\par}
+\vspace{0.9cm}
+{\large Version 1.0 \textbullet{} 17 September 2026 \textbullet{} branch \code{dev} at \code{ccb1724}\par}
+\vspace{1.3cm}
+\begin{keybox}[title={The one-paragraph version}]
+\small
+SAHAY-AI is an AI-assisted intake, vulnerability-assessment and escalation prototype for the
+National Helpline Against Atrocities (NHAA, 14566) and the Integrated Portal. A deterministic
+12-state dialogue machine conducts a bounded intake in Hindi, English or Hinglish; a synchronous
+crisis pre-check can stop intake at any moment and hand the caller to a person; a transparent
+nine-dimension Stress Vulnerability Index (0--100) with published weights, hard overrides and an
+explicit abstention path prioritises the case; and a helpline executive decides every action, with
+AI proposals and human decisions stored in separate tables. The victim client never receives a
+score, band, dimension or alert, and a server-side test proves it. The MVP runs on one laptop:
+FastAPI, Supabase PostgreSQL, a React console, an Expo victim app, self-hosted speech models and a
+mock LLM.
+\end{keybox}
+\vspace{0.4cm}
+\begin{warnbox}[title={Evidence standard used throughout}]
+\small
+Every number in this report is measured on this machine and labelled with what it does and does not
+support. Fictional corpora only: no real victim data has ever been used. The locked evaluation set
+is empty, so \textbf{no number here is an official, independent, blind or clinical result}. The one
+model the team trained runs in shadow mode only and is \code{rejected\_for\_product\_integration};
+the authoritative pipeline is deterministic. Published benchmark figures quoted in
+Section~\ref{sec:bench} come from other tasks and datasets and are \emph{context}, never a scoreboard.
+\end{warnbox}
+\vfill
+{\small\color{sahaygray} Sources: this repository at \code{dev} / \code{ccb1724}, the private training and
+model roots outside Git, the official SIH26093 problem-statement record, and the cited literature.\par}
+\end{titlepage}
+\pagenumbering{roman}
+\tableofcontents
+\newpage
+\pagenumbering{arabic}
+
+%======================================================================
+\section{Executive summary}
+
+\textbf{What the problem statement asks for.} PS SIH26093 asks for an AI-enabled real-time module
+that assesses stress, trauma, fear, anxiety and vulnerability for victims and complainants reaching
+NHAA 14566 and its digital channels; produces a Stress Vulnerability Index and Low, Moderate, High
+and Critical categories; detects suicidal ideation, intimidation, isolation and extreme
+vulnerability; recommends counselling, legal aid, medical help, police intervention, witness
+protection or emergency support; works multilingually; and maintains privacy, consent and ethical AI
+standards~\cite{sih26093}.
+
+\textbf{What we built.} A complete, working vertical slice of that module, local-first and
+auditable end to end: consent and AI disclosure, bounded intake, synchronous crisis interrupt,
+deterministic nine-dimension assessment with evidence links, alerts, AI-proposed pathways, a live
+executive queue and case packet, human decision, band override with mandatory reason, officer
+takeover and messaging, a victim-safe timeline and an append-only audit log. Measured size:
+20{,}624 lines of ML code, 3{,}813 lines of backend application code, 3{,}532 lines of console code
+and 3{,}113 lines of victim-app code, with \textbf{1{,}253 automated tests} of which 1{,}251 pass
+(Section~\ref{sec:evidence}).
+
+\textbf{What is proved, and what is not.} The safety architecture is proved by tests: role-filtered
+fan-out, consent gating, timeline leakage, contract mirroring, idempotency and shadow-model
+isolation. Detector quality is measured on fictional corpora and is honest about its gaps: one
+critical event in seventeen is still missed on the development fixtures. Speech recognition accuracy
+(WER), acoustic distress (D4) and end-to-end turn latency are \textbf{not yet measured};
+Section~\ref{sec:notmeasured} lists every such gap with the approval or work item that unblocks it.
+
+\textbf{Feasibility and viability.} The whole stack runs on one 8~GB laptop GPU with 5{,}950~MB of
+headroom while both the text encoder and the speech model are loaded, and the deterministic text
+pipeline processes 100--600 fictional records per second single-threaded, so the text triage path is
+effectively free at helpline scale (Section~\ref{sec:viability}). Every model used is Apache-2.0 or
+MIT, self-hosted, with no per-request API cost and no victim data leaving the deployment.
+
+\textbf{Post-MVP.} Section~\ref{sec:roadmap} is about integration and scale, not about finishing the
+MVP: authorised NHAA 14566 telephony and IVRS connectors through a licensed operator, Integrated
+Portal and chatbot ingestion, departmental single sign-on and district multi-tenancy, the
+22-scheduled-language rollout gated per language, an expert SVI calibration study against real
+triage outcomes, clinical governance sign-off, a governed domain dataset with a lawful basis, and
+production monitoring with drift and automation-bias auditing.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Headline numbers, all measured on this machine. Full context in the sections named.}
+\label{tab:headline}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.4cm}>{\raggedright\arraybackslash}p{4.6cm}X@{}}
+\toprule
+Measure & Value & Where \\
+\midrule
+Automated tests (4 suites) & 1{,}251 pass of 1{,}253 & \S\ref{sec:tests} \\
+Critical-event miss rate (dev / candidate) & 1 of 17 / 1 of 14 & \S\ref{sec:detres} \\
+Guardrail red-team (exposed fixtures) & 39 of 39 pass & \S\ref{sec:detres} \\
+Crisis pre-check precision / recall (dev) & 0.636 / 1.000 & \S\ref{sec:detres} \\
+Assessment leakage to victim client & 0, proved server-side by test & \S\ref{sec:tests} \\
+Encoder latency (MuRIL, 128 tokens, p50) & 14.8--17.8 ms & \S\ref{sec:runtimeperf} \\
+Hindi tokens per character (MuRIL vs XLM-R) & 0.246 vs 0.319 & \S\ref{sec:whymuril} \\
+Both models resident (MuRIL + Whisper) & 1{,}102 MB used, 5{,}950 MB free & \S\ref{sec:feasibility} \\
+Deterministic pipeline throughput & 100--600 records/s, one thread & \S\ref{sec:viability} \\
+Trained shadow model status & \code{rejected\_for\_product\_integration} & \S\ref{sec:shadow} \\
+Official (locked) evaluation samples & \textbf{0} & \S\ref{sec:notmeasured} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%======================================================================
+\section{The problem statement: SIH26093}
+\label{sec:ps}
+
+\subsection{The official record}
+\begin{table}[!htbp]
+\centering\small
+\caption{Problem statement metadata, as published~\cite{sih26093}.}
+\label{tab:psmeta}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}X@{}}
+\toprule
+Field & Value \\
+\midrule
+Problem statement ID & 26093 (\code{SIH26093}), serial 93 \\
+Title & AI-Based Real-Time Stress and Trauma Assessment Module for Victims/Complainants Accessing NHAA (14566) and Integrated Portal \\
+Organisation & Ministry of Social Justice and Empowerment (MoSJE) \\
+Department & Department of Social Justice and Empowerment \\
+Category & Software \\
+Theme & Smart Automation \\
+Idea submission deadline & 20 September 2026 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{quotebox}[title={Background, as issued}]
+\small
+``Victims and complainants belonging to Scheduled Castes and Scheduled Tribes who approach the
+National Helpline Against Atrocities (14566), Integrated Portal, chatbot, mobile application, IVRS,
+or other digital platforms often experience severe emotional distress arising from caste-based
+discrimination, violence, rape, gang rape, murder of family members, social boycott, displacement,
+threats, and prolonged legal proceedings. Presently, there is no standardized mechanism for
+assessing the psychological condition and vulnerability of victims at the time of first contact with
+authorities.''
+\end{quotebox}
+
+\begin{quotebox}[title={Problem statement and expected solution, as issued}]
+\small
+``Design and develop an AI-enabled Real-Time Stress and Trauma Assessment Module that can assess the
+psychological stress, trauma, fear, anxiety, and vulnerability levels of victims/complainants
+interacting through NHAA (14566), the Integrated Portal, chatbot, IVRS, mobile application, or any
+other approved digital interface.''
+
+\smallskip
+The solution should: analyse voice interactions, speech patterns, pauses, pitch variation, emotional
+indicators, and textual narratives; use Natural Language Processing (NLP), Speech Analytics, and
+Emotion AI to identify signs of trauma and distress; generate a Stress Vulnerability Index (SVI) on
+a predefined scale; categorize victims into Low, Moderate, High, and Critical Risk categories;
+detect indicators of severe trauma, fear, depression, suicidal ideation, intimidation, social
+isolation, and extreme vulnerability; automatically recommend counselling, legal aid, medical
+assistance, police intervention, witness protection, or emergency support based on risk level;
+support multilingual interactions, including major Indian languages and dialects; and maintain
+privacy, informed consent, confidentiality, and ethical AI standards.
+
+\smallskip
+Expected outcomes: early identification of highly distressed victims; prioritization of counselling
+and rehabilitation services; improved victim-centric grievance redressal; better allocation of
+support resources; enhanced responsiveness of the helpline and integrated portal ecosystem.
+
+\smallskip
+Stakeholders: Department of Social Justice and Empowerment; National Helpline Against Atrocities
+(14566); State Governments and Union Territories; District Administrations; Counsellors and Mental
+Health Professionals; Law Enforcement Agencies; Rehabilitation and Welfare Authorities.
+\end{quotebox}
+
+\subsection{How we read it}
+Three phrases in the statement decide the whole design, and we read them deliberately.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Interpretation decisions. Each is a safety position, and each is defensible in front of a
+mental-health panel.}
+\label{tab:interp}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{5.4cm}X@{}}
+\toprule
+Phrase in the PS & How we implement it & Why not the other reading \\
+\midrule
+``detect \ldots{} depression, suicidal ideation'' & As \emph{linguistic and behavioural indicators}
+that raise dimensions D2 and D5 and trigger escalation to a person & Naming a psychiatric condition
+as fact would be a diagnosis. Our output validator rejects any sentence that does so, in both
+languages \\
+``automatically recommend \ldots{} police intervention, witness protection'' & The system generates
+the recommendation automatically with rationale and citation; a human officer confirms, modifies or
+rejects it & ``Automatically recommend'' is not ``automatically act''. No agency is contacted and no
+case is closed by the machine \\
+``real-time'' & Sub-3-second conversational turns by budget; assessment runs on a parallel path so
+it never delays a reply & A model in the reply path makes the assistant hesitate at the worst
+possible moment \\
+``major Indian languages and dialects'' & Hindi, English and romanised Hinglish in the MVP; the
+22-language path is evidenced by a published benchmark and gated per language & Shipping a language
+we have not evaluated is how a helpline mistranscribes a crisis \\
+``Stress Vulnerability Index \ldots{} predefined scale'' & A transparent weighted sum of nine
+evidence-linked dimensions, 0--100, weights published and labelled provisional & A learned regressor
+would be unexplainable to an officer and uncalibratable without real outcome data \\
+\bottomrule
+\end{tabularx}
+\end{table}
+\subsection{Requirement traceability}
+\label{sec:trace}
+
+Table~\ref{tab:trace} decomposes the expected solution into atomic requirements and states, for each
+one, what exists today, the evidence, and an honest status. \yes{} means implemented and covered by a
+test or a measurement. \partly{} means implemented in part, with the remainder named.
+\defer{} means deliberately out of MVP scope with a named gate. \bydesign{} means we do something
+different on purpose, and say why.
+
+\setlength{\tabcolsep}{4pt}
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.7cm}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{5.5cm}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{1.75cm}@{}}
+\caption{PS SIH26093 requirement traceability. Section numbers point to evidence in this report.}
+\label{tab:trace}\\
+\toprule
+ID & Requirement (from the PS) & In SAHAY-AI today & Evidence & Status \\
+\midrule
+\endfirsthead
+\multicolumn{5}{@{}l}{\small\itshape Table~\ref{tab:trace} continued}\\
+\toprule
+ID & Requirement (from the PS) & In SAHAY-AI today & Evidence & Status \\
+\midrule
+\endhead
+\bottomrule
+\endfoot
+R1 & Analyse voice interactions, speech patterns, pauses & Gated voice path: Silero VAD produces
+validated speech intervals, then Whisper Small transcribes only those intervals. Pause structure is
+available from the VAD intervals & Runtime qualification \S\ref{sec:runtimeperf}; gate enforced in
+code \S\ref{sec:whyvad} & \partly \\
+R2 & Pitch variation, emotional indicators (acoustic) & Dimension D4 is defined, weighted 0.12, with
+a declared feature contract (F0 mean/std, RMS, speech rate, pause ratio, jitter). No acoustic model
+is approved, so D4 is reported \emph{structurally unavailable} and never estimated or zeroed &
+\S\ref{sec:d4}, \S\ref{sec:svi} & \defer \\
+R3 & Analyse textual narratives & Deterministic multilingual detectors over Hindi, English and
+romanised Hinglish with tiered lexicons, negation and quotation handling, plus structured extraction
+of incident, persons, timeline and stated need & \S\ref{sec:detres}; 57+48 fixture evaluation &
+\yes \\
+R4 & Use NLP & Rule and lexicon NLP in the product path; a MuRIL-based multilingual classifier
+exists as a research shadow only & \S\ref{sec:approach}, \S\ref{sec:shadow} & \yes \\
+R5 & Use Speech Analytics & VAD-gated ASR runtime qualified offline, with measured latency, memory
+and a documented hallucination failure mode & \S\ref{sec:runtimeperf} & \partly \\
+R6 & Use Emotion AI & Not shipped. Emotion labels are explicitly firewalled from safety labels; an
+isolated research head on a Hindi emotion corpus is diagnostic only & \S\ref{sec:firewall} &
+\bydesign \\
+R7 & Generate an SVI on a predefined scale & Nine-dimension weighted index, 0--100, published
+weights, evidence turn ids per dimension, aggregate confidence, scoring version stored with every
+assessment & \S\ref{sec:svi}; frozen contract & \yes \\
+R8 & Categorise Low / Moderate / High / Critical & Exactly those four bands (0--29, 30--54, 55--74,
+75--100), plus an explicit \emph{Needs Human Assessment} state when the system must not score &
+\S\ref{sec:svi} & \yes \\
+R9 & Detect severe trauma indicators & D5 trauma-associated indicators contribute to the index; no
+clinical label is produced & \S\ref{sec:svi} & \partly \\
+R10 & Detect fear, intimidation & D3 fear and intimidation, and the continuing-threat detector, with
+evidence links & Dev/candidate P/R \S\ref{sec:detres} & \yes \\
+R11 & Detect depression & Detected as linguistic indicators only, never named as a condition. The
+output validator blocks any sentence that states a diagnosis & \S\ref{sec:guardrails} & \bydesign \\
+R12 & Detect suicidal ideation & Synchronous crisis pre-check runs before dialogue policy on every
+utterance, tuned recall-first; a match forces state SX, Critical, and a human takeover & Recall
+1.000 on dev fixtures \S\ref{sec:detres}; flow \S\ref{sec:crisisflow} & \yes \\
+R13 & Detect social isolation & D6 isolation, boycott and displacement detector & \S\ref{sec:detres}
+& \yes \\
+R14 & Detect extreme vulnerability & The composite index plus hard overrides: a confirmed immediate
+danger or crisis forces Critical regardless of the weighted sum & \S\ref{sec:svi} & \yes \\
+R15 & Recommend counselling, legal aid, medical, police, witness protection, emergency & Eight
+pathways are generated with rationale and policy citation, each rendered as \emph{awaiting decision}
+until an officer confirms, modifies or rejects it & \S\ref{sec:escalationflow} & \yes \\
+R16 & Support multilingual interaction, major Indian languages and dialects & Hindi, English and
+romanised Hinglish end to end, including code-mixed detection and per-language evaluation slices.
+The 22-language path is a benchmarked roadmap item, not a claim & \S\ref{sec:bench},
+\S\ref{sec:roadmap} & \partly \\
+R17 & Privacy, informed consent, confidentiality & Consent gate before any capture, AI disclosure
+carried in the session response, scoring suppressed entirely when consent is declined, TLS-only
+database, JWT with role-based access, token and JWT redaction in logs, no secrets in the repository
+& \S\ref{sec:privacy}; tests \S\ref{sec:tests} & \yes \\
+R18 & Ethical AI standards & Eight written safety invariants enforced in code and tests; AI
+proposals and human decisions in separate tables; append-only audit log; provisional weights labelled
+in the UI; no clinical claim anywhere & \S\ref{sec:invariants} & \yes \\
+R19 & Channels: NHAA 14566, Integrated Portal, chatbot, IVRS, mobile app & Mobile app and portal chat
+channels implemented against one normalised ingestion interface; telephony and IVRS terminate at a
+documented adapter stub pending departmental approval, an authorised operator and DLT registration &
+\S\ref{sec:arch}; roadmap R1 \S\ref{sec:roadmap} & \partly \\
+R20 & Real time & Per-stage latency budget frozen at under 3\,s victim-stop to assistant-start, with
+assessment on a parallel path that never blocks a reply. Component latencies are measured; the
+end-to-end turn is not yet instrumented & \S\ref{sec:runtimeperf}, \S\ref{sec:notmeasured} &
+\partly \\
+O1 & Early identification of highly distressed victims & Crisis pre-check fires before dialogue
+policy and escalates within the same turn; recall 1.000 on the development fixtures, with one
+critical event still missed overall & \S\ref{sec:detres} & \partly \\
+O2 & Prioritisation of counselling and rehabilitation & Band-ranked live queue, alerts requiring
+acknowledgement, and pathway proposals with citations & \S\ref{sec:escalationflow} & \yes \\
+O3 & Improved victim-centric grievance redressal & The victim tells the account once; a victim-safe
+timeline shows only confirmed officer actions in plain language, never a score & \S\ref{sec:timeline}
+& \yes \\
+O4 & Better allocation of support resources & Structured, evidence-linked case records and decision
+data are stored for analysis; district and state analytics are a roadmap item &
+\S\ref{sec:roadmap} & \partly \\
+O5 & Enhanced responsiveness of the helpline ecosystem & Demonstrated within the prototype
+(queue-to-decision workflow); not measured against live helpline operations, which needs the
+integration in roadmap phase R1 & \S\ref{sec:roadmap} & \defer \\
+\end{longtable}
+
+\noindent\textbf{Scorecard.} Of the 20 solution requirements: 12 are \yes, 5 are \partly, 1 is
+\defer{} and 2 are \bydesign{} positions we will defend rather than change. Of the 5 expected
+outcomes: 2 are \yes, 2 are \partly{} and 1 is \defer{} until real integration.
+
+%======================================================================
+\section{Solution overview}
+\label{sec:solution}
+
+\subsection{The product in three claims}
+\begin{enumerate}
+  \item \textbf{A bounded intake instrument, not a counsellor.} A deterministic state machine
+        chooses one approved intent per turn. A language model may only phrase that intent, and a
+        validator checks the sentence before it is spoken. With the model switched off the system
+        still completes an intake from pre-written fallbacks.
+  \item \textbf{Deterministic, explainable prioritisation.} The SVI is a weighted sum of nine
+        dimensions, each carrying the turn ids that justify it. The officer sees why, not just what.
+        When the evidence is too thin or the input too poor, the system abstains instead of guessing.
+  \item \textbf{A human holds authority, and the record proves it.} Every recommendation is a
+        proposal. Confirm, modify and reject are logged with the officer and the time; band overrides
+        require a written reason; AI and human records live in separate tables.
+\end{enumerate}
+
+\subsection{Who it serves}
+The PS names seven stakeholder groups. Table~\ref{tab:stake} states what each of them gets from the
+prototype as it stands today, rather than what a finished deployment would eventually give them.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Stakeholders named in the PS and what the prototype gives each of them today.}
+\label{tab:stake}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}X@{}}
+\toprule
+Stakeholder & What SAHAY-AI provides in the MVP \\
+\midrule
+The complainant & One telling of their account; an explicit AI disclosure; a persistent
+``talk to a person'' control; a plain-language status timeline; never a score or a label about
+themselves \\
+NHAA 14566 executive & A band-ranked queue, a decision-ready case packet with evidence and
+uncertainty, one-click acknowledgement, confirm/modify/reject, band override with reason, takeover
+and direct messaging \\
+Supervising counsellor & A read-only supervisor view, the audit trail, the guardrail red-team
+results, and a written list of everything the system refuses to do \\
+Department and State/UT administrations & Structured, auditable case data and decision records that
+can support resource allocation once the integration in roadmap phase R1 exists \\
+Law enforcement & Immediate-danger and continuing-threat evidence surfaced with the triggering
+utterances, escalated by a person, never by the machine \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{The eight safety invariants}
+\label{sec:invariants}
+These are written into the repository's own instructions and enforced by tests. They are the reason
+the project can be defended in front of a mental-health panel.
+
+\begin{enumerate}[itemsep=1pt]
+  \item A deterministic state machine chooses one approved intent; a model may only phrase it, and
+        every generated sentence is validated before synthesis, with a pre-written fallback on
+        failure.
+  \item Crisis and self-harm language is detected \emph{before} normal dialogue policy. A match
+        forces state SX, a fixed approved script, Critical priority and immediate human takeover.
+        Intake never resumes automatically.
+  \item Victim clients never receive SVI, band, dimension, emotion, confidence, assessment or alert
+        data. This is enforced server-side and tested.
+  \item A human decides every recommended action; AI recommendations and human decisions live in
+        separate tables and payloads.
+  \item Confirmed immediate danger or crisis overrides the weighted score and forces Critical.
+  \item Low confidence, poor audio or low language confidence returns \code{needs\_human} and no
+        score.
+  \item AI disclosure remains visible and ``talk to a person'' remains available throughout intake.
+  \item No real victim data is used anywhere in the MVP.
+\end{enumerate}
+
+%======================================================================
+\section{Architecture}
+\label{sec:arch}
+
+\subsection{System architecture}
+Figure~\ref{fig:arch} shows the whole system. Two properties matter more than the boxes: the
+\emph{reply path} is synchronous and guarded by the crisis pre-check, and the \emph{assessment path}
+runs in parallel so that no model can make the assistant hesitate. Role filtering happens on the
+server, in one fan-out module, not in any client.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  cli/.style={draw=sahaygreen, rounded corners=2pt, fill=sahaygreen!8, align=center,
+              minimum height=9mm, text width=24mm, inner sep=2pt},
+  box/.style={draw=sahayblue, rounded corners=2pt, fill=sahayblue!6, align=center,
+              minimum height=9mm, text width=24mm, inner sep=2pt},
+  crit/.style={box, draw=sahayred, fill=sahayred!7},
+  store/.style={draw=sahaypurple, rounded corners=2pt, fill=sahaypurple!6, align=center,
+                minimum height=9mm, text width=24mm, inner sep=2pt},
+  shd/.style={box, draw=sahaygray, dashed, fill=sahaygray!7},
+  arr/.style={-{Stealth[length=1.8mm]}, semithick, draw=black!70},
+  darr/.style={arr, dashed, draw=sahaygray},
+  lab/.style={font=\tiny\itshape, text=sahaygray, align=center},
+  zone/.style={font=\tiny\bfseries, text=sahayblue, align=left, anchor=west},
+]
+% clients
+\node[cli] (app)   at (0,0)      {Expo victim app\\(consent, talk, chat,\\timeline)};
+\node[cli] (portal)at (0,-1.6)   {Portal chat\\(text channel)};
+\node[shd] (ivrs)  at (0,-3.2)   {Telephony / IVRS\\adapter stub\\(not connected)};
+% gateway
+\node[box] (gw)    at (3.6,-1.6) {Session gateway\\FastAPI\\(auth, consent,\\turn orchestration)};
+% reply path
+\node[crit](pre)   at (7.2,0)    {Crisis pre-check\\(synchronous)};
+\node[box] (fsm)   at (10.6,0)   {Dialogue FSM\\12 states};
+\node[box] (val)   at (14.0,0)   {LLM phrasing\\+ validator\\+ TTS};
+% assessment path
+\node[box] (det)   at (7.2,-3.0) {Detectors\\D1--D9 + extraction};
+\node[box] (svi)   at (10.6,-3.0){SVI engine\\overrides, abstention};
+\node[box] (pkt)   at (14.0,-3.0){Recommendations\\+ escalation packet};
+% storage and console
+\node[store](db)   at (10.6,-5.2){Supabase PostgreSQL\\15 tables, TLS only};
+\node[cli] (con)   at (14.0,-5.2){Executive console\\queue, packet,\\decisions, audit};
+\node[shd] (shadow)at (7.2,-5.2) {MuRIL shadow model\\(research CLI only)};
+
+\draw[arr] (app.east)    -- (gw.west);
+\draw[arr] (portal.east) -- (gw.west);
+\draw[darr] (ivrs.east)  -- (gw.west);
+\draw[arr] (gw) -- (pre);
+\draw[arr] (pre) -- (fsm);
+\draw[arr] (fsm) -- (val);
+\draw[arr] (val.north) .. controls +(0,0.9) and +(0,0.9) .. node[lab,above]{assistant turn to the victim} (app.north);
+\draw[arr] (gw.south) |- node[lab,below,pos=0.75]{queued, parallel} (det.west);
+\draw[arr] (det) -- (svi);
+\draw[arr] (svi) -- (pkt);
+\draw[arr] (pkt) -- (con);
+\draw[arr] (pkt.south) -- (db.east);
+\draw[arr] (db) -- (con);
+\draw[darr] (det.south) -- (shadow.north);
+\node[lab, text=sahayred] at (10.6,-4.2) {role-filtered fan-out: no score, band, dimension or alert ever reaches a victim client};
+\node[zone] at (-1.3,1.05) {CLIENTS};
+\node[zone] at (5.6,1.05)  {REPLY PATH (synchronous, sub-3\,s budget)};
+\node[zone] at (5.6,-2.0)  {ASSESSMENT PATH (parallel, never blocks a reply)};
+\node[zone, text=sahaygray] at (5.6,-5.9) {RESEARCH ONLY, OUTSIDE THE PRODUCT};
+\end{tikzpicture}
+\caption{SAHAY-AI system architecture. Solid arrows are live paths; dashed arrows are not connected
+in the MVP (telephony) or are research-only (the trained shadow model).}
+\label{fig:arch}
+\end{figure}
+
+\subsection{Runtime and deployment}
+Everything in Table~\ref{tab:runtime} runs on one machine and, apart from the managed database,
+entirely offline. The choices were made so that a later move to departmental infrastructure is a
+configuration change rather than a rewrite: persistence, the assessment runner, retrieval, speech and
+the language model all sit behind adapters with mocks.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Runtime profile of the MVP, as configured in the repository.}
+\label{tab:runtime}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}X@{}}
+\toprule
+Layer & Choice and rationale \\
+\midrule
+API & FastAPI in one process, Pydantic v2 contracts, bound to the LAN so a physical phone can reach it \\
+Database & Supabase PostgreSQL over TLS through SQLAlchemy and Alembic. The configuration layer
+refuses a non-TLS URL, refuses the pooler port, and refuses SQLite outside an explicit test
+environment \\
+Background work & In-process assessment runner; assessment cycles run in a worker thread and are
+drained on shutdown. Redis and RQ remain deferred \\
+Console & React 18, TypeScript, Vite, with a typed mirror of the backend enumerations that a test
+compares against the contract \\
+Victim app & Expo / React Native (SDK 54) with an offline queue, i18n for Hindi and English, and a
+strict event allowlist \\
+Speech and text models & Self-hosted and pinned: Whisper Small converted to CTranslate2, Silero VAD,
+MuRIL as the text encoder, XLM-R for comparison only. All loaded offline, none on the reply path \\
+LLM & Mock adapter by default. The complete dialogue runs with the model disabled \\
+Secrets & Environment only; never committed. Tokens and JWT shapes are redacted from logs \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Data model}
+The schema is deliberately boring, because an auditable record is worth more than a clever one.
+Fifteen tables carry the case: \code{users}, \code{sessions}, \code{consents}, \code{turns},
+\code{cases}, \code{assessments}, \code{alerts}, \code{recommendations}, \code{decisions\_ai},
+\code{decisions\_human}, \code{overrides}, \code{timeline\_events}, \code{audit\_log},
+\code{policy\_chunks} and \code{latency\_metrics}. Four design rules matter:
+
+\begin{itemize}
+  \item \code{decisions\_ai} and \code{decisions\_human} are separate tables, so the record can never
+        read as though a machine decided.
+  \item \code{overrides} is the authoritative store of band overrides and its \code{reason} column is
+        \code{NOT NULL}, enforced again at the endpoint.
+  \item \code{timeline\_events} is the authoritative victim-safe timeline, unique per case and dedupe
+        key, and carries no assessment field.
+  \item \code{audit\_log} is append-only and is an accountability record, not the timeline.
+\end{itemize}
+
+\subsection{The contract surface}
+Interfaces are frozen in a single document that every team builds against, and a test parses that
+document and fails if any copy of the enumerations drifts. The victim event allowlist is the
+safety-critical part:
+\begingroup\raggedright
+\begin{itemize}[itemsep=1pt]
+  \item \textbf{A victim client may receive only} \filepath{assistant.turn},
+        \filepath{transcript.line}, \filepath{session.status}, \filepath{timeline.update} and
+        \filepath{officer.message}.
+  \item \textbf{Executive-only, filtered server-side:} \filepath{dimension.update},
+        \filepath{alert.safety}, \filepath{case.structured},
+        \filepath{action.recommended}, \filepath{safesignal.flag} and
+        \filepath{escalation.packet}.
+\end{itemize}
+\endgroup
+%======================================================================
+\section{Flows}
+\label{sec:flows}
+
+\subsection{The intake conversation}
+The dialogue is a 12-state machine (Figure~\ref{fig:fsm}). States are skippable and reorderable: if
+the free narrative already answered ``who and when'', that state is skipped, because asking a
+distressed person what they just said is the fastest way to lose their trust. The target is 8--12
+turns. The chat channel uses the identical machine; text turns simply skip ASR and TTS.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  st/.style={draw=sahayblue, rounded corners=3pt, fill=sahayblue!7, align=center,
+             minimum height=8mm, text width=20mm, inner sep=2pt},
+  fix/.style={st, draw=sahaygreen, fill=sahaygreen!8},
+  crit/.style={st, draw=sahayred, fill=sahayred!8},
+  hum/.style={st, draw=sahaypurple, fill=sahaypurple!7},
+  arr/.style={-{Stealth[length=1.6mm]}, semithick, draw=black!65},
+  crisisarr/.style={arr, draw=sahayred, thick},
+  lab/.style={font=\tiny\itshape, text=sahaygray, align=center},
+]
+\node[fix] (s0) at (0,0)      {S0 opening\\fixed script};
+\node[st]  (s1) at (2.9,0)    {S1 free\\narrative};
+\node[st]  (s2) at (5.8,0)    {S2 immediate\\safety};
+\node[st]  (s3) at (8.7,0)    {S3 medical\\need};
+\node[st]  (s4) at (11.6,0)   {S4 who and\\when};
+\node[st]  (s5) at (11.6,-1.7){S5 ongoing\\threat};
+\node[st]  (s6) at (8.7,-1.7) {S6 support\\network};
+\node[st]  (s7) at (5.8,-1.7) {S7 existing\\action};
+\node[st]  (s8) at (2.9,-1.7) {S8 what they\\want};
+\node[fix] (s9) at (0,-1.7)   {S9 closing\\fixed script};
+\node[crit, text width=36mm](sx) at (3.2,-4.3)
+  {SX crisis interrupt\\fixed script, Critical,\\human takeover, no resumption};
+\node[hum, text width=30mm] (sh) at (9.6,-4.3) {SH human handoff\\on request or escalation};
+\draw[arr] (s0) -- (s1); \draw[arr] (s1) -- (s2); \draw[arr] (s2) -- (s3);
+\draw[arr] (s3) -- (s4); \draw[arr] (s4) -- (s5); \draw[arr] (s5) -- (s6);
+\draw[arr] (s6) -- (s7); \draw[arr] (s7) -- (s8); \draw[arr] (s8) -- (s9);
+\draw[arr] (s1.north east) .. controls +(0.6,0.8) and +(-0.6,0.8) ..
+  node[lab,above,pos=0.5]{skip a state already answered} (s4.north west);
+\draw[crisisarr] (s2.south) .. controls +(0,-1.6) and +(0.6,1.2) .. (sx.north east);
+\draw[crisisarr] (s8.south west) .. controls +(0,-1.2) and +(-0.4,1.2) .. (sx.north west);
+\node[lab, text=sahayred] at (6.4,-5.75)
+  {SX is reachable unconditionally from any state, and only from the synchronous pre-check};
+\draw[arr, draw=sahaypurple] (s6.south) .. controls +(0,-1.2) and +(0,1.2) .. (sh.north);
+\node[lab, text=sahaypurple, anchor=west] at (11.6,-4.3) {``talk to a person''\\stays available\\throughout};
+\end{tikzpicture}
+\caption{The dialogue state machine. Green states are fixed pre-approved scripts that are never model
+generated; the red state can interrupt from anywhere and never returns to intake.}
+\label{fig:fsm}
+\end{figure}
+
+\subsection{One turn, end to end}
+\label{sec:turnflow}
+Figure~\ref{fig:turn} is the order of operations in \filepath{backend/app/services/turn_loop.py}.
+That order is a safety invariant, not an implementation detail: the crisis pre-check runs before
+dialogue policy, and the validator runs before anything is spoken.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  lifeline/.style={draw=sahaygray!60, dashed},
+  head/.style={draw=sahayblue, fill=sahayblue!8, rounded corners=2pt, align=center,
+               text width=19mm, minimum height=6mm, inner sep=2pt, font=\scriptsize\bfseries},
+  msg/.style={-{Stealth[length=1.6mm]}, semithick, draw=black!70, font=\tiny},
+  note/.style={font=\tiny\itshape, text=sahaygray, align=left},
+]
+\def\lx{0} \def\gx{3.2} \def\px{6.4} \def\dx{9.6} \def\vx{12.8}
+\node[head] (L) at (\lx,0) {Victim client};
+\node[head] (G) at (\gx,0) {Gateway};
+\node[head] (P) at (\px,0) {Crisis\\pre-check};
+\node[head] (D) at (\dx,0) {Dialogue\\FSM};
+\node[head] (V) at (\vx,0) {Phrasing +\\validator};
+\foreach \x in {\lx,\gx,\px,\dx,\vx} { \draw[lifeline] (\x,-0.45) -- (\x,-6.6); }
+\draw[msg] (\lx,-1.0) -- node[above]{utterance (PCM or text)} (\gx,-1.0);
+\draw[msg] (\gx,-1.6) -- node[above]{turn text} (\px,-1.6);
+\draw[msg] (\px,-2.2) -- node[above]{no crisis match} (\dx,-2.2);
+\draw[msg] (\dx,-2.8) -- node[above]{one licensed intent} (\vx,-2.8);
+\draw[msg] (\vx,-3.4) -- node[above]{validated sentence, or fallback} (\gx,-3.4);
+\draw[msg] (\gx,-4.0) -- node[above]{assistant turn + transcript line} (\lx,-4.0);
+\draw[msg, draw=sahayorange] (\gx,-4.9) -- node[above]{turn stored, assessment cycle queued} (\dx,-4.9);
+\node[note, anchor=west] at (\dx+0.2,-5.35) {parallel path:\\detectors, SVI, alerts,\\packet, console events};
+\node[note, anchor=west] at (\lx+0.15,-6.1) {Budget: VAD 700\,ms, ASR 600\,ms, pre-check 50\,ms, policy 10\,ms, phrasing 800\,ms, validator 20\,ms, TTS 500\,ms, total under 3\,s.};
+\end{tikzpicture}
+\caption{One intake turn. The assessment cycle is queued after the reply has already been sent, so a
+slow model can never delay the assistant.}
+\label{fig:turn}
+\end{figure}
+
+\subsection{The crisis interrupt}
+\label{sec:crisisflow}
+This is the flow the project is judged on. It is unconditional, it is not a model decision, and it
+does not resume.
+
+\begin{enumerate}[itemsep=1pt]
+  \item Every utterance, in every state, goes through the synchronous pre-check before dialogue
+        policy. It uses high-recall Hindi, English and romanised Hinglish lexicons with clause-scoped
+        negation and quotation handling, because a false alarm costs an officer thirty seconds and a
+        miss costs far more.
+  \item On a match the session moves to state SX in code. The band is forced to Critical, a crisis
+        alert is raised with \code{requires\_ack}, the case jumps to the top of the queue with an
+        audible cue, and a takeover is requested.
+  \item The assistant speaks only the fixed, pre-approved SX script: it acknowledges, says plainly
+        that a person will speak with them now, and asks them to stay. No advice, no questions, no
+        assessment.
+  \item Intake does not resume. Only a human takeover continues the session.
+  \item \textbf{Fail-closed today:} the SX, S0, S9 and SH scripts are not yet written and reviewed,
+        so the assistant says \emph{nothing} in those states and the event is audited as
+        \code{fixed\_script.unavailable}. Nothing unreviewed is ever spoken to a victim. Writing and
+        review by a counsellor is the outstanding item, tracked in the repository.
+\end{enumerate}
+
+\subsection{The assessment cycle}
+\label{sec:assessflow}
+A cycle is keyed by the case and the number of victim turns heard, so running it twice writes nothing
+the second time. It reads the turns, runs the pure deterministic pipeline in a worker thread,
+persists exactly one assessment row per cycle, updates the case band with its cause, upserts alerts
+(unique per case and type) and recommendations (unique per case and pathway), and publishes
+executive-only events. It never speaks to the victim and never triggers the crisis interrupt.
+
+Human authority is enforced here too: once an officer overrides the band, later cycles keep assessing
+but do not replace the officer's band --- except that a hard safety override still escalates to
+Critical, which always wins.
+
+\subsection{Scoring, overrides and abstention}
+\label{sec:svi}
+The index is a weighted sum over nine dimensions (Table~\ref{tab:svi}), each score on 0--100 and each
+carrying the turn ids that justify it:
+\[
+\mathrm{SVI} \;=\; \frac{\sum_{i \in \text{available}} w_i\, s_i}{\sum_{i \in \text{available}} w_i},
+\qquad
+\text{bands: } 0\text{--}29\ \text{Low},\; 30\text{--}54\ \text{Moderate},\; 55\text{--}74\ \text{High},\; 75\text{--}100\ \text{Critical}.
+\]
+
+\begin{table}[!htbp]
+\centering\small
+\caption{The nine dimensions and their provisional weights, pending an expert calibration study.}
+\label{tab:svi}
+\begin{tabular}{@{}llc@{\hspace{0.6cm}}llc@{}}
+\toprule
+Dim & Meaning & Weight & Dim & Meaning & Weight \\
+\midrule
+D1 & Immediate safety threat & 0.22 & D6 & Isolation, boycott, displacement & 0.08 \\
+D2 & Crisis / self-harm language & 0.18 & D7 & Medical urgency & 0.08 \\
+D3 & Fear, intimidation, threats & 0.13 & D8 & Legal urgency & 0.06 \\
+D4 & Acute distress (acoustic) & 0.12 & D9 & Communication safety & 0.05 \\
+D5 & Trauma-associated indicators & 0.08 & & & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Three behaviours distinguish this from a naive score:
+\begin{itemize}
+  \item \textbf{Hard overrides beat weights.} A confirmed immediate danger or crisis forces Critical
+        regardless of the sum, and the assessment records which override applied.
+  \item \textbf{Structural renormalisation, never zero-filling.} On a typed channel the acoustic
+        dimension has no measurement path at all, so the denominator becomes 0.88 and the console
+        states that D4 was unavailable. D4 is never reported as measured and never set to zero. Poor
+        audio or a runtime failure does \emph{not} renormalise: it abstains.
+  \item \textbf{Abstention is a first-class output.} Aggregate confidence below 0.45, poor audio or
+        low language confidence returns \emph{Needs Human Assessment} with no score anywhere, not in
+        the packet, the queue or the trajectory. Consent declined suppresses scoring entirely.
+\end{itemize}
+
+\subsection{Escalation and the human decision}
+\label{sec:escalationflow}
+Figure~\ref{fig:case} is the case lifecycle. Every transition is a human action except the first.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[
+  font=\scriptsize,
+  st/.style={draw=sahayblue, rounded corners=3pt, fill=sahayblue!7, align=center,
+             minimum height=8mm, text width=22mm, inner sep=2pt},
+  act/.style={draw=sahaygreen, rounded corners=2pt, fill=sahaygreen!8, align=center,
+              minimum height=7mm, text width=26mm, inner sep=2pt, font=\tiny},
+  arr/.style={-{Stealth[length=1.6mm]}, semithick, draw=black!65},
+  lab/.style={font=\tiny\itshape, text=sahaygray, align=center},
+]
+\node[st] (open)  at (0,0)    {\code{open}\\in the queue};
+\node[st] (clm)   at (4.2,0)  {\code{claimed}\\by one officer};
+\node[st] (tko)   at (8.4,0)  {\code{taken\_over}\\assistant muted};
+\node[st] (cls)   at (12.6,0) {\code{closed}};
+\draw[arr] (open) -- node[lab,above]{claim} (clm);
+\draw[arr] (clm) -- node[lab,above]{takeover} (tko);
+\draw[arr] (tko) -- node[lab,above]{close} (cls);
+\node[act] (a1) at (0,-1.7)   {alert acknowledged\\(idempotent, audited)};
+\node[act] (a2) at (4.2,-1.7) {confirm / modify / reject\\each recommendation};
+\node[act] (a3) at (8.4,-1.7) {band override\\reason mandatory};
+\node[act] (a4) at (12.6,-1.7){officer message\\to the complainant};
+\draw[arr] (clm.south) -- (a1.north east);
+\draw[arr] (clm.south) -- (a2.north);
+\draw[arr] (clm.south) -- (a3.north west);
+\draw[arr] (tko.south) -- (a4.north west);
+\node[act, text width=40mm, draw=sahaypurple, fill=sahaypurple!7] (tl) at (6.3,-3.4)
+  {victim-safe timeline: request received, under review, officer assigned, action taken,
+   follow-up scheduled, closed --- plain language, no pathway, no score};
+\draw[arr, draw=sahaypurple] (a2.south) -- (tl.north east);
+\draw[arr, draw=sahaypurple] (a4.south) -- (tl.north east);
+\node[lab] at (6.3,-4.3) {only a human confirm or modify adds the ``action taken'' step};
+\end{tikzpicture}
+\caption{Case lifecycle and the officer actions attached to each state. Every write is
+executive-only; a supervisor token is read-only and gets 403.}
+\label{fig:case}
+\end{figure}
+
+The packet the officer opens has ten sections: header, assessment summary with the dimension
+breakdown and confidence, safety alerts requiring acknowledgement, the structured case record with
+every field linked to its source utterance, the full two-sided transcript, the evidence panel, the
+SVI trajectory, recommended pathways with rationale and policy citation, an uncertainty block with
+equal prominence to the score, and the decision area. The target is a decision in under 90 seconds
+without listening to a recording.
+
+\subsection{What the complainant sees}
+\label{sec:timeline}
+The victim surface is deliberately thin: language choice, consent with AI disclosure, talk or chat,
+and a status timeline. The timeline contains no assessment field, and an automated test asserts the
+response contains none of \code{svi}, \code{band}, \code{dimension}, \code{alert} or
+\code{confidence}. Labels are process facts in plain language --- ``an officer has taken action on
+your request'' --- never ``counselling pathway initiated'', and never the band.
+
+\subsection{Degraded and edge flows}
+A triage system is judged on what it does when something breaks, so the degraded paths are
+implemented and tested rather than documented as future work (Table~\ref{tab:degraded}).
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Behaviour when something goes wrong. Each row is implemented and covered by tests.}
+\label{tab:degraded}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.8cm}X@{}}
+\toprule
+Situation & Behaviour \\
+\midrule
+Consent declined & The text is kept for a person to read; no AI analysis runs at all: no score, no
+alerts from the pipeline, no recommendations \\
+Model or LLM unavailable & The intake completes from pre-written per-intent fallbacks in both
+languages; the LLM-off walk is part of the evaluation and passes \\
+Fixed script not yet approved & The assistant stays silent in that state and the event is audited;
+nothing unreviewed is spoken \\
+Poor or unreadable input & Abstention: \emph{Needs Human Assessment}, no score published anywhere \\
+Network loss on the phone & The victim app queues turns and resumes from the last acknowledged
+sequence number; the server de-duplicates \\
+Repeated processing of a turn & Idempotency keys on turns, assessments, alerts, recommendations,
+timeline events and acknowledgements mean a replay writes nothing new \\
+Shadow model fires, errors, hangs or returns rubbish & The deterministic output is unchanged: proved
+across 60 records under seven fault conditions with zero mismatches \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%======================================================================
+\section{Technical approach and why}
+\label{sec:approach}
+
+\subsection{Why a deterministic machine phrases through a model, not the reverse}
+\label{sec:guardrails}
+A free-form assistant talking to trauma victims fails in ways that are obvious in hindsight: it gives
+legal advice, promises an arrest, asks for forensic detail, or comforts with ``don't worry''. Our
+design makes those outcomes structurally impossible rather than statistically unlikely. The state
+machine picks the intent; the model may only rephrase it; a validator with ten checks (length,
+unlicensed question, advice, promise, diagnosis, banned comfort, detail-seeking, blame, language,
+disclosure) runs before synthesis, and a rejection falls back to pre-written text. The rejection rate
+itself is a tracked metric.
+
+\subsection{Why a transparent weighted index, not a learned score}
+\label{sec:whyindex}
+An officer must be able to see why a case is Critical, and a supervisor must be able to audit it. A
+weighted sum over nine evidence-linked dimensions gives that for free, is calibratable by experts
+later, and abstains cleanly. A learned regressor trained on fictional data would be unexplainable,
+uncalibrated, and impossible to defend without outcome data from real triage. Our own experiment
+supports this choice: the trained model we did build underperformed the deterministic pipeline on the
+exposed fixtures (Section~\ref{sec:shadow}).
+
+\subsection{Why MuRIL for text}
+\label{sec:whymuril}
+Helpline text is code-mixed and frequently romanised. MuRIL is pre-trained on Indian-language text
+with transliterated pairs and reports a large advantage exactly there: 48.9 against mBERT's 21.1 on
+transliterated test sets, and 68.6 against 59.1 on native-script sets~\cite{khanuja2021}. Our own
+measurement agrees on efficiency: the pinned MuRIL tokeniser needs 0.246 tokens per character on
+Hindi against XLM-R's 0.319, and 0.259 against 0.294 on Hinglish, with a zero unknown-token rate.
+That is roughly 23\% fewer tokens per Hindi character, which is 23\% more context inside the same
+128-token window.
+
+\subsection{Why VAD gates the speech model}
+\label{sec:whyvad}
+During qualification, Whisper Small produced fluent Hindi text from five seconds of \emph{silence}
+(median 186 characters) and from a pure tone (148 characters) when forced to decode. On a helpline,
+hallucinated text is not a quality problem, it is a safety problem. So Silero VAD is an enforced
+precondition in code: the transcribe method has no default for its speech intervals, validates every
+interval before decoding, decodes only the audio inside accepted intervals, and skips the model
+entirely when no speech is found. An unguarded path exists only inside the benchmark module and is
+statically fenced by a test.
+
+\subsection{Why the acoustic dimension is empty today}
+\label{sec:d4}
+The PS asks for pitch variation and emotional indicators, and the literature supports that acoustic
+features carry trauma-relevant signal~\cite{hu2024,islam2024}. We nevertheless ship D4 as
+\emph{structurally unavailable}, because no approved acoustic corpus exists: the local CREMA-D copy
+is entirely Git LFS pointers, and RAVDESS and Common Voice Hindi are not approved. Rather than
+estimate distress from an unvalidated feature set, the index renormalises and the console says D4 was
+not measured. The published evidence also argues for caution about severity from voice: the best
+available speech-based PTSD study explains about a tenth of the variance in symptom severity
+($R^2 = 0.10$) even with clinical recordings~\cite{hu2024}.
+
+\subsection{The source-label firewall}
+\label{sec:firewall}
+Public corpora label other things: subreddit of origin, stress, sentiment, hate speech, emotion. None
+of these is a SAHAY safety label, and the repository refuses every automatic mapping from one to the
+other --- stress is not crisis, a non-suicide subreddit label is not ``safe'', hate speech is not
+continuing threat, emotion is not acoustic distress, and no source label may ever become an SVI, a
+band or a routing decision. This is why the project can use public data for research without
+laundering it into safety ground truth.
+
+\subsection{Privacy, security and DPDP posture}
+\label{sec:privacy}
+Consent precedes capture, and declining it suppresses scoring entirely. All speech and NLP run
+locally, so no victim audio leaves the deployment. The database layer refuses a non-TLS connection.
+Access is JWT with role-based authorisation, and a victim session token is scoped to its own session
+and rejected by every console route. Logs redact tokens and JWT shapes, validation errors never echo
+the submitted text, and a 500 never returns a stack trace or case text. Against the Digital Personal
+Data Protection Act 2023 and its 2025 Rules~\cite{meity2023}, the design already implements notice
+and consent, purpose limitation (the victim client cannot receive assessment data), local processing,
+and retention separation between audio and derived case data; breach processes, a consent-manager
+integration and a formal lawful-basis assessment are production work, listed in
+Section~\ref{sec:roadmap}.
+%======================================================================
+\section{Evidence: what we measured}
+\label{sec:evidence}
+
+\subsection{Code and test inventory}
+\label{sec:tests}
+Measured on \code{dev} at \code{ccb1724} on 17 September 2026, by running each suite.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Code size and automated test results. The two ML failures are explained below.}
+\label{tab:tests}
+\begin{tabular}{@{}lrrrl@{}}
+\toprule
+Area & Source lines & Tests & Result & Runner \\
+\midrule
+ML pipeline and evaluation & 20{,}624 & 829 & 827 pass, 2 fail & pytest \\
+\quad of which local model runtime & 2{,}145 & --- & --- & --- \\
+ML test code & 8{,}382 & --- & --- & --- \\
+Backend application & 3{,}813 & 173 & all pass & pytest \\
+Executive console & 3{,}532 & 57 & all pass & vitest \\
+Victim app & 3{,}113 & 194 & all pass & node --test \\
+\midrule
+\textbf{Total} & \textbf{31{,}082} & \textbf{1{,}253} & \textbf{1{,}251 pass} & \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[sahay, xbar, width=0.78\linewidth, height=4.4cm,
+  xlabel={Automated tests}, xmin=0, xmax=960,
+  symbolic y coords={Victim app,Console,Backend,ML}, ytick=data,
+  nodes near coords, nodes near coords style={font=\tiny},
+  enlarge y limits=0.22, bar width=10pt]
+\addplot[fill=sahayblue!70, draw=sahayblue] coordinates {(827,ML) (173,Backend) (57,Console) (194,Victim app)};
+\addplot[fill=sahayred!60, draw=sahayred] coordinates {(2,ML) (0,Backend) (0,Console) (0,Victim app)};
+\legend{Passing, Failing}
+\end{axis}
+\end{tikzpicture}
+\caption{Test distribution across the four suites.}
+\label{fig:tests}
+\end{figure}
+
+\noindent\textbf{The two failures are an environment artefact, and we say so rather than hiding
+them.} Both are repository-scanning \emph{invariant} tests: one asserts that no pipeline module
+imports an archive library, the other that only the benchmark module references the unguarded
+decoder. They walk every \code{*.py} under \code{ml/} and now also walk \code{ml/.venv}, so they
+match vendored code inside \code{pip} rather than project code. The fix is one line --- exclude the
+virtual environment from the scan --- and the invariants themselves still hold for project code.
+
+\noindent The safety-critical suites deserve naming, because they are what makes the invariants real:
+role-filtered fan-out, consent gating, victim timeline leakage, contract mirroring between backend,
+console and mobile, vertical-slice authorisation (a session token is rejected on every console
+route), reliability and idempotency, PostgreSQL configuration hardening, and, on the ML side, purity
+of the three standard-library modules, guardrail red-team coverage and shadow-model isolation.
+
+\subsection{Deterministic pipeline results}
+\label{sec:detres}
+The evaluation harness is offline, deterministic and uses no model, no network and no LLM. Corpora
+are fictional: 57 development fixtures (tuning allowed), 48 candidate fixtures (never tuned on, every
+outcome published), 39 guardrail red-team cases, and a \textbf{locked set that is still empty}.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Headline safety metrics before and after the hardening round. Candidate numbers after
+hardening are regression numbers, because those failures were read while designing the fixes.}
+\label{tab:dethard}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+& \multicolumn{2}{c}{Baseline} & \multicolumn{2}{c}{After hardening} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-5}
+Metric & Dev (57) & Candidate (48) & Dev (57) & Candidate (48) \\
+\midrule
+Critical misses / critical events & 1/17 & 4/14 & 1/17 & 1/14 \\
+\quad Wilson 95\% CI of the miss rate & 0.010--0.270 & 0.117--0.547 & 0.010--0.270 & 0.013--0.315 \\
+False escalations & 2 & 2 & 2 & 2 \\
+Crisis pre-check precision / recall & 0.636 / 1.000 & 0.714 / 0.556 & 0.636 / 1.000 & 0.800 / 0.889 \\
+Evidence validity (cited turns real) & 1.000 & 1.000 & 1.000 & 1.000 \\
+Guardrail red-team (39 cases) & \multicolumn{2}{c}{20/39 pass} & \multicolumn{2}{c}{39/39 pass} \\
+Author-written near-miss / leakage cases & \multicolumn{2}{c}{---} & \multicolumn{2}{c}{75/75 and 29/29 pass} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Per-detector precision, recall and F1 at baseline. Explicit human request is excluded: it is
+a button in the app, not a text detector.}
+\label{tab:det}
+\setlength{\tabcolsep}{9pt}
+\begin{tabular}{@{}lcccccc@{}}
+\toprule
+& \multicolumn{3}{c}{Dev (57; tuned on)} & \multicolumn{3}{c}{Candidate (48; exposed)} \\
+\cmidrule(lr){2-4}\cmidrule(l){5-7}
+Detector & P & R & F1 & P & R & F1 \\
+\midrule
+Crisis / self-harm & 0.636 & 1.000 & 0.778 & 0.714 & 0.556 & 0.625 \\
+Immediate danger & 1.000 & 0.875 & 0.933 & 1.000 & 1.000 & 1.000 \\
+Continuing threat & 1.000 & 0.800 & 0.889 & 1.000 & 0.917 & 0.957 \\
+Medical urgency & 1.000 & 1.000 & 1.000 & 1.000 & 0.667 & 0.800 \\
+Isolation / boycott / displacement & 1.000 & 0.800 & 0.889 & 1.000 & 0.500 & 0.667 \\
+Legal urgency & 1.000 & 1.000 & 1.000 & 1.000 & 0.857 & 0.923 \\
+Coercion (communication safety) & 1.000 & 0.857 & 0.923 & 1.000 & 0.400 & 0.571 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent Reading this honestly: precision is near perfect, recall is the weakness, and the
+weaknesses cluster in coercion, isolation and paraphrased crisis wording. Two critical misses and
+four false escalations remain, all of the latter caused by crisis wording that is quoted or
+attributed to someone else. The MVP's own headline target --- zero critical misses on the scripted
+corpus --- is \textbf{not met}, and we would rather say that than quote a favourable slice.
+
+\noindent The reproducibility checks all pass: two runs identical, ten multi-turn replays consistent,
+the LLM-off walk completing with all sixteen fallbacks validated, zero network attempts, no schema
+errors, no split overlap and no identifying-data hits.
+
+\subsection{The trained model, and why it is not in the product}
+\label{sec:shadow}
+The team trained one model: an eight-label multilingual classifier on a domain-adapted MuRIL encoder,
+supervised only on fictional template-generated records. Domain adaptation worked as language
+modelling (held-out masked-language perplexity 11.95 to 6.17). The classifier did not earn its way
+into the product:
+
+\begin{itemize}
+  \item On the frozen synthetic holdout the hardened checkpoint reached crisis recall 1.00 in all
+        three languages, but missed its pre-registered macro-F1 gate (0.675 against 0.70), collapsed
+        continuing-threat recall to 0.11, and could not be evaluated at all on three labels that had
+        no positive holdout support.
+  \item On the published fixtures it was \emph{worse} than the deterministic pipeline: micro-F1 0.56
+        against 0.91 on dev over the seven shared labels.
+  \item Deterministic invariance was verified: 60 records under seven shadow conditions (real model,
+        always fires, silent, error, timeout, malformed, missing) produced identical deterministic
+        output, zero mismatches.
+\end{itemize}
+
+\noindent Status: \code{rejected\_for\_product\_integration}, research CLI only, with human review of
+the corpus still pending. A separate report covers this experiment in detail. The important point for
+this deck is the governance: the gates were fixed before training, the holdout was evaluated once,
+undefined metrics were reported as undefined rather than zero-filled, and a disappointing model was
+allowed to fail rather than be promoted.
+
+\subsection{Runtime performance}
+\label{sec:runtimeperf}
+Measured on the demo laptop (RTX 4060, 8~GB) with sockets blocked. These are latency and memory
+numbers on fictional text and synthetic signals; none of them is a quality measurement.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Measured runtime behaviour of the local model stack.}
+\label{tab:perf}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.4cm}X@{}}
+\toprule
+Component & Measurement \\
+\midrule
+MuRIL text encoder (fp16) & Cold load 7.8\,s. Encode p50 at 128 tokens: 17.8\,ms English, 14.8\,ms
+Hindi, 16.3\,ms Hinglish; 327--397 samples/s at batch 8; peak 504\,MB \\
+XLM-R (comparison only) & Cold load 4.2\,s; 15.9--19.0\,ms p50 at 128 tokens \\
+Whisper Small via CTranslate2 & Cold load 1.1\,s; real-time factor 0.08--0.47 on synthetic
+speech-like signals; Hindi decoding is roughly constant at 2.35\,s regardless of clip length on
+non-speech, which is consistent with decoding to a length limit \\
+Silero VAD (CPU) & About 20\,ms per second of audio: 98\,ms for 5\,s, 595\,ms for 30\,s, 1{,}186\,ms
+for 60\,s \\
+Gated pipeline on silence & 0 speech intervals, the speech model is never invoked, 225\,ms total \\
+Unguarded worst case (benchmark only) & 5\,s of silence produced a median 186 characters of fluent
+Hindi text; a pure tone produced 148. This is the failure the gate exists to prevent \\
+Coexistence & Text encoder and speech model resident together: 1{,}102\,MB used, 5{,}950\,MB free \\
+Deterministic text pipeline & 100--600 records per second, single-threaded, no GPU \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What we have deliberately not measured}
+\label{sec:notmeasured}
+This list is part of the submission, not an omission from it.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Known measurement gaps, each with the gate that unblocks it. None of these is claimed as
+working in the MVP.}
+\label{tab:gaps}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.4cm}X@{}}
+\toprule
+Gap & What unblocks it \\
+\midrule
+Speech recognition accuracy (WER/CER) for Hindi, English and Hinglish & Approval and download of an
+evaluation corpus (Common Voice Hindi is proposed, not approved) plus our own transcribed scenario
+recordings \\
+Acoustic distress, dimension D4 & An approved acoustic corpus and a validation study; until then D4
+stays structurally unavailable rather than estimated \\
+End-to-end turn latency (the under-3\,s claim) & Instrumenting the turn loop on the demo machine
+with a real microphone; the per-stage budget exists, the end-to-end measurement does not \\
+Official detector metrics & Human authoring and double review of a blind corpus; the harness refuses
+to run until a corpus is frozen, and the locked count is 0 \\
+Fixed scripts S0, S9, SX, SH & Writing in Hindi and English, review by a counsellor or psychology
+faculty member, and pre-synthesis. The system fails closed until then \\
+Real-world triage quality & Requires the governed dataset and calibration study in roadmap phase R3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%======================================================================
+\section{Comparison against benchmarks}
+\label{sec:bench}
+
+\subsection{Why an honest comparison is mostly a gap analysis}
+There is no public benchmark for ``multilingual safety triage of helpline intake with evidence links
+and abstention''. The nearest published tasks differ in language, modality, label definition and
+population. So this section does two things: it states the best published numbers on the adjacent
+tasks, and it states what we have and have not measured against them. Anyone who presents a single
+headline accuracy for this problem is comparing incomparable things.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Adjacent published benchmarks and our position against each. ``Comparable?'' is the honest
+answer, not a hedge.}
+\label{tab:benchtable}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.1cm}>{\raggedright\arraybackslash}p{4.3cm}>{\raggedright\arraybackslash}p{3.5cm}X@{}}
+\toprule
+Task & Best published figure & SAHAY-AI today & Comparable? \\
+\midrule
+Hindi ASR (WER) & IndicWhisper: 13.6 average across seven Hindi benchmarks, best 7.6 (IndicTTS),
+worst 26.8 (Gramvaani)~\cite{vistaar}; IndicConformer-600M: 13.2 on a Hindi
+benchmark~\cite{indicconformer} & \textbf{Not measured.} Whisper Small runs VAD-gated with measured
+latency only & No. This is a real gap; see roadmap R2 \\
+Suicidal-ideation detection on Reddit & Reported F1 roughly 93--99\% for transformer
+classifiers~\cite{suicidereview,suiciderobertas} & Auxiliary research head: 0.900 micro-F1 on 3{,}000
+held-out windows & Weakly. Different split protocol, windowed input, capped training, and it is a
+diagnostic, never a safety label \\
+Stress detection (Dreaddit) & BERT-base 0.8065 F1; best classical 0.7980; majority baseline
+0.6808~\cite{dreaddit} & Auxiliary research head: 0.657 micro-F1 on 108 held-out windows & Weakly,
+and we are \emph{below} the published baseline, on 860 training windows \\
+Multilingual encoders on Indian languages & MuRIL 68.6 vs mBERT 59.1 native; 48.9 vs 21.1
+transliterated~\cite{khanuja2021} & We adopt MuRIL on that evidence and measured a 23\% tokenisation
+advantage over XLM-R on Hindi & Yes, as a model-selection rationale \\
+Hindi emotion in counselling dialogue & EmoInHindi: Fleiss' kappa 0.84 for emotion and 0.88 for
+intensity, with contextual transformer baselines~\cite{singh2022} & Auxiliary head only: 0.667
+micro-F1, 0.355 macro-F1, and 7 of 17 labels never predicted & No, and deliberately so: emotion
+labels are firewalled from safety labels \\
+Speech-based PTSD screening & Accuracy 0.975 and AUC 1.0 on 76 patients and 60 controls; severity
+$R^2 = 0.10$~\cite{hu2024}; 91\% emotion and 89\% PTSD on acted speech~\cite{islam2024} & Not
+attempted. We detect indicators, never a diagnosis & No, and by design \\
+Safety triage with abstention and evidence links & \textbf{No public benchmark exists} & Critical
+miss 1/17 dev and 1/14 candidate; red-team 39/39; evidence validity 1.000 & The benchmark has to be
+built; see \S\ref{sec:buildbench} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[sahay, ybar, bar width=13pt, width=0.86\linewidth, height=5.4cm,
+  ymin=0, ymax=1.12, ylabel={F1 (higher is better)},
+  symbolic x coords={suicide,stress,emotion}, xtick=data,
+  xticklabels={Suicidal ideation (Reddit), Stress (Dreaddit), Emotion (EmoInHindi)},
+  x tick label style={font=\scriptsize, align=center, text width=3.2cm},
+  enlarge x limits=0.3,
+  nodes near coords={\pgfmathprintnumber[fixed,fixed zerofill,precision=2]{\pgfplotspointmeta}},
+  nodes near coords style={font=\tiny},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=2}]
+\addplot[fill=sahaygray!55, draw=sahaygray] coordinates {(suicide,0.93) (stress,0.8065) (emotion,0.55)};
+\addplot[fill=sahayblue!75, draw=sahayblue] coordinates {(suicide,0.900) (stress,0.657) (emotion,0.667)};
+\legend{Published reference, SAHAY-AI auxiliary research head}
+\end{axis}
+\end{tikzpicture}
+\caption{Auxiliary research heads against published references on the same datasets. These are
+\emph{not} SAHAY safety metrics: they are diagnostics of what the adapted encoder represents, trained
+with capped data, and the EmoInHindi published bar is indicative only because that paper reports
+Hamming loss and Jaccard index rather than a comparable F1.}
+\label{fig:benchbars}
+\end{figure}
+
+\subsection{The ASR gap, stated plainly}
+Published systems reach roughly 13 WER on Hindi across mixed benchmarks, with much worse numbers on
+telephone-quality, spontaneous speech (26.8 on Gramvaani)~\cite{vistaar}. That last figure is the one
+a helpline should care about, because it is the closest condition to a distressed caller on a poor
+mobile connection. We have not measured our own WER at all. Two consequences follow, and both are in
+the design: the deterministic detectors run on text and therefore inherit every transcription error,
+and the system abstains when language confidence is low rather than scoring a garbled transcript.
+
+\subsection{The benchmark this problem actually needs}
+\label{sec:buildbench}
+For triage of atrocity-helpline intake, the metric that matters is not accuracy: it is the
+\textbf{critical-event miss rate} with its confidence interval, alongside the false-escalation rate
+an officer can tolerate. No public dataset supports that measurement in Hindi, English and Hinglish.
+The repository therefore contains the machinery to create one --- authoring and reviewer
+instructions, a freeze-and-hash protocol, a post-freeze measurement path that refuses to run until a
+corpus is frozen, and a rule that the first run on a corpus exposes it permanently. Building that
+corpus with human authors and two-reviewer adjudication for crisis samples is the single most
+valuable thing this project can do next, and it is the pre-condition for any claim of accuracy at all.
+%======================================================================
+\section{Feasibility}
+\label{sec:feasibility}
+
+\subsection{Technical feasibility: it already runs}
+The strongest feasibility argument is that the vertical slice exists and its safety properties are
+under test. Beyond that, the resource measurements say the workload is small:
+
+\begin{itemize}
+  \item \textbf{One consumer GPU carries the model stack.} The text encoder and the speech model
+        loaded together use 1{,}102~MB and leave 5{,}950~MB free on an 8~GB laptop GPU. Nothing in
+        the MVP needs a data-centre accelerator.
+  \item \textbf{The text path is nearly free.} The deterministic pipeline processes 100--600 records
+        per second on one CPU thread, with no model at all. Text triage therefore scales with
+        ordinary web capacity, not with GPU capacity.
+  \item \textbf{Speech is the only real cost.} At a conservative real-time factor of 0.3 on true
+        speech, one GPU sustains roughly three concurrent voice streams in real time, and more with
+        batching; the encoder adds about 17~ms per turn. This is arithmetic from measured components,
+        not a load test, and it is stated as such.
+  \item \textbf{Training is small.} Domain adaptation took one hour on the same laptop
+        (9{,}913 optimiser steps, 3{,}606~s). No cloud training was used or needed.
+\end{itemize}
+
+\subsection{Operational feasibility}
+The officer workflow was designed backwards from the constraint that matters: an executive handles
+40--60 contacts a shift and is accountable for every decision. The packet therefore leads with the
+band and reference, keeps the uncertainty block at equal prominence to the score, links every
+structured field to the utterance that produced it, and makes acknowledgement, confirm, modify,
+reject, override and takeover single actions. The deployment model also fits the existing NHAA
+concept of operations: the helpline already issues a docket number per complaint and lets
+complainants track status~\cite{pib2021}, which is exactly what the victim-safe timeline mirrors.
+
+\subsection{Data feasibility, stated without varnish}
+Data, not model capacity, is this project's binding constraint. Table~\ref{tab:datafeas} separates
+what we may use today from what is merely present on the machine.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Data the project can and cannot use today.}
+\label{tab:datafeas}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.2cm}X@{}}
+\toprule
+Category & Position \\
+\midrule
+Real victim data & Never used, and out of scope for the MVP by invariant. Any future use is a
+governed activity needing a lawful basis, de-identification and expert annotation \\
+Fictional scenario corpora & The basis of every published number here: 57 dev, 48 candidate and 39
+red-team fixtures, plus template-generated training corpora for the research model \\
+Public research corpora & Present locally for research only, all \code{licence\_pending}: their
+licensing and privacy review is unresolved, they may contain authentic personal narratives, and
+redaction cannot catch names or contextual identifiers \\
+Approved models & MuRIL (Apache-2.0), XLM-R (MIT), Whisper Small (Apache-2.0), Silero VAD (MIT), all
+pinned by revision and run offline \\
+Not approved & Common Voice Hindi, RAVDESS, CREMA-D, IEMOCAP, DAIC-WOZ, policy PDFs and any external
+LLM API. Each has a recorded decision entry and a fallback \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Risks and mitigations}
+The risks below are ordered by what they would cost if they happened, not by how likely they are.
+Each mitigation named in Table~\ref{tab:risks} exists in the repository today.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{The risks that actually threaten this project, with what we have already done about each.}
+\label{tab:risks}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.6cm}>{\raggedright\arraybackslash}p{1.6cm}X@{}}
+\toprule
+Risk & Severity & Mitigation in place \\
+\midrule
+The assistant says something harmful to a victim & Project-ending & Bounded intent set; ten-check
+validator before synthesis; fixed scripts that fail closed; red-team suite at 39/39; counsellor review
+required before any script is spoken \\
+A crisis utterance is missed & Severe & Recall-first synchronous pre-check in three languages, with
+negation and quotation handling; measured miss rate reported with its confidence interval; every
+missed fixture listed by id in the report \\
+Assessment data leaks to the victim client & Severe, ethical & Server-side allowlist and role fan-out,
+with tests on the backend and mirrored tests in the app; the timeline response is asserted free of
+assessment fields \\
+A model silently changes a safety decision & Severe & The trained model is shadow-only and rejected;
+invariance verified under seven fault modes with zero mismatches; no application module may import the
+model runtime \\
+Transcription errors drive a wrong score & High & Abstention on low language confidence; VAD gating to
+stop hallucinated text; WER measurement scheduled before any voice claim \\
+Automation bias: officers rubber-stamp AI proposals & High & Recommendations render as awaiting
+decision; overrides require a written reason; AI and human records separate; acceptance-rate auditing
+is a roadmap item \\
+Unresolved dataset licensing & Medium, legal & Everything stays quarantined and out of the product;
+derived checkpoints are quarantined if a review refuses a dataset \\
+Demo failure on the day & Medium & Everything runs offline on one machine; the LLM-off path is tested;
+disposable seeded database; the scenario runner replays the whole slice deterministically \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%======================================================================
+\section{Viability}
+\label{sec:viability}
+
+\subsection{Cost structure}
+The architecture was chosen so that the running cost of an assessment is essentially the cost of the
+hardware it runs on:
+
+\begin{itemize}
+  \item \textbf{No per-request model cost.} Speech recognition, voice activity detection and text
+        encoding are self-hosted. The language model used for phrasing is optional and has a mock;
+        the complete intake runs with it disabled, so an external API is an enhancement, not a
+        dependency.
+  \item \textbf{Licences permit government deployment.} MuRIL and Whisper are Apache-2.0; XLM-R,
+        Silero VAD and IndicConformer are MIT. There is no per-seat or per-minute licence to
+        negotiate.
+  \item \textbf{Hardware is modest.} A single GPU workstation carries the model stack; the text-only
+        channels need no GPU at all.
+  \item \textbf{Data stays in the deployment.} No third party receives victim audio or text, which
+        removes both a recurring cost and a class of legal risk.
+\end{itemize}
+
+\subsection{Why the design stays viable as it scales}
+The expensive part of triage is voice, and the cheap part is text. Because the reply path and the
+assessment path are separate, and because the assessment path is a pure function over turns, capacity
+can be added by running more assessment workers without touching the conversational loop. The
+provider interfaces --- storage, assessment runner, retrieval, ASR, TTS and the language model --- are
+adapters with mocks, so replacing the local runner with a queue, or SQLite-in-tests with managed
+PostgreSQL (already done), does not disturb the safety-critical modules, which remain standard-library
+only and dependency-free.
+
+\subsection{What would make it non-viable}
+Three things, and all three are outside engineering: failure to obtain clinical governance sign-off
+for the dialogue scripts and crisis protocol; failure to establish a lawful basis and governed
+dataset for any real-data work; and an operational decision to let the system act without a human in
+the loop, which would break the invariant the whole design rests on. We would rather the project stop
+than ship any of those.
+
+%======================================================================
+\section{Post-MVP roadmap}
+\label{sec:roadmap}
+
+This roadmap is about \textbf{integration and scale}, not about finishing the MVP. Items that
+complete the MVP itself --- writing and reviewing the fixed scripts, measuring WER, building the blind
+corpus, instrumenting end-to-end latency --- are listed separately in Table~\ref{tab:gaps} and are
+pre-launch work, not roadmap.
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}[font=\scriptsize]
+\definecolor{ph1}{HTML}{1F4E79}\definecolor{ph2}{HTML}{2E7D32}
+\definecolor{ph3}{HTML}{D97706}\definecolor{ph4}{HTML}{6A3D9A}
+\draw[sahaygray!50] (0,0.4) -- (15.2,0.4);
+\foreach \x/\l in {0/M0, 3.8/M3, 7.6/M9, 11.4/M12, 15.2/M18} {
+  \draw[sahaygray!50] (\x,0.3) -- (\x,0.5);
+  \node[font=\tiny, text=sahaygray] at (\x,0.75) {\l};
+}
+\fill[ph1!80, rounded corners=2pt] (0,-0.3) rectangle (4.6,0.15);
+\node[white, font=\tiny\bfseries] at (2.3,-0.08) {R1 channel integration};
+\fill[ph2!80, rounded corners=2pt] (3.8,-1.0) rectangle (9.5,-0.55);
+\node[white, font=\tiny\bfseries] at (6.65,-0.78) {R2 language and voice scale-out};
+\fill[ph3!85, rounded corners=2pt] (5.7,-1.7) rectangle (12.2,-1.25);
+\node[white, font=\tiny\bfseries] at (8.95,-1.48) {R3 calibration, clinical governance, governed data};
+\fill[ph4!80, rounded corners=2pt] (9.5,-2.4) rectangle (15.2,-1.95);
+\node[white, font=\tiny\bfseries] at (12.35,-2.18) {R4 analytics, monitoring, follow-up};
+\node[font=\tiny\itshape, text=sahaygray, anchor=west] at (0,-2.9)
+  {Months after MVP acceptance. Each phase has an entry gate; none starts before its approval exists.};
+\end{tikzpicture}
+\caption{Post-MVP roadmap phases. Overlaps are deliberate: language roll-out and calibration proceed
+in parallel once the channel integration is live.}
+\label{fig:roadmap}
+\end{figure}
+
+\subsection{R1 --- Real channel integration with NHAA 14566 and the Integrated Portal}
+The MVP already terminates every channel at one normalised ingestion interface and ships a documented
+telephony adapter stub, so this phase is integration work rather than redesign.
+
+\begin{itemize}
+  \item \textbf{Live 14566 telephony and IVRS.} Connect through a licensed telecom operator with DLT
+        registration, with the IVRS menu handing a caller into the same bounded intake. Entry gate:
+        departmental approval, authorised operator, and a signed data-flow description.
+  \item \textbf{Integrated Portal and chatbot ingestion.} Accept portal and chatbot conversations
+        against the same interface, and return the docket reference the portal already issues, so the
+        complainant sees one identity across channels.
+  \item \textbf{Case hand-off into the existing grievance workflow.} Write the escalation packet and
+        the officer's decision into the department's own case system, so SAHAY-AI augments the record
+        rather than creating a parallel one.
+  \item \textbf{Departmental identity.} Replace local JWT accounts with the department's single
+        sign-on, with role mapping for executive, supervisor and administrator.
+  \item \textbf{Multi-tenant district deployment.} State, district and helpline-desk scoping of
+        queues, with data partitioned per jurisdiction.
+  \item \textbf{Production infrastructure.} Containerised deployment, managed PostgreSQL, a real job
+        queue for assessment workers, CI with the safety suites as a merge gate, and backup and
+        restore drills.
+\end{itemize}
+
+\subsection{R2 --- Language and voice scale-out}
+\begin{itemize}
+  \item \textbf{The 22 scheduled languages, one at a time.} Adopt IndicConformer for recognition and
+        an Indic text-to-speech voice for output, and ship a language only after its own evaluation:
+        WER on that language, detector precision and recall on that language's fixtures, and a
+        reviewed set of fixed scripts in that language. A language with no evaluation does not ship.
+  \item \textbf{Dialect and register adaptation}, with per-dialect slices in the evaluation rather
+        than a single national average.
+  \item \textbf{Full-duplex low-latency voice} through a media server, so a caller can interrupt the
+        assistant naturally.
+  \item \textbf{Acoustic distress (D4) as a measured dimension}, once an approved corpus and a
+        validation study exist; until then it stays structurally unavailable.
+\end{itemize}
+
+\subsection{R3 --- Calibration, clinical governance and governed data}
+\begin{itemize}
+  \item \textbf{Expert calibration study.} Replace the provisional SVI weights with weights
+        calibrated against real triage outcomes, with counsellors and helpline supervisors in the
+        loop, and publish the resulting reliability analysis.
+  \item \textbf{Clinical governance sign-off} of the dialogue scripts, the crisis protocol and the
+        escalation thresholds by mental-health professionals and NHAA operational staff.
+  \item \textbf{Governed domain dataset} under an approved framework: documented lawful basis,
+        consent, de-identification, access control and expert annotation, replacing fictional corpora
+        as the evaluation basis.
+  \item \textbf{Independent evaluation} on a human-authored blind corpus, with two-reviewer
+        adjudication for crisis and immediate-danger samples, producing the first official metrics the
+        project is allowed to quote.
+  \item \textbf{The multimodal model, as a study.} Replace the rule-based cross-modal divergence check
+        with a trained model only if it beats the deterministic pipeline on that independent
+        evaluation, and publish the comparison either way.
+\end{itemize}
+
+\subsection{R4 --- Analytics, monitoring and follow-up}
+\begin{itemize}
+  \item \textbf{District and state analytics} for resource allocation: where distress concentrates,
+        which pathways are confirmed, where rehabilitation follow-up lags.
+  \item \textbf{Rehabilitation follow-up tracking}, closing the loop from escalation to the support
+        actually delivered, which is what the PS means by better allocation of support resources.
+  \item \textbf{Production monitoring} with drift detection on detector firing rates and language
+        mix, and alerting when abstention rates move.
+  \item \textbf{Automation-bias auditing}: track how often officers confirm AI proposals unchanged,
+        and treat a rising rate as a safety signal rather than a success metric.
+  \item \textbf{Periodic red-team and script review} on a fixed cadence, with results published to
+        the supervising authority.
+\end{itemize}
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Roadmap phases with their entry gates and the approvals each needs. No phase begins before
+its gate is met.}
+\label{tab:roadmapgates}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{1.2cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{4.4cm}X@{}}
+\toprule
+Phase & Entry gate & Needs approval from & Principal risk if rushed \\
+\midrule
+R1 & MVP accepted; fixed scripts reviewed; a signed data-flow description exists & Department;
+telecom operator with DLT registration; departmental IT security & A live helpline routed through an
+unreviewed script \\
+R2 & R1 live; per-language evaluation harness running & Department per language; linguistic reviewers
+& Shipping a language whose transcription quality is unknown \\
+R3 & Governed data agreement; ethics and clinical governance body constituted & Ethics committee;
+clinical governance; data protection officer & Calibrating weights on biased or unlawful data \\
+R4 & R1 and R3 delivered; analytics purpose specification agreed & Department; data protection officer
+& Analytics becoming surveillance of complainants \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+%======================================================================
+\section{Conclusion}
+
+Against PS SIH26093 the prototype delivers the core of what was asked: a real-time, multilingual,
+bounded intake that produces an explainable Stress Vulnerability Index with Low, Moderate, High and
+Critical bands, detects crisis, danger, intimidation, isolation, medical and legal urgency with
+evidence links, proposes the six pathways the statement names plus two more, keeps the complainant's
+consent and dignity at the centre, and puts a human officer in authority over every action. It does
+this offline, on one machine, with 1{,}251 passing tests and a written account of everything it does
+not yet know.
+
+What it does not do is claim more than it has measured. Speech recognition accuracy, acoustic
+distress and end-to-end latency are unmeasured; the fixed scripts await a counsellor's review; the
+only model the team trained was rejected because it did not beat a deterministic pipeline; and the
+official evaluation set is still empty because honest official numbers require human-authored,
+independently reviewed data that does not yet exist.
+
+That combination --- a working, auditable system plus an explicit list of what remains unproved --- is
+the strongest position a safety-critical prototype can be in. The next milestone is not a better
+model. It is the real channel integration in Section~\ref{sec:roadmap} and the independent evaluation
+in Section~\ref{sec:buildbench}, in that order.
+
+%======================================================================
+\appendix
+\section{Evidence index}
+Every number in this report traces to one of these sources, all of which are in the repository or in
+the operator-controlled private roots outside Git.
+
+\begin{itemize}
+  \item \textbf{Test results:} run on 17 September 2026 from \code{dev} at \code{ccb1724}
+        (\code{pytest} for ML and backend, \code{vitest} for the console, \code{node --test} for the
+        victim app).
+  \item \textbf{Deterministic evaluation:} \filepath{ml/eval/results/eval-baseline-2026-09-11.md} and
+        \filepath{ml/eval/results/safety-hardening-2026-09-11.md}, produced by the offline harness.
+  \item \textbf{Model runtime measurements:} the private benchmark reports produced by the model
+        runtime qualification, summarised in Table~\ref{tab:perf}.
+  \item \textbf{Shadow-model results:} the private training reports and the model card, summarised in
+        \S\ref{sec:shadow} and covered fully in the separate AI research report.
+  \item \textbf{Contracts, states and specification:} \filepath{docs/contracts/CONTRACTS.md},
+        \filepath{docs/dialogue/STATES.md}, \filepath{docs/HANDOVER.md},
+        \filepath{docs/VERTICAL_SLICE.md}.
+  \item \textbf{External approvals:} \filepath{docs/EXTERNAL_DECISIONS.md}, entries EXT-001 to
+        EXT-122.
+  \item \textbf{Problem statement:} the official SIH26093 record~\cite{sih26093}; the same text is
+        quoted in \filepath{docs/HANDOVER.md}.
+\end{itemize}
+
+\section{Glossary}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}X@{}}
+\toprule
+Term & Meaning \\
+\midrule
+NHAA 14566 & National Helpline Against Atrocities, the toll-free helpline this module serves \\
+SVI & Stress Vulnerability Index: 0--100, nine weighted dimensions, evidence-linked \\
+Band & Low, Moderate, High or Critical \\
+D1--D9 & The nine assessment dimensions (Table~\ref{tab:svi}) \\
+SX & The crisis interrupt state: fixed script, Critical, human takeover, no resumption \\
+SH & Human handoff state \\
+Abstention & Returning \emph{Needs Human Assessment} instead of a score \\
+Escalation packet & The decision-ready case bundle handed to an executive \\
+Licensed question & The single question a dialogue state permits \\
+Shadow mode & A model whose output is displayed beside the authoritative pipeline but can change
+nothing \\
+Evidence class & The label stating whether a number is synthetic, contaminated regression, or
+official (none of ours are official) \\
+DPDP & Digital Personal Data Protection Act 2023 and its 2025 Rules \\
+DLT & The distributed-ledger registration required for commercial voice and SMS traffic in India \\
+\bottomrule
+\end{tabularx}
+
+%======================================================================
+\begin{thebibliography}{9}
+\setlength{\itemsep}{3pt}
+\small
+
+\bibitem{sih26093}
+Ministry of Social Justice and Empowerment.
+Problem Statement SIH26093: AI-Based Real-Time Stress and Trauma Assessment Module for
+Victims/Complainants Accessing NHAA (14566) and Integrated Portal. Smart India Hackathon 2026.
+\url{https://sih.gov.in/sih2026PS}
+
+\bibitem{pib2021}
+Ministry of Social Justice and Empowerment, Press Information Bureau.
+14566 --- National Helpline Against Atrocities on SCs/STs. Press release, December 2021.
+\url{https://pib.gov.in/Pressreleaseshare.aspx?PRID=1780741}
+
+\bibitem{meity2023}
+Ministry of Electronics and Information Technology (MeitY), Government of India.
+The Digital Personal Data Protection Act, 2023, and the Digital Personal Data Protection Rules, 2025.
+\url{https://www.meity.gov.in}
+
+\bibitem{khanuja2021}
+S.~Khanuja, D.~Bansal, S.~Mehtani, et al.
+MuRIL: Multilingual representations for Indian languages. arXiv:2103.10730, 2021.
+\url{https://arxiv.org/abs/2103.10730}
+
+\bibitem{vistaar}
+K.~S.~Bhogale, S.~Sundaresan, A.~Raman, et al.
+Vistaar: Diverse benchmarks and training sets for Indian language ASR. AI4Bharat, 2023.
+\url{https://github.com/AI4Bharat/vistaar}
+
+\bibitem{indicconformer}
+AI4Bharat.
+IndicConformer 600M multilingual: hybrid CTC and RNN-Transducer ASR for the 22 official Indian
+languages. Model card, MIT licence.
+\url{https://huggingface.co/ai4bharat/indic-conformer-600m-multilingual}
+
+\bibitem{systran}
+SYSTRAN. faster-whisper: Whisper transcription with CTranslate2.
+\url{https://github.com/SYSTRAN/faster-whisper}
+
+\bibitem{singh2022}
+G.~V.~Singh, P.~Priya, M.~Firdaus, A.~Ekbal and P.~Bhattacharyya.
+EmoInHindi: A multi-label emotion and intensity annotated dataset in Hindi for emotion recognition in
+dialogues. LREC 2022, pages 5829--5837.
+\url{https://aclanthology.org/2022.lrec-1.627/}
+
+\bibitem{dreaddit}
+E.~Turcan and K.~McKeown.
+Dreaddit: A Reddit dataset for stress analysis in social media. LOUHI 2019.
+\url{https://aclanthology.org/D19-6213/}
+
+\bibitem{suicidereview}
+A.~Haque, V.~Reddi and T.~Giallanza (and related reviews).
+Leveraging Reddit for suicidal ideation detection: a review of machine learning and NLP techniques.
+International Journal of Environmental Research and Public Health, 19(16):10347, 2022.
+\url{https://www.mdpi.com/1660-4601/19/16/10347}
+
+\bibitem{suiciderobertas}
+A comparative analysis of transformer and LSTM models for detecting suicidal ideation on Reddit.
+arXiv:2411.15404, 2024.
+\url{https://arxiv.org/pdf/2411.15404}
+
+\bibitem{hu2024}
+J.~Hu, C.~Zhao, C.~Shi, Z.~Zhao and Z.~Ren.
+Speech-based recognition and estimating severity of PTSD using machine learning.
+Journal of Affective Disorders, 362:859--868, 2024.
+\url{https://doi.org/10.1016/j.jad.2024.07.015}
+
+\bibitem{islam2024}
+K.~Islam and Z.~ElSayed.
+Speech-based emotion recognition and PTSD detection through machine and deep learning.
+IJCERT, 11(3):46--53, 2024.
+\url{https://www.ijcert.org/index.php/ijcert/article/view/978}
+
+\end{thebibliography}
+
+\noindent{\footnotesize\color{sahaygray} Problem-statement text retrieved 17 September 2026; other
+URLs verified 13 and 17 September 2026. Published benchmark figures are quoted from the sources named
+and were not reproduced by this team.}
+
+\end{document}
