@@ -66,9 +66,11 @@ def shift_intervals(intervals: Sequence[Tuple[float, float]], offset_s: float,
     """Intervals re-expressed relative to a trimmed clip that starts at ``offset_s``."""
     out = []
     for s, e in intervals:
-        s2, e2 = max(0.0, s - offset_s), min(duration_s, e - offset_s)
+        # Round first, then clamp: rounding must never push an end past the clip's real length.
+        s2 = max(0.0, round(s - offset_s, 4))
+        e2 = min(duration_s, round(e - offset_s, 4))
         if e2 > s2:
-            out.append((round(s2, 4), round(e2, 4)))
+            out.append((s2, e2))
     return out
 
 

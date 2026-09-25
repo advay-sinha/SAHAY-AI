@@ -115,10 +115,10 @@ class TestBuild(unittest.TestCase):
         self.assertTrue(all(len(s) == 1 for s in by_actor.values()))
         self.assertTrue(all(r.get("age_band") for r in rows if r["dataset"] == "crema_d"))
 
-    def test_build_refuses_unapproved_datasets(self):
+    def test_build_refuses_rejected_datasets(self):
         for rec in self.reg["datasets"]:
             if rec["id"] == "crema_d":
-                rec["review_status"] = "metadata_pending"
+                rec["review_status"] = "rejected"
         with self.assertRaises(gov.GovernanceError):
             sc.build(self.data, self.out, registry=self.reg)
 
@@ -140,6 +140,13 @@ class TestPreprocessHelpers(unittest.TestCase):
 
     def test_shift_intervals(self):
         self.assertEqual(pp.shift_intervals([(0.5, 1.0), (1.5, 2.0)], 0.4, 1.7), [(0.1, 0.6), (1.1, 1.6)])
+
+    def test_shifted_intervals_never_end_past_the_clip(self):
+        # R2 regression: speech running to the end of a clip rounded 1.76969 s up to 1.7697 s.
+        duration = 28315 / 16000  # 1.7696875 s
+        shifted = pp.shift_intervals([(1.4, 3.0697)], 1.3, duration)
+        self.assertLessEqual(shifted[-1][1], duration)
+        self.assertEqual(shifted, [(0.1, duration)])
 
     def test_whisper_valid_frames(self):
         self.assertEqual(pp.whisper_valid_frames(16000), 50)
