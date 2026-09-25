@@ -407,6 +407,12 @@ class TestEvidencePrecision(unittest.TestCase):
             self.assertNotIn("t1", a["evidence_turn_ids"])
 
 
+def _untracked_environment(path):
+    """Virtual environments and caches beneath ml/ (e.g. ml/.venv) are not ML source."""
+    rel = path.relative_to(ML).parts
+    return any(part.startswith(".") or part == "__pycache__" for part in rel)
+
+
 class TestInvariants(unittest.TestCase):
     def test_validation_never_changes_scores_or_bands(self):
         dev = load("dev.json")["samples"][:15]
@@ -424,6 +430,8 @@ class TestInvariants(unittest.TestCase):
         self.assertEqual(checks.external_corpus_access(opened), [])
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
+            if _untracked_environment(path):
+                continue
             # ml/data is the dataset-governance package (archive audit tooling);
             # it is never imported by the pipeline, which the check below proves.
             if "tests" in path.parts or rel.startswith("data/"):
