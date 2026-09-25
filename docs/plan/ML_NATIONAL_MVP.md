@@ -223,9 +223,9 @@ Both are predeclared before any training (D-8).
 | M12c ✅ | SER preprocessing code: `ml.data.ser_corpus build` (labels, CREMA-D demographics, actor-disjoint sex-stratified splits: RAVDESS 16/4/4 actors, CREMA-D 65/13/13); `ml.ser.preprocess audio` (16 kHz mono, Silero VAD trim, prosody and quality); `ml.ser.preprocess whisper` (frozen encoder, 13×768 per clip); `ml.ser.e2v_features` (1024-d embeddings plus 9 native scores). Smoke-tested on 6 real clips in a scratch root. | ML lead | — |
 | **R2** | `ml.data.ser_corpus build`, then `ml.ser.preprocess audio`, then `ml.ser.preprocess whisper` (model environment) | **Owner** | — |
 | **R2b** | `ml.ser.e2v_features` in `sahay-ser-e2v`: embeddings and zero-shot scores. The ONNX export moves to after selection (R6b), because it is needed only if emotion2vec wins. | **Owner** | D-13, D-14 |
-| M12d | Training code: prosody logistic-regression baseline, Whisper-encoder head, emotion2vec-embedding head, WavLM Base+ fine-tune | ML lead | D-7 |
-| **R3** | Train the baseline, the Whisper-encoder head and the emotion2vec-embedding head (all short, on cached features) | **Owner** | — |
-| **R4** | Fine-tune WavLM Base+ (long; VRAM and time recorded). **Skipped if** emotion2vec wins on team-dev by a clear margin. Otherwise it runs as the comparison. | **Owner** | — |
+| M12d ✅ | `ml.ser.train`: prosody logistic-regression baseline (speaker-normalised and pooled), Whisper-encoder head (learned layer weights), emotion2vec+ zero-shot (forced 5-class and abstaining 9→5), emotion2vec+ head, and WavLM Base+ fine-tune (CNN and lower 6 layers frozen, weighted layers, attentive statistics pooling, bf16). Best epoch by validation UAR; test scored once per corpus and sex; `--regime crema` adds cross-corpus. Smoke-tested on a 240-clip subset: every command ran with 0 network attempts; WavLM used 2.0 GB peak VRAM. | ML lead | D-7 |
+| **R3** | Rerun R2 (the interval fix recovers 86 clips), then `baseline`, `whisper-head`, `e2v-zeroshot` and `e2v-head`, each for `--regime both` and `--regime crema`. All short, on cached features. | **Owner** | — |
+| **R4** | `wavlm --regime both` (8 epochs, about 20–30 min), then `wavlm --regime crema`. Then `compare`. | **Owner** | — |
 | M12e | Text-affect preprocessing code: EmoInHindi to `affect:` mapping, transliteration, optional GoEmotions | ML lead | D-9a, D-11 |
 | **R5** | Run text-affect preprocessing | **Owner** | — |
 | M12f | MuRIL and XLM-R text-affect training code | ML lead | D-9a |
