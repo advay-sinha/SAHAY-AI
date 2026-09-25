@@ -220,9 +220,9 @@ Both are predeclared before any training (D-8).
 | M12a ✅ | Prosody extractor (YIN-style F0 in numpy, energy, pauses from VAD intervals, speech rate, response latency), unit-tested on synthetic tones and gaps | ML lead | D-4 |
 | M12b ✅ | Manifest entries (pinned revision and hashes) for emotion2vec+ large and WavLM Base+. Pinned `requirements-e2v.txt` for the isolated emotion2vec environment. Registry entries and data cards for RAVDESS and CREMA-D. Fetch and verify commands. | ML lead | D-5, D-10, D-13, D-14 |
 | **R1** ✅ | ① `snapshot-crema-pointers`. ② Download RAVDESS (`ml.data.ser_audio fetch-ravdess`). ③ Fresh sparse clone of CREMA-D plus `git lfs pull --include "AudioWAV/*"`, then `verify-crema`. (The existing local copy is an extracted archive of pointers, not a git clone.) ④ `ml.ser.models fetch --model all`. ⑤ Create the isolated `sahay-ser-e2v` environment, install `ml/ser/requirements-e2v.txt`, `pip freeze` → lock. ⑥ `ml.ser.e2v_check`: offline load test with networking blocked. | **Owner** | Network |
-| M12c | SER preprocessing code: decode, resample to 16 kHz mono, trim with VAD, actor-disjoint splits, prosody features and the Whisper-encoder feature cache | ML lead | — |
-| **R2** | Run SER preprocessing (the Whisper feature cache is the slow part) | **Owner** | — |
-| **R2b** | emotion2vec+ in its isolated environment: cache embeddings, run the zero-shot 9→5 predictions, and try an ONNX export of the frozen encoder (whether it works decides how it runs in the product) | **Owner** | D-13, D-14 |
+| M12c ✅ | SER preprocessing code: `ml.data.ser_corpus build` (labels, CREMA-D demographics, actor-disjoint sex-stratified splits: RAVDESS 16/4/4 actors, CREMA-D 65/13/13); `ml.ser.preprocess audio` (16 kHz mono, Silero VAD trim, prosody and quality); `ml.ser.preprocess whisper` (frozen encoder, 13×768 per clip); `ml.ser.e2v_features` (1024-d embeddings plus 9 native scores). Smoke-tested on 6 real clips in a scratch root. | ML lead | — |
+| **R2** | `ml.data.ser_corpus build`, then `ml.ser.preprocess audio`, then `ml.ser.preprocess whisper` (model environment) | **Owner** | — |
+| **R2b** | `ml.ser.e2v_features` in `sahay-ser-e2v`: embeddings and zero-shot scores. The ONNX export moves to after selection (R6b), because it is needed only if emotion2vec wins. | **Owner** | D-13, D-14 |
 | M12d | Training code: prosody logistic-regression baseline, Whisper-encoder head, emotion2vec-embedding head, WavLM Base+ fine-tune | ML lead | D-7 |
 | **R3** | Train the baseline, the Whisper-encoder head and the emotion2vec-embedding head (all short, on cached features) | **Owner** | — |
 | **R4** | Fine-tune WavLM Base+ (long; VRAM and time recorded). **Skipped if** emotion2vec wins on team-dev by a clear margin. Otherwise it runs as the comparison. | **Owner** | — |
@@ -246,6 +246,8 @@ Both are predeclared before any training (D-8).
 | emotion2vec+ large | Every file hash verified (1.95 GB). Loads offline in `sahay-ser-e2v` with 0 network attempts: 164,048,921 parameters as loaded (the card says ~300M), 697 MiB peak VRAM, 1024-d embeddings, 0.44 s for a 3 s clip on the first call. The checkpoint's ninth label is `<unk>` (the card says "unknown"); the mapping now uses it. Missing-key warnings cover only the unused pretraining decoder. |
 | `sahay-ser-e2v` | Installed after redirecting pip's temp and cache to D:, because C: had 4.3 GB free. Lock file: `ml/ser/requirements-e2v.lock` (89 packages: funasr 1.4.16, modelscope 1.40.1, torch 2.11.0+cu128, onnx 1.23.0, onnxruntime 1.30.0). |
 | Deferral triggers | X1–X4 are clear. emotion2vec stays the primary candidate. X5 is decided at R6b. |
+
+**M12c finding (2026-09-26):** the first smoke test showed that the YIN voicing rule, tuned on clean synthetic tones (CMND < 0.15, a fixed −50 dBFS floor), rejected most real voiced frames: loud frames of acted clips have median CMND minima of 0.23 to 0.36. Voicing now uses aperiodicity < 0.45 plus a clip-relative level floor (95th percentile − 35 dB, never below −70 dBFS). Voiced ratios on the smoke clips rose from 0.02–0.31 to 0.48–0.71, and pitch matches an independent tracker (torchaudio: 158 Hz against YIN's 150 Hz on the same clip).
 
 #### External help needed (owner or team actions)
 
