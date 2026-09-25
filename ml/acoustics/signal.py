@@ -5,8 +5,12 @@ third-party package and the default test suite stays dependency-free. The output
 ``prosody.summarize_turn`` and ``quality.is_poor``.
 
 Pitch uses YIN (de Cheveigné and Kawahara, 2002): a cumulative-mean-normalised difference
-function with an absolute threshold and parabolic refinement, vectorised across frames.
-A frame counts as voiced only if it clears both the YIN threshold and an energy floor.
+(CMND) function, the first dip below ``YIN_THRESHOLD`` or else the global minimum (YIN step 4),
+and parabolic refinement, vectorised across frames. A frame counts as voiced only if its CMND
+at the chosen lag is below ``VOICING_APERIODICITY`` and its level clears a floor set relative to
+the clip's own loudness, so quiet studio audio and loud phone audio are treated alike. The
+thresholds were set from real speech: loud frames of acted clips had median CMND minima of
+0.23 to 0.36, which a clean-signal threshold of 0.15 would have rejected.
 
 Nothing here decides anything about the person. Audio is never logged or written.
 """
@@ -21,8 +25,10 @@ RMS_WINDOW = 400          # 25 ms
 YIN_WINDOW = 512          # 32 ms integration window
 FMIN_HZ = 65.0
 FMAX_HZ = 500.0
-YIN_THRESHOLD = 0.15
-VOICING_FLOOR_DB = -50.0  # frames quieter than this are never voiced
+YIN_THRESHOLD = 0.15          # dip search: first lag whose CMND falls below this
+VOICING_APERIODICITY = 0.45   # voiced only if CMND at the chosen lag is below this
+VOICING_FLOOR_DB = -70.0      # absolute floor: frames quieter than this are never voiced
+RELATIVE_FLOOR_DB = 35.0      # and never more than this far below the clip's 95th-percentile level
 CLIP_LEVEL = 0.99
 MIN_NOISE_FRAMES = 10
 
@@ -94,20 +100,23 @@ def yin_f0(samples: Any, *, fmin: float = FMIN_HZ, fmax: float = FMAX_HZ,
     below = region < threshold
     has = below.any(axis=1)
     first = np.argmax(below, axis=1)
-    # Walk from the first sub-threshold lag down to its local minimum.
+    # Walk from the first sub-threshold lag down to its local minimum; with no dip, take the
+    # global minimum (YIN step 4). Voicing is decided separately, below.
     rising = np.concatenate([region[:, 1:] >= region[:, :-1], np.ones((n, 1), dtype=bool)], axis=1)
     cols = np.arange(region.shape[1])[None, :]
-    local = np.argmax(rising & (cols >= first[:, None]), axis=1)
+    local = np.where(has, np.argmax(rising & (cols >= first[:, None]), axis=1), np.argmin(region, axis=1))
+    aperiodicity = region[np.arange(n), local]
 
     if levels_db is None:
         levels_db = rms_db(x)
     levels = np.asarray(levels_db, dtype=np.float64)
     if levels.shape[0] != n:
         raise ValueError("levels must have one value per frame")
+    floor = max(VOICING_FLOOR_DB, float(np.percentile(levels, 95)) - RELATIVE_FLOOR_DB)
 
     out: List[Optional[float]] = []
     for i in range(n):
-        if not has[i] or levels[i] < VOICING_FLOOR_DB:
+        if aperiodicity[i] >= VOICING_APERIODICITY or levels[i] < floor:
             out.append(None)
             continue
         k = int(local[i])
