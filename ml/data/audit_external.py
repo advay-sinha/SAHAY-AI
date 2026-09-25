@@ -144,7 +144,7 @@ def extract(reg: Dict[str, Any], root: Path, dataset_id: str) -> Dict[str, Any]:
     rec = gov.get(reg, dataset_id)
     if rec["download_status"] != "downloaded":
         raise gov.GovernanceError(f"{dataset_id} is not downloaded")
-    gov.select_for(reg, dataset_id, "research")  # licence_pending/quarantined datasets are refused here
+    gov.select_for(reg, dataset_id, "research")  # EXT-129: only absent or rejected datasets are refused here
     src = gov.resolve_under(root, rec["local_relative_path"])
     if az.sha256_file(src) != rec["sha256"] or src.stat().st_size != rec["byte_size"]:
         raise az.UnsafeArchive("integrity mismatch; refusing to extract")

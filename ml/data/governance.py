@@ -5,11 +5,16 @@ METADATA ONLY: no raw data, no sample text, no machine-specific path. Local
 files are located as `<SAHAY_DATASETS_ROOT>/<local_relative_path>`.
 
 Guards enforced here (and tested in ml/tests/test_dataset_governance.py):
-  * a dataset may be selected for a purpose only in an approved review state;
-  * a downloaded file is never approved automatically;
+  * EXT-129 (project owner, 2026-09-26): for MVP model research, training and
+    validation, any registered and downloaded dataset may be selected whatever
+    its review status. The review status, licence fields and prohibited uses
+    still record the facts; they no longer gate these three purposes. Only a
+    dataset explicitly ``rejected`` is refused;
+  * a downloaded file is never marked approved automatically;
   * Dreaddit (or any dataset with official_locked_test_allowed = false) can
     never serve as the official locked test set;
-  * no external dataset may populate D4 without an approved mapping study.
+  * no external dataset may populate an SVI dimension in the product (D4 in
+    particular) without an approved mapping study.
 """
 
 import json
@@ -47,8 +52,9 @@ HOLDOUT = ("not_holdout", "external_validation_candidate", "external_test_candid
 #:   potential_victim_narratives          may contain authentic accounts of abuse, violence or crisis
 #:   minors_possible                      authors may include children
 #:   personal_names_not_reliably_redacted rule-based redaction cannot remove names or places
-#: Invariant 8 is unaffected by any flag: real or potentially real victim
-#: narratives are never used in the MVP, the product or the demo.
+#: Invariant 8, as clarified by EXT-129: data from SAHAY's own users is never used. Public
+#: research datasets may train and validate MVP models, but their text, audio and derived
+#: records never enter the product, the demo, victim-facing output, fixtures or Git.
 SENSITIVITY_FLAGS = ("real_user_generated_text", "potential_victim_narratives", "minors_possible",
                      "personal_names_not_reliably_redacted")
 
@@ -205,16 +211,31 @@ def get(reg: Mapping[str, Any], dataset_id: str) -> Dict[str, Any]:
 # --- use guards -----------------------------------------------------------------------
 
 
+#: EXT-129: purposes open to every registered, downloaded dataset for MVP model work.
+EXT_129_PURPOSES = ("research", "evaluation", "training")
+EXT_129_BASIS = "ext_129_mvp_training_validation"
+
+
 def select_for(reg: Mapping[str, Any], dataset_id: str, purpose: str) -> Dict[str, Any]:
-    """Return the record only if its review state permits `purpose`."""
+    """Return the record if it may be used for `purpose` (research, evaluation or training).
+
+    Under EXT-129 the review state no longer gates these purposes: any registered, downloaded
+    dataset is selectable unless it was explicitly ``rejected``. "evaluation" here means model
+    validation; the official locked and blind sets are guarded by ``assert_can_be_locked_test``.
+    """
     if purpose not in PURPOSE_STATES:
         raise GovernanceError(f"unknown purpose {purpose!r}")
     rec = get(reg, dataset_id)
-    if rec["review_status"] not in PURPOSE_STATES[purpose]:
-        raise GovernanceError(f"{dataset_id} is {rec['review_status']}: not approved for {purpose}")
-    if purpose in rec["prohibited_uses"]:
-        raise GovernanceError(f"{dataset_id}: {purpose} is a prohibited use")
+    if rec["review_status"] == "rejected":
+        raise GovernanceError(f"{dataset_id} was rejected; it may not be used")
+    if rec["download_status"] != "downloaded":
+        raise GovernanceError(f"{dataset_id} is not downloaded")
     return rec
+
+
+def use_basis(rec: Mapping[str, Any]) -> str:
+    """Why a selected dataset may be used: its own approval, or the EXT-129 owner decision."""
+    return "registry_approval" if str(rec["review_status"]).startswith("approved_") else EXT_129_BASIS
 
 
 def assert_can_be_locked_test(reg: Mapping[str, Any], dataset_id: str) -> None:

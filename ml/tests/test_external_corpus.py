@@ -145,14 +145,23 @@ class TestRoot(NoRoot):
 
 
 class TestGovernanceGate(Corpus):
-    def test_a_licence_pending_dataset_is_refused_before_any_row_is_read(self):
-        pending = fictional_registry(self.rel, self.src, review_status="licence_pending")
+    def test_a_rejected_dataset_is_refused_before_any_row_is_read(self):
+        rejected = fictional_registry(self.rel, self.src, review_status="licence_pending")
+        rejected["datasets"][0]["review_status"] = "rejected"
         with mock.patch.object(xc, "read_rows", side_effect=AssertionError("a row was read")):
             with self.assertRaises(xc.AdapterRefused):
-                xc.convert(self.root, DATASET_ID, registry=pending, spec=SPEC)
+                xc.convert(self.root, DATASET_ID, registry=rejected, spec=SPEC)
         self.assertFalse((self.root / "normalized").exists())
 
-    def test_every_real_dataset_is_refused(self):
+    def test_a_licence_pending_dataset_converts_under_ext129(self):
+        pending = fictional_registry(self.rel, self.src, review_status="licence_pending")
+        result = xc.convert(self.root, DATASET_ID, registry=pending, spec=SPEC)
+        self.assertEqual(result["governance_basis"], gov.EXT_129_BASIS)
+        for r in xc.load_normalized(self.root, DATASET_ID, pending):
+            self.assertEqual(r["permitted_evaluation_purposes"], list(gov.EXT_129_PURPOSES))
+            self.assertFalse(r["locked_corpus_eligible"])
+
+    def test_real_datasets_without_local_files_are_refused(self):
         real = gov.load_registry()
         for rec in real["datasets"]:
             with self.assertRaises(xc.AdapterRefused, msg=rec["id"]):
@@ -522,8 +531,10 @@ class TestExtraction(NoRoot):
         rel = "archives/good.zip"
         (self.root / "archives").mkdir()
         make_zip(self.root / rel, [("data/a.csv", "x")])
+        reg = self.registry_for(rel, "licence_pending")
+        reg["datasets"][0]["review_status"] = "rejected"
         with self.assertRaises(gov.GovernanceError):
-            audit.extract(self.registry_for(rel, "licence_pending"), self.root, DATASET_ID)
+            audit.extract(reg, self.root, DATASET_ID)
         self.assertFalse((self.root / "extracted").exists())
 
     def test_an_unsafe_zip_is_refused(self):
@@ -650,7 +661,11 @@ class TestReport(Corpus):
         self.assertFalse(report["tuning_performed"])
         # No external TEXT dataset (one with a converter spec) is permitted; the SER audio datasets
         # approved for training (EXT-003 / EXT-104) have no text converter.
-        self.assertEqual(sum(r["conversion_permitted_by_registry"] for r in report["datasets"] if r["adapter_spec"]), 0)
+        # EXT-129: every downloaded external text dataset with a converter spec is now permitted.
+        spec_rows = [r for r in report["datasets"] if r["adapter_spec"]]
+        self.assertTrue(spec_rows)
+        for r in spec_rows:
+            self.assertEqual(r["conversion_permitted_by_registry"], r["download_status"] == "downloaded", r["dataset_id"])
         self.assertIn("Private exploratory research composition", text)
 
     def test_the_report_composes_converted_records_without_text(self):
@@ -804,10 +819,8 @@ class OverrideCorpus(NoRoot):
 
 
 class TestOverride(OverrideCorpus):
-    def test_the_default_path_still_refuses_licence_pending(self):
-        with self.assertRaises(xc.AdapterRefused):
-            self.convert(override=None)
-        self.assertFalse((self.root / "normalized").exists())
+    def test_the_default_path_converts_licence_pending_under_ext129(self):
+        self.assertEqual(self.convert(override=None)["governance_basis"], gov.EXT_129_BASIS)
 
     def test_the_override_needs_the_exact_acknowledgement(self):
         for ack in ("", "yes", xc.OVERRIDE_ACKNOWLEDGEMENT.upper(), xc.OVERRIDE_ACKNOWLEDGEMENT[:-1]):
@@ -862,15 +875,16 @@ class TestOverride(OverrideCorpus):
             self.assertEqual(xc.authorise(self.reg, DATASET_ID, purpose, self.override)["basis"],
                              "local_research_override")
 
-    def test_training_redistribution_locked_and_freeze_are_never_authorised(self):
-        for purpose in ("training", "redistribution", "locked_test", "corpus_freeze", "blind_corpus_intake",
+    def test_redistribution_locked_and_freeze_are_never_authorised(self):
+        for purpose in ("redistribution", "locked_test", "corpus_freeze", "blind_corpus_intake",
                         "independent_evaluation", "official_evaluation", "model_publication"):
             self.assertIn(purpose, xc.OVERRIDE_REFUSED_PURPOSES)
             with self.assertRaises(xc.AdapterRefused):
                 xc.authorise(self.reg, DATASET_ID, purpose, self.override)
-        for purpose in ("training", "evaluation", "research"):
-            with self.assertRaises(gov.GovernanceError):
-                gov.select_for(self.reg, DATASET_ID, purpose)
+        # EXT-129: MVP model research, training and validation are open; the locked set is not.
+        self.assertNotIn("training", xc.OVERRIDE_REFUSED_PURPOSES)
+        for purpose in gov.EXT_129_PURPOSES:
+            self.assertEqual(gov.select_for(self.reg, DATASET_ID, purpose)["id"], DATASET_ID)
         with self.assertRaises(gov.GovernanceError):
             gov.assert_can_be_locked_test(self.reg, DATASET_ID)
 
@@ -1130,9 +1144,11 @@ class TestResearchOnlyPolicy(OverrideCorpus):
                        "publication", "i take responsibility for access to the private source files"):
             self.assertIn(clause, ack)
 
-    def test_product_mvp_demo_and_tuning_purposes_are_refused_even_with_the_override(self):
+    def test_product_mvp_demo_and_victim_facing_purposes_are_refused_even_with_the_override(self):
+        # Raw dataset text never enters the product, the demo or anything a victim sees (invariant 8,
+        # EXT-129). Training and tuning left this list under EXT-129.
         for purpose in ("mvp_product", "product", "demo", "victim_facing_output", "backend_ingestion",
-                        "threshold_tuning", "lexicon_tuning", "model_tuning", "publication", "external_upload"):
+                        "publication", "external_upload"):
             self.assertIn(purpose, xc.OVERRIDE_REFUSED_PURPOSES)
             with self.assertRaises(xc.AdapterRefused, msg=purpose):
                 xc.authorise(self.reg, DATASET_ID, purpose, self.override)

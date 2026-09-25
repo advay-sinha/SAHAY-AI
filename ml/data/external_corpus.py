@@ -114,10 +114,12 @@ OVERRIDE_ELIGIBLE_STATES = ("licence_pending",)
 #: The only purposes the override can serve.
 OVERRIDE_PURPOSES = ("local_research_conversion", "local_research_exploratory_analysis")
 #: Purposes nothing in this module can serve, override or not, whatever the acknowledgement says.
+#: EXT-129 removed training and tuning from this list: MVP model training and validation may use
+#: every registered, downloaded dataset. What remains protects the product and the victim (raw
+#: dataset text never enters them), honest official evaluation, and the licences.
 OVERRIDE_REFUSED_PURPOSES = ("mvp_product", "product", "demo", "victim_facing_output", "backend_ingestion",
                              "locked_test", "blind_corpus_intake", "corpus_freeze", "independent_evaluation",
-                             "official_evaluation", "training", "threshold_tuning", "lexicon_tuning",
-                             "model_tuning", "model_publication", "publication", "redistribution",
+                             "official_evaluation", "model_publication", "publication", "redistribution",
                              "commercial_use", "external_upload")
 OVERRIDE_WARNING = ("WARNING: local exploratory research override in use. Licensing and privacy approval for this "
                     "dataset are UNRESOLVED. Output is a private, quarantined research artefact: it cannot enter the "
@@ -127,8 +129,8 @@ OVERRIDE_BASIS = "local_research_override"
 ARTIFACT_CLASS = "quarantined_research_artifact"
 RESIDUAL_IDENTIFIER_RISK = (
     "Private offline research artefact. Rule-based redaction cannot detect personal names, places or contextual "
-    "identifiers, which may remain in this text. It cannot enter the product, demo, training, tuning, evaluation "
-    "or publication.")
+    "identifiers, which may remain in this text. It may train and validate MVP models (EXT-129), but it cannot "
+    "enter the product, demo, victim-facing output, official evaluation, Git or publication.")
 RETENTION_RECOMMENDATION = (
     "Retain only while this analysis is actively required; delete the normalised sensitive text once aggregate "
     "review is complete. Nothing deletes it automatically.")
@@ -275,7 +277,7 @@ def authorise(reg: Mapping[str, Any], dataset_id: str, purpose: str,
             gov.select_for(reg, dataset_id, "research")
         except gov.GovernanceError as exc:
             raise AdapterRefused(f"governance refused {dataset_id}: {exc}") from None
-        return {"basis": "registry_approval", "review_status": rec["review_status"], "purpose": purpose}
+        return {"basis": gov.use_basis(rec), "review_status": rec["review_status"], "purpose": purpose}
     if purpose not in OVERRIDE_PURPOSES:
         raise AdapterRefused(f"the local exploratory research override does not cover {purpose!r}")
     if not isinstance(override, Mapping) or override.get("acknowledgement") != OVERRIDE_ACKNOWLEDGEMENT:
@@ -535,6 +537,7 @@ def _base(dataset_id: str, rec: Mapping[str, Any], split: str, row_sha: str, lan
         "source_label_family": families,
         "governance_basis": basis["basis"],
         "permitted_evaluation_purposes": (list(OVERRIDE_PURPOSES) if basis["basis"] == OVERRIDE_BASIS
+                                          else list(gov.EXT_129_PURPOSES) if basis["basis"] == gov.EXT_129_BASIS
                                           else sorted(set(rec["approved_uses"]) & {"research", "evaluation"})),
         "research_artifact": {"class": ARTIFACT_CLASS, "statement": RESIDUAL_IDENTIFIER_RISK},
         "independently_authored": False,

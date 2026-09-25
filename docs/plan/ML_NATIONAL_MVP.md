@@ -1,6 +1,6 @@
 # SAHAY-AI ML — national-level MVP phase plan
 
-Status as of 2026-09-24. **All decisions D-1 to D-15 approved by the owner on 2026-09-24**; see `docs/EXTERNAL_DECISIONS.md` (EXT-120 to EXT-128). Owner: AI/ML and Safety lead. Scope: everything under `ml/` plus the ML side of the backend voice path.
+Status as of 2026-09-24. **All decisions D-1 to D-15 approved by the owner on 2026-09-24**; see `docs/EXTERNAL_DECISIONS.md` (EXT-120 to EXT-128). **EXT-129 (2026-09-26):** every downloaded dataset is open for MVP model research, training and validation, and source labels may act as weak-supervision training labels. Dataset content still never reaches the product, the demo, a victim or the official locked set. Owner: AI/ML and Safety lead. Scope: everything under `ml/` plus the ML side of the backend voice path.
 
 This file records which ML phases are finished (with evidence), how far each Problem Statement 26093 requirement is met, and the phases still needed for a national-finale MVP supporting at least three language varieties. It sits under `docs/plan/PHASES.md` and does not change any frozen contract. Any contract, dialogue or external-dependency change listed below goes through its normal process (`contract-change`, `dialogue-authoring` and `docs/EXTERNAL_DECISIONS.md`).
 

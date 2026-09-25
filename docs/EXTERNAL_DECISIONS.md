@@ -504,3 +504,38 @@ Fallback or
 Decision maker:  Project owner, 2026-09-24. All downloads and training runs
                  are executed manually by the owner (run points R1–R7).
 ```
+
+```text
+Date:            2026-09-26
+ID:              EXT-129 — Dataset use for MVP model training and validation
+Decision:        APPROVED (project owner)
+Scope:           Every registered and downloaded dataset may be used for MVP model
+                 research, training and validation, whatever its registry review
+                 status or record-level prohibited uses. This covers the Task 5
+                 text corpora (Reddit Suicide Detection, Dreaddit, EmoInHindi,
+                 the Hinglish hate-speech derivative, Hinglish sentiment), the SER
+                 audio corpora, and datasets added later. Source labels may act as
+                 weak-supervision training/validation labels through
+                 label_firewall.map_for_training, tagged
+                 weak_supervision_from_source_label with their former caveat.
+Unchanged:       Registry licence and review fields keep recording the facts
+                 (licence_pending stays licence_pending). Still refused: raw
+                 dataset text or audio in the product, demo, backend ingestion,
+                 fixtures, victim-facing output or Git; the official locked and
+                 blind sets and independent/official evaluation; redistribution,
+                 publication, commercial use and external upload; learning
+                 diagnosis, the SVI, the band, routing or text-derived D4 from a
+                 source label; map_to_sahay (official labels). Datasets explicitly
+                 marked rejected stay refused. Product integration of trained
+                 weights still follows its own gates (D-8, D-9b).
+Invariant 8:     Clarified: data from SAHAY's own users is never used. Public
+                 research datasets may train and validate MVP models; their content
+                 never reaches the product or a victim. Supersedes the stricter
+                 reading in the EXT-119 clarification for training and validation.
+Reason:          The dataset gates were written for an early, narrower MVP. The
+                 national MVP needs the available corpora for model training and
+                 validation.
+Licence/cost:    Project-owner risk acceptance for the licence_pending datasets,
+                 for local, non-commercial hackathon model development only.
+Decision maker:  Project owner, 2026-09-26.
+```

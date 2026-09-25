@@ -28,6 +28,11 @@ estimates of the same thing:
   hate speech              != continuing threat (without contextual human review)
   neutral/positive sentiment != safe or no-alert ground truth
 
+EXT-129 (project owner, 2026-09-26) adds ``map_for_training``: for MVP model training
+and validation only, any source label may act as a SAHAY label, tagged as weak supervision
+with its caveat attached. Diagnosis, the SVI, the band, routing and (from text) D4 stay refused.
+``map_to_sahay``, the path to an official SAHAY label, is unchanged.
+
 Every other mapping into a SAHAY target needs a separate *human mapping
 record*: a named reviewer, written reasoning and provenance. Even a complete,
 valid record does not activate a mapping today: ``AUTHORISED_MAPPINGS`` is
@@ -193,6 +198,52 @@ def map_to_sahay(source_family: str, sahay_target: str,
         raise LabelFirewallError("no mapping is authorised: the record is well formed but has not been approved "
                                  "by the leads and registered with an approved study id")
     raise LabelFirewallError("mapping application is not implemented in this release")  # pragma: no cover
+
+
+# --- EXT-129: weak supervision for MVP model training and validation ------------------------
+
+#: Targets a source label may never become, even for training: SAHAY never diagnoses; the SVI
+#: and band come only from the deterministic engine; routing is decided by the deterministic
+#: policy and a human (root CLAUDE.md invariants 1, 4 and 5); a text source has no acoustic
+#: channel, so it cannot stand for D4.
+NEVER_EVEN_FOR_TRAINING = {
+    "diagnosis": NEVER_FROM_TEXT["diagnosis"],
+    "svi": NEVER_FROM_TEXT["svi"],
+    "band": NEVER_FROM_TEXT["band"],
+    "D4": NEVER_FROM_TEXT["D4"],
+    "routing": "routing is decided by the deterministic policy and a human, never learned from a source label",
+    "routed_critical": "routing is decided by the deterministic policy and a human, never learned from a source label",
+}
+TRAINING_PURPOSES = ("training", "validation")
+WEAK_SUPERVISION = "weak_supervision_from_source_label"
+
+
+def map_for_training(dataset_id: str, source_family: str, sahay_target: str, purpose: str) -> Dict[str, Any]:
+    """Allow a source label to act as a SAHAY training or validation label (EXT-129).
+
+    The result is always tagged ``weak_supervision_from_source_label``, and any former hard
+    prohibition travels with it as a ``caveat``. Metrics computed against these labels must be
+    reported as weak-supervision evidence, never as human-judged ground truth. This does not
+    touch ``map_to_sahay``: nothing here makes a source label an official SAHAY label, an
+    official evaluation label or a product output.
+    """
+    if purpose not in TRAINING_PURPOSES:
+        raise LabelFirewallError(f"map_for_training serves only {TRAINING_PURPOSES}, not {purpose!r}")
+    if sahay_target not in SAHAY_TARGETS:
+        raise LabelFirewallError(f"{sahay_target!r} is not a SAHAY target; nothing to map")
+    if source_family not in SOURCE_FAMILIES:
+        raise LabelFirewallError(f"source_family must be one of {SOURCE_FAMILIES}")
+    if sahay_target in NEVER_EVEN_FOR_TRAINING:
+        raise LabelFirewallError(f"never from a source label: {NEVER_EVEN_FOR_TRAINING[sahay_target]}")
+    return {
+        "dataset_id": dataset_id,
+        "source_family": source_family,
+        "sahay_target": sahay_target,
+        "purpose": purpose,
+        "evidence_class": WEAK_SUPERVISION,
+        "caveat": FORBIDDEN_EQUIVALENCES.get((source_family, sahay_target)),
+        "basis": "EXT-129",
+    }
 
 
 def refusals() -> Dict[str, str]:

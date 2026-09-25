@@ -160,11 +160,23 @@ class TestRegistry(unittest.TestCase):
 
 
 class TestUseGuards(unittest.TestCase):
-    def test_unapproved_datasets_cannot_be_selected(self):
-        for rid in ("dreaddit", "emoinhindi", "common_voice_hi"):
-            for purpose in ("research", "evaluation", "training"):
-                with self.assertRaises(gov.GovernanceError, msg=(rid, purpose)):
-                    gov.select_for(REG, rid, purpose)
+    def test_ext129_opens_every_downloaded_dataset_for_mvp_model_work(self):
+        # EXT-129 (owner, 2026-09-26): review status no longer gates research, training or validation.
+        for rid in ("dreaddit", "emoinhindi", "reddit_suicide_detection"):
+            for purpose in gov.EXT_129_PURPOSES:
+                self.assertEqual(gov.select_for(REG, rid, purpose)["id"], rid)
+            self.assertEqual(gov.use_basis(gov.get(REG, rid)), gov.EXT_129_BASIS)
+        self.assertEqual(gov.use_basis(gov.get(REG, "crema_d")), "registry_approval")
+
+    def test_absent_rejected_or_unknown_uses_are_still_refused(self):
+        with self.assertRaises(gov.GovernanceError):
+            gov.select_for(REG, "common_voice_hi", "training")  # not downloaded
+        reg = copy.deepcopy(REG)
+        gov.get(reg, "dreaddit")["review_status"] = "rejected"
+        with self.assertRaises(gov.GovernanceError):
+            gov.select_for(reg, "dreaddit", "training")
+        with self.assertRaises(gov.GovernanceError):
+            gov.select_for(REG, "dreaddit", "product")
 
     def test_dreaddit_can_never_be_the_locked_test_set(self):
         with self.assertRaises(gov.GovernanceError):
@@ -181,14 +193,11 @@ class TestUseGuards(unittest.TestCase):
         with self.assertRaises(gov.GovernanceError):
             gov.assert_can_populate_dimension(REG, "emoinhindi", "D4")
 
-    def test_an_approved_record_is_selectable_only_for_its_purpose(self):
+    def test_record_level_training_prohibitions_no_longer_gate_mvp_model_work(self):
         reg = copy.deepcopy(REG)
-        rec = gov.get(reg, "emoinhindi")
-        rec.update(review_status="approved_for_research", licence_name="x", licence_url="https://x",
-                   redistribution="not_permitted", approved_uses=["research"], prohibited_uses=["training"])
-        self.assertEqual(gov.select_for(reg, "emoinhindi", "research")["id"], "emoinhindi")
-        with self.assertRaises(gov.GovernanceError):
-            gov.select_for(reg, "emoinhindi", "evaluation")
+        gov.get(reg, "emoinhindi")["prohibited_uses"] = ["training", "evaluation"]
+        for purpose in gov.EXT_129_PURPOSES:
+            self.assertEqual(gov.select_for(reg, "emoinhindi", purpose)["id"], "emoinhindi")
 
 
 class TestDatasetRoot(unittest.TestCase):
@@ -379,10 +388,12 @@ class TestAuditCommand(unittest.TestCase):
         self.assertEqual(json.loads(self.reg_path.read_text(encoding="utf-8")), self.reg)
         self.assertTrue(before is None or before == self.reg_path.read_text(encoding="utf-8"))
 
-    def test_extraction_needs_the_explicit_flag_and_approval(self):
+    def test_extraction_needs_the_explicit_flag_and_refuses_rejected_datasets(self):
         self.run_audit()
         self.assertFalse((self.root / "extracted").exists())
-        self.assertEqual(self.run_audit(extra=("--extract", "fictional_ds")), audit_external.EXIT_GOVERNANCE)
+        rejected = copy.deepcopy(self.reg)
+        rejected["datasets"][0]["review_status"] = "rejected"
+        self.assertEqual(self.run_audit(rejected, extra=("--extract", "fictional_ds")), audit_external.EXIT_GOVERNANCE)
         self.assertFalse((self.root / "extracted").exists())
         self.assertEqual(self.run_audit(self.approved(), extra=("--extract", "fictional_ds")), audit_external.EXIT_OK)
         dest = self.root / "extracted" / "fictional_ds" / self.reg["datasets"][0]["sha256"][:12]

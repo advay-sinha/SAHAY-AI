@@ -72,8 +72,8 @@ class TestGovernanceGate(unittest.TestCase):
         for d in tc.DATASETS:
             self.assertEqual(gov.get(reg, d)["review_status"], "licence_pending")
 
-    def test_the_task5_override_still_refuses_training(self):
-        self.assertIn("training", xc.OVERRIDE_REFUSED_PURPOSES)
+    def test_ext129_opened_training_but_the_override_stays_research_only(self):
+        self.assertNotIn("training", xc.OVERRIDE_REFUSED_PURPOSES)
         self.assertNotIn(tc.GOVERNANCE_BASIS, xc.OVERRIDE_PURPOSES)
 
     def test_the_training_root_is_required_and_confined(self):
