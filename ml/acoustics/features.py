@@ -1,16 +1,24 @@
 """Acoustic feature interface feeding dimension D4 (acute distress).
 
-No numpy/librosa/torch dependency is approved. This defines the shape the D4
-scorer consumes so the SVI engine can be tested against fixtures now.
+Two layers (plan M12a, EXT-121):
+
+* ``acoustics.signal``  - frame tracks (YIN F0, RMS) and quality from 16 kHz samples;
+                          numpy is imported lazily, only when it runs.
+* ``acoustics.prosody`` - standard-library summary features and deviation from the
+                          caller's own in-session baseline.
+
+Neither produces a D4 value. The D4 fusion rule is a separate, lead-approved step (D-8).
 """
 
-from typing import Dict, Protocol
+from typing import Any, Dict, Protocol
+
+from .prosody import FEATURE_NAMES
 
 
 class FeatureExtractor(Protocol):
-    def extract(self, pcm16: bytes, sample_rate: int = 16000) -> Dict[str, float]:
-        """Return {"f0_mean", "f0_std", "rms_mean", "speech_rate", "pause_ratio", "jitter"}."""
+    def extract(self, pcm16: bytes, sample_rate: int = 16000) -> Dict[str, Any]:
+        """Return prosody features keyed by ``FEATURE_NAMES``; unmeasurable values are None."""
         ...
 
 
-FEATURE_NAMES = ("f0_mean", "f0_std", "rms_mean", "speech_rate", "pause_ratio", "jitter")
+__all__ = ["FEATURE_NAMES", "FeatureExtractor"]
