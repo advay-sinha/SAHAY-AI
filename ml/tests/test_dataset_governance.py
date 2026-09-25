@@ -56,10 +56,20 @@ class TestRegistry(unittest.TestCase):
                       "approved_for_research", "approved_for_evaluation", "approved_for_training", "rejected"):
             self.assertIn(state, gov.REVIEW_STATES)
 
-    def test_downloaded_datasets_are_not_approved(self):
+    #: The only use approvals in the committed registry (EXT-003 / EXT-104, verified at run R1).
+    SER_APPROVED = {"ravdess_audio_speech", "crema_d"}
+    SER_USES = {"ser_training", "ser_evaluation"}
+
+    def test_downloaded_datasets_are_approved_only_with_a_decision_and_verified_integrity(self):
         for rec in REG["datasets"]:
-            if rec["download_status"] == "downloaded":
-                self.assertFalse(rec["review_status"].startswith("approved_"), rec["id"])
+            if rec["review_status"].startswith("approved_"):
+                self.assertIn(rec["id"], self.SER_APPROVED)
+                self.assertEqual(rec["download_status"], "downloaded", rec["id"])
+                self.assertRegex(str(rec["sha256"]), r"^[0-9a-f]{64}$", rec["id"])
+                self.assertIn("APPROVED", rec["ext_decision"], rec["id"])
+                self.assertFalse(any(gov._is_blank(rec[f]) for f in gov.LICENCE_FIELDS), rec["id"])
+                self.assertIn("d4_acoustic_distress", rec["prohibited_uses"], rec["id"])
+                self.assertEqual(rec["unresolved_questions"], [], rec["id"])
             self.assertFalse(rec["official_locked_test_allowed"], rec["id"])
             self.assertEqual(rec["sahay_dimension_mappings"], {}, rec["id"])
 
@@ -80,7 +90,7 @@ class TestRegistry(unittest.TestCase):
         # EXT-003 / EXT-104 / EXT-125 (2026-09-24): licence terms were verified from the source
         # (EXT-128 lookup) before download. A licence is recorded only with https evidence, and
         # nothing is approved for use until the owner's download passes its integrity check.
-        for rid in ("ravdess_audio_speech", "crema_d", "goemotions"):
+        for rid in ("goemotions",):
             rec = gov.get(REG, rid)
             self.assertEqual(rec["download_status"], "not_downloaded", rid)
             self.assertIsNone(rec["sha256"], rid)
@@ -109,7 +119,10 @@ class TestRegistry(unittest.TestCase):
 
     def test_committed_registry_grants_no_use_and_records_evidence(self):
         for rec in REG["datasets"]:
-            self.assertEqual(rec["approved_uses"], [], rec["id"])
+            if rec["id"] in self.SER_APPROVED:
+                self.assertTrue(set(rec["approved_uses"]) <= self.SER_USES, rec["id"])
+            else:
+                self.assertEqual(rec["approved_uses"], [], rec["id"])
             self.assertNotEqual(rec["redistribution"], "permitted", rec["id"])
             self.assertRegex(rec["date_checked"], r"^\d{4}-\d{2}-\d{2}$", rec["id"])
             if rec["download_status"] == "downloaded":

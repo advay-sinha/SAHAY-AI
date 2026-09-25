@@ -61,7 +61,7 @@ class TestSerManifest(unittest.TestCase):
         self.assertEqual(set(ser.E2V_TO_AFFECT), set(e2v["native_labels"]))
         mapped = {v for v in ser.E2V_TO_AFFECT.values() if v is not None}
         self.assertEqual(mapped, set(ser.AFFECT_CLASSES))
-        for label in ("disgusted", "surprised", "other", "unknown"):
+        for label in ("disgusted", "surprised", "other", "<unk>"):
             self.assertIsNone(ser.E2V_TO_AFFECT[label], label)
 
 

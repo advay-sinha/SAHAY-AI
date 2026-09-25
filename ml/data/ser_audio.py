@@ -110,6 +110,18 @@ def _read_pointer(path: Path) -> Optional[Dict[str, Any]]:
     return {"sha256": oid[len("sha256:"):], "bytes": int(fields["size"])}
 
 
+def _canonical_pointer_manifest(entries: Dict[str, Dict[str, Any]]) -> bytes:
+    """Byte-stable manifest body (LF line endings on every OS), so its sha256 is reproducible."""
+    return json.dumps({"dataset": CREMA["dataset_id"], "files": entries}, indent=0, sort_keys=True).encode("utf-8")
+
+
+def pointer_manifest_sha256(root: Path) -> str:
+    """sha256 of the canonical pointer manifest: the registry's integrity reference for CREMA-D."""
+    path = governance.resolve_under(root, CREMA["pointer_manifest"])
+    entries = json.loads(path.read_text(encoding="utf-8"))["files"]
+    return hashlib.sha256(_canonical_pointer_manifest(entries)).hexdigest()
+
+
 def snapshot_crema_pointers(root: Path) -> Dict[str, Any]:
     """Record every AudioWAV pointer (name -> sha256, bytes) in a private manifest. No network."""
     src = governance.resolve_under(root, CREMA["pointer_dir"])
@@ -130,9 +142,9 @@ def snapshot_crema_pointers(root: Path) -> Dict[str, Any]:
         return report
     target = governance.resolve_under(root, CREMA["pointer_manifest"])
     target.parent.mkdir(parents=True, exist_ok=True)
-    body = json.dumps({"dataset": CREMA["dataset_id"], "files": entries}, indent=0, sort_keys=True)
-    target.write_text(body, encoding="utf-8")
-    report["manifest_sha256"] = hashlib.sha256(body.encode("utf-8")).hexdigest()
+    body = _canonical_pointer_manifest(entries)
+    target.write_bytes(body)
+    report["manifest_sha256"] = hashlib.sha256(body).hexdigest()
     report["result"] = "verified"
     return report
 

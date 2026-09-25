@@ -252,28 +252,30 @@
    "local_relative_path": "corpus/audio/ravdess/Audio_Speech_Actors_01-24.zip",
    "archive_filename": "Audio_Speech_Actors_01-24.zip",
    "byte_size": 208468073,
-   "sha256": null,
-   "archive_safety_status": "not_applicable",
-   "extraction_status": "not_applicable",
-   "review_status": "metadata_pending",
-   "approved_uses": [],
+   "sha256": "5d208e01632cc3e5242106fa2af3273e6dc5239fb8143131979ac74c4aa40657",
+   "archive_safety_status": "passed",
+   "extraction_status": "extracted",
+   "review_status": "approved_for_training",
+   "approved_uses": [
+    "ser_training",
+    "ser_evaluation"
+   ],
    "prohibited_uses": [
     "download_without_approved_ext_decision",
     "d4_acoustic_distress"
    ],
    "contamination_risk": "emotion2vec+ may have seen this corpus in training (possibly_seen_in_pretraining); WavLM Base+ has not.",
    "limitations": [
-    "English only; acted, studio-quality emotion; 2 fixed sentences; not distressed-caller speech; non-clinical."
+    "English only; acted, studio-quality emotion; 2 fixed sentences; not distressed-caller speech; non-clinical.",
+    "R1 2026-09-26: size, md5 (bc696df6...) and archive-safety checks passed; 1,440 WAV files extracted."
    ],
-   "date_checked": "2026-09-24",
+   "date_checked": "2026-09-26",
    "evidence_urls": [
     "https://zenodo.org/records/1188976",
     "https://creativecommons.org/licenses/by-nc-sa/4.0/"
    ],
-   "unresolved_questions": [
-    "Download, md5 check (bc696df654c87fed845eb13823edef8a) and archive-safety check pending at run R1."
-   ],
-   "download_status": "not_downloaded",
+   "unresolved_questions": [],
+   "download_status": "downloaded",
    "ext_decision": "EXT-003 APPROVED 2026-09-24 (SER training and evaluation; owner downloads at R1)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
@@ -283,7 +285,7 @@
   {
    "id": "crema_d",
    "name": "CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset",
-   "version": "Repository CheyneyComputerScience/CREMA-D; AudioWAV only (7,442 files, 605,899,936 bytes per the local LFS pointers)",
+   "version": "Repository CheyneyComputerScience/CREMA-D; AudioWAV only (7,442 files, 605,899,936 bytes per the local LFS pointers); fetched from commit 1658cd342dff90010aa843eaeebd53610a08b1dc",
    "modality": "multimodal",
    "primary_language": "en",
    "additional_languages": [],
@@ -310,11 +312,14 @@
    "local_relative_path": "corpus/audio/crema_d/CREMA-D/AudioWAV",
    "archive_filename": "",
    "byte_size": 605899936,
-   "sha256": null,
+   "sha256": "dc62d2be6ca7ddc15375eb7203ecc06d4939d63d9c4c6fdaf27db31064449d2a",
    "archive_safety_status": "not_applicable",
    "extraction_status": "not_applicable",
-   "review_status": "metadata_pending",
-   "approved_uses": [],
+   "review_status": "approved_for_training",
+   "approved_uses": [
+    "ser_training",
+    "ser_evaluation"
+   ],
    "prohibited_uses": [
     "training",
     "evaluation",
@@ -334,17 +339,15 @@
    "contamination_risk": "emotion2vec+ may have seen this corpus in training (possibly_seen_in_pretraining); WavLM Base+ has not.",
    "limitations": [
     "English only; acted emotion; 12 fixed sentences; not distressed-caller speech; non-clinical.",
-    "The existing local copy is an extracted repository archive holding only Git LFS pointers; the audio itself is not yet present."
+    "R1 2026-09-26: all 7,442 AudioWAV files match their LFS pointer sha256 and size (605,899,936 bytes). The registry sha256 is that of the canonical pointer manifest (ml.data.ser_audio.pointer_manifest_sha256)."
    ],
-   "date_checked": "2026-09-24",
+   "date_checked": "2026-09-26",
    "evidence_urls": [
     "https://github.com/CheyneyComputerScience/CREMA-D",
     "https://opendatacommons.org/licenses/odbl/1-0/"
    ],
-   "unresolved_questions": [
-    "Pointer snapshot, AudioWAV download and per-file sha256 verification pending at run R1."
-   ],
-   "download_status": "not_downloaded",
+   "unresolved_questions": [],
+   "download_status": "downloaded",
    "ext_decision": "EXT-104 APPROVED 2026-09-24 (AudioWAV only; SER training and evaluation; owner downloads at R1)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},

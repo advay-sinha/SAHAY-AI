@@ -648,7 +648,9 @@ class TestReport(Corpus):
         text = xr.render(report)
         self.assertFalse(report["pipeline_run"])
         self.assertFalse(report["tuning_performed"])
-        self.assertEqual(sum(r["conversion_permitted_by_registry"] for r in report["datasets"]), 0)
+        # No external TEXT dataset (one with a converter spec) is permitted; the SER audio datasets
+        # approved for training (EXT-003 / EXT-104) have no text converter.
+        self.assertEqual(sum(r["conversion_permitted_by_registry"] for r in report["datasets"] if r["adapter_spec"]), 0)
         self.assertIn("Private exploratory research composition", text)
 
     def test_the_report_composes_converted_records_without_text(self):
@@ -696,9 +698,18 @@ class TestRegistry(unittest.TestCase):
     def setUp(self):
         self.reg = gov.load_registry()
 
+    #: Audio datasets approved for SER training after R1 verification (EXT-003 / EXT-104).
+    SER_APPROVED = {"ravdess_audio_speech", "crema_d"}
+
     def test_the_registry_validates_and_approves_nothing_external(self):
         self.assertEqual(gov.validate_registry(self.reg), [])
         for rec in self.reg["datasets"]:
+            if rec["id"] in self.SER_APPROVED:
+                self.assertIn(rec["modality"], ("audio", "multimodal"), rec["id"])
+                self.assertTrue(set(rec["approved_uses"]) <= {"ser_training", "ser_evaluation"}, rec["id"])
+                self.assertIn("d4_acoustic_distress", rec["prohibited_uses"], rec["id"])
+                self.assertEqual(rec["sahay_dimension_mappings"], {}, rec["id"])
+                continue
             self.assertFalse(rec["review_status"].startswith("approved_"), rec["id"])
             self.assertEqual(rec["approved_uses"], [], rec["id"])
             self.assertEqual(rec["sahay_dimension_mappings"], {}, rec["id"])
@@ -714,7 +725,7 @@ class TestRegistry(unittest.TestCase):
 
     def test_every_downloaded_record_stays_before_licence_approval(self):
         for rec in self.reg["datasets"]:
-            if rec["download_status"] == "downloaded":
+            if rec["download_status"] == "downloaded" and rec["id"] not in self.SER_APPROVED:
                 self.assertEqual(rec["review_status"], "licence_pending", rec["id"])
 
     def test_no_machine_path_enters_the_registry(self):
