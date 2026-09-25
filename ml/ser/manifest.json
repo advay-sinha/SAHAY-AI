@@ -1,0 +1,49 @@
+{
+ "schema_version": "ser-1.0.0",
+ "purpose": "Pinned speech-emotion (SER) backbones for plan step M12. Holds no machine path, token or weight. No model here feeds routing, the crisis pre-check, a hard override or a forced band. SER may contribute to D4 only under decision D-8, after its promotion gate passes.",
+ "root_env": "SAHAY_MODELS_ROOT",
+ "layout": "<SAHAY_MODELS_ROOT>/<logical_id>/<revision>/",
+ "models": [
+  {
+   "logical_id": "emotion2vec_plus_large",
+   "role": "ser_primary_candidate",
+   "upstream_repo": "emotion2vec/emotion2vec_plus_large",
+   "source": "huggingface",
+   "revision": "6c303ba987b86b93193de93e34bb2b077a6bedc4",
+   "decision": "EXT-126 (D-13); runtime environment EXT-127 (D-14)",
+   "licence": "FunASR Model Open Source License v1.1 (attribution; model names retained; terms may be revised upstream)",
+   "use": "frozen inference only: zero-shot 9-class head mapped to 5 affect classes, and utterance embeddings for a SAHAY-trained 5-class head",
+   "environment": "sahay-ser-e2v (isolated; FunASR). Never loaded in sahay-ml-models.",
+   "native_labels": ["angry", "disgusted", "fearful", "happy", "neutral", "other", "sad", "surprised", "unknown"],
+   "contamination": "possibly_seen_in_pretraining for RAVDESS and CREMA-D (seed stage trained on EmoBox; later fine-tuning data unpublished)",
+   "gated": false,
+   "token_required": false,
+   "files": [
+    {"path": "config.yaml", "bytes": 5552, "git_blob_sha1": "62bb0fb683077d4c01818a8a24785d3dcef8282e"},
+    {"path": "configuration.json", "bytes": 343, "git_blob_sha1": "f165bb611a674faee647fe64a9a7a00ad36f0a8f"},
+    {"path": "model.pt", "bytes": 1945790254, "sha256": "be501a01f26fcdc7663a062dff86af839afbaef7c4de32f5e42d7e1ad2784da4"},
+    {"path": "tokens.txt", "bytes": 119, "git_blob_sha1": "e5a8dfffb0836ed38f37915905d1c05bdb18f1af"}
+   ]
+  },
+  {
+   "logical_id": "wavlm_base_plus",
+   "role": "ser_alternate",
+   "upstream_repo": "microsoft/wavlm-base-plus",
+   "source": "huggingface",
+   "revision": "4c66d4806a428f2e922ccfa1a962776e232d487b",
+   "decision": "EXT-124 (D-10)",
+   "licence": "CC BY-SA 3.0 (UniSpeech licence linked from the model card); fine-tuned derivatives stay private",
+   "use": "fine-tuned 5-class SER head (top layers trainable, CNN feature encoder frozen) in sahay-ml-models",
+   "environment": "sahay-ml-models (EXT-118 pins; transformers loads WavLM natively)",
+   "native_labels": [],
+   "contamination": "none known for RAVDESS or CREMA-D (self-supervised on Libri-Light, GigaSpeech and VoxPopuli)",
+   "gated": false,
+   "token_required": false,
+   "files": [
+    {"path": "config.json", "bytes": 2232, "git_blob_sha1": "b7b4e5f6c410f71283a59e26250e40855ca99310"},
+    {"path": "preprocessor_config.json", "bytes": 215, "git_blob_sha1": "10f6def8c83d70a2b087a567dcf523b75152a80b"},
+    {"path": "pytorch_model.bin", "bytes": 377617425, "sha256": "3bb273a6ace99408b50cfc81afdbb7ef2de02da2eab0234e18db608ce692fe51"}
+   ]
+  }
+ ]
+}

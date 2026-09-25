@@ -82,7 +82,12 @@
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
-   "sensitivity_flags": ["real_user_generated_text", "potential_victim_narratives", "minors_possible", "personal_names_not_reliably_redacted"]
+   "sensitivity_flags": [
+    "real_user_generated_text",
+    "potential_victim_narratives",
+    "minors_possible",
+    "personal_names_not_reliably_redacted"
+   ]
   },
   {
    "id": "emoinhindi",
@@ -162,7 +167,9 @@
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
-   "sensitivity_flags": ["personal_names_not_reliably_redacted"]
+   "sensitivity_flags": [
+    "personal_names_not_reliably_redacted"
+   ]
   },
   {
    "id": "common_voice_hi",
@@ -183,7 +190,9 @@
    "research_only_restrictions": "unknown; docs/DATASETS_AND_SERVICES.md says the terms must be confirmed at download time",
    "attribution_requirements": "unknown",
    "consent_statement": "unknown (not checked in this task)",
-   "privacy_risks": ["Voice recordings of real contributors."],
+   "privacy_risks": [
+    "Voice recordings of real contributors."
+   ],
    "demographics": "unknown",
    "label_definitions": "Transcripts (per project docs); not checked in this task.",
    "splits": "unknown until a release is selected",
@@ -195,12 +204,19 @@
    "extraction_status": "not_applicable",
    "review_status": "metadata_pending",
    "approved_uses": [],
-   "prohibited_uses": ["download_without_approved_ext_decision", "d4_acoustic_distress"],
+   "prohibited_uses": [
+    "download_without_approved_ext_decision",
+    "d4_acoustic_distress"
+   ],
    "contamination_risk": "unknown",
-   "limitations": ["Read speech; domain mismatch with helpline calls (project docs)."],
+   "limitations": [
+    "Read speech; domain mismatch with helpline calls (project docs)."
+   ],
    "date_checked": "2026-09-11",
    "evidence_urls": [],
-   "unresolved_questions": ["Release, licence and consent terms not verified; project docs state it is normally offered under CC0, which must be confirmed from the release itself."],
+   "unresolved_questions": [
+    "Release, licence and consent terms not verified; project docs state it is normally offered under CC0, which must be confirmed from the release itself."
+   ],
    "download_status": "not_downloaded",
    "ext_decision": "EXT-002 PROPOSED",
    "holdout_status": "not_holdout",
@@ -211,42 +227,54 @@
   {
    "id": "ravdess_audio_speech",
    "name": "RAVDESS (Audio_Speech_Actors_01-24)",
-   "version": "unselected",
+   "version": "1.0.0 (Zenodo record 1188976, doi 10.5281/zenodo.1188976); file Audio_Speech_Actors_01-24.zip only",
    "modality": "audio",
    "primary_language": "en",
    "additional_languages": [],
-   "sahay_purpose": "Proposal only (EXT-003): auxiliary acted-emotion speech baseline. Not a D4 source without an approved mapping study.",
+   "sahay_purpose": "Speech-emotion (SER) training and actor-disjoint evaluation for plan step M12 (EXT-003). Acted emotion is not acoustic distress: it reaches D4 only through the D-8 mapping after the promotion gate passes on team recordings.",
    "source_page": "https://zenodo.org/records/1188976",
-   "download_source": "not recorded; source_page copied from docs/DATASETS_AND_SERVICES.md section 2 and data-scripts/dataset_registry.yaml, not re-verified in this change",
-   "publisher": "unknown",
-   "citation": "unknown",
-   "licence_name": "unknown",
-   "licence_url": "unknown",
-   "redistribution": "unknown",
-   "commercial_use": "unknown",
-   "research_only_restrictions": "unknown; docs/DATASETS_AND_SERVICES.md and data-scripts/dataset_registry.yaml state CC BY-NC-SA 4.0, which has not been verified against the source in this change",
-   "attribution_requirements": "unknown",
-   "consent_statement": "unknown",
-   "privacy_risks": ["Voice recordings of actors."],
+   "download_source": "https://zenodo.org/api/records/1188976/files/Audio_Speech_Actors_01-24.zip/content",
+   "publisher": "S. R. Livingstone and F. A. Russo (Ryerson University), published on Zenodo",
+   "citation": "Livingstone SR, Russo FA (2018). The Ryerson Audio-Visual Database of Emotional Speech and Song (RAVDESS). PLoS ONE 13(5): e0196391.",
+   "licence_name": "CC BY-NC-SA 4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+   "redistribution": "not_permitted",
+   "commercial_use": "not_permitted",
+   "research_only_restrictions": "Non-commercial use only. The licence allows share-alike redistribution; SAHAY policy is never to redistribute datasets, derived audio or trained weights.",
+   "attribution_requirements": "Cite Livingstone and Russo (2018) and name the licence in any report or model card.",
+   "consent_statement": "Professional actors recorded for a published research database (per the publisher); not re-verified beyond the Zenodo record.",
+   "privacy_risks": [
+    "Voice recordings of actors."
+   ],
    "demographics": "unknown",
-   "label_definitions": "Acted emotion categories (per project docs); not checked in this task.",
-   "splits": "unknown",
-   "local_relative_path": "",
-   "archive_filename": "",
-   "byte_size": null,
+   "label_definitions": "8 acted emotions (neutral, calm, happy, sad, angry, fearful, disgust, surprised) at 2 intensities; 2 fixed English statements; 24 actors. SAHAY uses neutral, happy, sad, angry, fearful as affect:<class>; calm, surprised and disgust are dropped. Source labels never become SAHAY safety labels.",
+   "splits": "none upstream; SAHAY builds actor-disjoint train/validation/test splits",
+   "local_relative_path": "corpus/audio/ravdess/Audio_Speech_Actors_01-24.zip",
+   "archive_filename": "Audio_Speech_Actors_01-24.zip",
+   "byte_size": 208468073,
    "sha256": null,
    "archive_safety_status": "not_applicable",
    "extraction_status": "not_applicable",
    "review_status": "metadata_pending",
    "approved_uses": [],
-   "prohibited_uses": ["download_without_approved_ext_decision", "d4_acoustic_distress"],
-   "contamination_risk": "unknown",
-   "limitations": ["English only; acted emotion; non-clinical (project docs)."],
-   "date_checked": "2026-09-11",
-   "evidence_urls": [],
-   "unresolved_questions": ["Licence and terms to be verified from the official source before any request."],
+   "prohibited_uses": [
+    "download_without_approved_ext_decision",
+    "d4_acoustic_distress"
+   ],
+   "contamination_risk": "emotion2vec+ may have seen this corpus in training (possibly_seen_in_pretraining); WavLM Base+ has not.",
+   "limitations": [
+    "English only; acted, studio-quality emotion; 2 fixed sentences; not distressed-caller speech; non-clinical."
+   ],
+   "date_checked": "2026-09-24",
+   "evidence_urls": [
+    "https://zenodo.org/records/1188976",
+    "https://creativecommons.org/licenses/by-nc-sa/4.0/"
+   ],
+   "unresolved_questions": [
+    "Download, md5 check (bc696df654c87fed845eb13823edef8a) and archive-safety check pending at run R1."
+   ],
    "download_status": "not_downloaded",
-   "ext_decision": "EXT-003 PROPOSED",
+   "ext_decision": "EXT-003 APPROVED 2026-09-24 (SER training and evaluation; owner downloads at R1)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
@@ -255,33 +283,33 @@
   {
    "id": "crema_d",
    "name": "CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset",
-   "version": "GitHub repository CheyneyComputerScience/CREMA-D (local clone; commit not recorded)",
+   "version": "Repository CheyneyComputerScience/CREMA-D; AudioWAV only (7,442 files, 605,899,936 bytes per the local LFS pointers)",
    "modality": "multimodal",
    "primary_language": "en",
    "additional_languages": [],
-   "sahay_purpose": "Proposal only (EXT-104, P2): auxiliary acted speech-emotion source after the voice gate. Acted emotion is not acoustic distress; it cannot populate D4 without an approved mapping and validation study.",
+   "sahay_purpose": "Speech-emotion (SER) training and cross-corpus evaluation for plan step M12 (EXT-104). Acted emotion is not acoustic distress: it reaches D4 only through the D-8 mapping after the promotion gate passes on team recordings.",
    "source_page": "https://github.com/CheyneyComputerScience/CREMA-D",
-   "download_source": "Git clone of https://github.com/CheyneyComputerScience/CREMA-D; audio and video are stored with Git LFS and need `git lfs` to fetch",
-   "publisher": "Cao, Cooper, Keutmann, Gur, Nenkova and Verma (repository hosted by CheyneyComputerScience)",
-   "citation": "Cao H, Cooper DG, Keutmann MK, Gur RC, Nenkova A, Verma R. CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset. IEEE Transactions on Affective Computing. 2014;5(4):377-390.",
-   "licence_name": "unknown",
-   "licence_url": "unknown",
-   "redistribution": "unknown",
-   "commercial_use": "unknown",
-   "research_only_restrictions": "Not yet reviewed by a human. The official repository README (checked 2026-09-11) states that the dataset is made available under the Open Database License v1.0 (https://opendatacommons.org/licenses/odbl/1-0/), with contents under the Database Contents License v1.0 (https://opendatacommons.org/licenses/dbcl/1-0/). The registry does not record any permission until a human licence review confirms it. The licence does not address the actors' likeness.",
-   "attribution_requirements": "Cite Cao et al. 2014 (above) and keep the ODbL/DbCL notices.",
-   "consent_statement": "Actors were recruited and recorded for the dataset (per the paper); the consent terms themselves were not reviewed.",
+   "download_source": "Git LFS objects of https://github.com/CheyneyComputerScience/CREMA-D (AudioWAV only), or an owner-approved mirror verified file by file against the pointer sha256",
+   "publisher": "Cheyney University of Pennsylvania / CREMA-D authors (GitHub repository)",
+   "citation": "Cao H, Cooper DG, Keutmann MK, Gur RC, Nenkova A, Verma R (2014). CREMA-D: Crowd-sourced Emotional Multimodal Actors Dataset. IEEE Transactions on Affective Computing 5(4): 377-390.",
+   "licence_name": "Open Database License v1.0 (ODbL), per LICENSE.txt in the repository",
+   "licence_url": "https://opendatacommons.org/licenses/odbl/1-0/",
+   "redistribution": "not_permitted",
+   "commercial_use": "permitted",
+   "research_only_restrictions": "None in the licence. The ODbL allows share-alike redistribution; SAHAY policy is never to redistribute datasets, derived audio or trained weights.",
+   "attribution_requirements": "Cite Cao et al. (2014) and name the ODbL in any report or model card.",
+   "consent_statement": "Actors recorded for a published research database (per the publisher); not re-verified.",
    "privacy_risks": [
     "Audio and video of 91 real actors: identifiable faces and voices.",
     "VideoDemographics.csv holds actor age, sex, race and ethnicity: sensitive attributes linked to an actor id.",
     "Must never be shown to a victim or used to profile demographic groups."
    ],
    "demographics": "91 actors, 48 male and 43 female, aged 20-74, several racial and ethnic groups (per the repository README).",
-   "label_definitions": "Acted emotion: Anger, Disgust, Fear, Happy, Neutral, Sad; intended intensity Low, Medium, High or Unspecified; plus crowd-sourced perceived-emotion ratings. Acted, perceived emotion: not distress, not crisis, not danger, not an SVI value.",
-   "splits": "No official split. 7,442 clips of 12 scripted English sentences.",
-   "local_relative_path": "",
+   "label_definitions": "6 acted emotions (anger, disgust, fear, happy, neutral, sad); 12 fixed English sentences; 91 actors; crowd-sourced perceptual ratings. SAHAY uses neutral, happy, sad, angry, fearful as affect:<class>; disgust is dropped. Source labels never become SAHAY safety labels.",
+   "splits": "none upstream; SAHAY builds actor-disjoint train/validation/test splits",
+   "local_relative_path": "corpus/audio/crema_d/CREMA-D/AudioWAV",
    "archive_filename": "",
-   "byte_size": null,
+   "byte_size": 605899936,
    "sha256": null,
    "archive_safety_status": "not_applicable",
    "extraction_status": "not_applicable",
@@ -303,28 +331,21 @@
     "committing_derived_text",
     "download_without_approved_ext_decision"
    ],
-   "contamination_risk": "No text overlap with SAHAY corpora (12 scripted sentences). Audio overlap is impossible: SAHAY has no audio corpus.",
+   "contamination_risk": "emotion2vec+ may have seen this corpus in training (possibly_seen_in_pretraining); WavLM Base+ has not.",
    "limitations": [
-    "Acted emotion by professional actors reading 12 fixed English sentences: not spontaneous speech, not Hindi or Hinglish, not a helpline call.",
-    "Perceived emotion is not acoustic distress; it says nothing about D4 without a mapping study.",
-    "The local clone has NO media: all 22,326 .wav, .mp3 and .flv files are Git LFS pointer stubs (130-132 bytes, beginning with the LFS pointer signature). Only label CSVs, R scripts and READMEs are real files.",
-    "Not clinically validated."
+    "English only; acted emotion; 12 fixed sentences; not distressed-caller speech; non-clinical.",
+    "The existing local copy is an extracted repository archive holding only Git LFS pointers; the audio itself is not yet present."
    ],
-   "date_checked": "2026-09-11",
+   "date_checked": "2026-09-24",
    "evidence_urls": [
     "https://github.com/CheyneyComputerScience/CREMA-D",
-    "https://opendatacommons.org/licenses/odbl/1-0/",
-    "https://opendatacommons.org/licenses/dbcl/1-0/"
+    "https://opendatacommons.org/licenses/odbl/1-0/"
    ],
    "unresolved_questions": [
-    "A human licence review must confirm the ODbL v1.0 / DbCL v1.0 terms stated in the repository README and record them here; until then every licence field stays unknown.",
-    "No approved external decision: EXT-104 is PROPOSED in docs/EXTERNAL_DECISIONS.md, yet a partial clone is present locally.",
-    "The media were never fetched (Git LFS pointers only), so download_status stays not_downloaded.",
-    "Which repository commit was cloned is not recorded.",
-    "Does the ODbL/DbCL grant cover the actors' likeness for a government prototype? Needs a human review."
+    "Pointer snapshot, AudioWAV download and per-file sha256 verification pending at run R1."
    ],
    "download_status": "not_downloaded",
-   "ext_decision": "EXT-104 PROPOSED",
+   "ext_decision": "EXT-104 APPROVED 2026-09-24 (AudioWAV only; SER training and evaluation; owner downloads at R1)",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
@@ -349,7 +370,9 @@
    "research_only_restrictions": "unknown",
    "attribution_requirements": "unknown",
    "consent_statement": "unknown",
-   "privacy_risks": ["Audio-visual recordings of people."],
+   "privacy_risks": [
+    "Audio-visual recordings of people."
+   ],
    "demographics": "unknown",
    "label_definitions": "unknown (not checked in this task)",
    "splits": "unknown",
@@ -361,12 +384,19 @@
    "extraction_status": "not_applicable",
    "review_status": "metadata_pending",
    "approved_uses": [],
-   "prohibited_uses": ["download_without_approved_ext_decision", "d4_acoustic_distress"],
+   "prohibited_uses": [
+    "download_without_approved_ext_decision",
+    "d4_acoustic_distress"
+   ],
    "contamination_risk": "unknown",
-   "limitations": ["Access friction noted in project docs."],
+   "limitations": [
+    "Access friction noted in project docs."
+   ],
    "date_checked": "2026-09-11",
    "evidence_urls": [],
-   "unresolved_questions": ["Access terms not verified."],
+   "unresolved_questions": [
+    "Access terms not verified."
+   ],
    "download_status": "not_downloaded",
    "ext_decision": "none recorded (post-MVP in docs/DATASETS_AND_SERVICES.md)",
    "holdout_status": "not_holdout",
@@ -393,7 +423,9 @@
    "research_only_restrictions": "unknown",
    "attribution_requirements": "unknown",
    "consent_statement": "unknown",
-   "privacy_risks": ["Interview recordings of real participants; clinical context."],
+   "privacy_risks": [
+    "Interview recordings of real participants; clinical context."
+   ],
    "demographics": "unknown",
    "label_definitions": "unknown (not checked in this task)",
    "splits": "unknown",
@@ -405,12 +437,20 @@
    "extraction_status": "not_applicable",
    "review_status": "metadata_pending",
    "approved_uses": [],
-   "prohibited_uses": ["download_without_approved_ext_decision", "diagnosis", "d4_acoustic_distress"],
+   "prohibited_uses": [
+    "download_without_approved_ext_decision",
+    "diagnosis",
+    "d4_acoustic_distress"
+   ],
    "contamination_risk": "unknown",
-   "limitations": ["Access friction noted in project docs."],
+   "limitations": [
+    "Access friction noted in project docs."
+   ],
    "date_checked": "2026-09-11",
    "evidence_urls": [],
-   "unresolved_questions": ["Access terms not verified."],
+   "unresolved_questions": [
+    "Access terms not verified."
+   ],
    "download_status": "not_downloaded",
    "ext_decision": "none recorded (post-MVP in docs/DATASETS_AND_SERVICES.md)",
    "holdout_status": "not_holdout",
@@ -495,7 +535,12 @@
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
-   "sensitivity_flags": ["real_user_generated_text", "potential_victim_narratives", "minors_possible", "personal_names_not_reliably_redacted"]
+   "sensitivity_flags": [
+    "real_user_generated_text",
+    "potential_victim_narratives",
+    "minors_possible",
+    "personal_names_not_reliably_redacted"
+   ]
   },
   {
    "id": "hinglish_hate_speech_local_derivative",
@@ -577,7 +622,11 @@
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
-   "sensitivity_flags": ["real_user_generated_text", "minors_possible", "personal_names_not_reliably_redacted"]
+   "sensitivity_flags": [
+    "real_user_generated_text",
+    "minors_possible",
+    "personal_names_not_reliably_redacted"
+   ]
   },
   {
    "id": "hinglish_sentiment_kaggle",
@@ -653,7 +702,72 @@
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,
-   "sensitivity_flags": ["real_user_generated_text", "minors_possible", "personal_names_not_reliably_redacted"]
+   "sensitivity_flags": [
+    "real_user_generated_text",
+    "minors_possible",
+    "personal_names_not_reliably_redacted"
+   ]
+  },
+  {
+   "id": "goemotions",
+   "name": "GoEmotions (simplified TSV splits)",
+   "version": "google-research/goemotions/data {train,dev,test}.tsv and emotions.txt at master on 2026-09-24 (3,519,053 / 439,059 / 436,706 / 248 bytes); sha256 recorded at first fetch",
+   "modality": "text",
+   "primary_language": "en",
+   "additional_languages": [],
+   "sahay_purpose": "English text-affect training for the MuRIL/XLM-R shadow branch (plan M12e-f, EXT-125). Shadow only; never a SAHAY safety label.",
+   "source_page": "https://github.com/google-research/google-research/tree/master/goemotions",
+   "download_source": "https://raw.githubusercontent.com/google-research/google-research/master/goemotions/data/",
+   "publisher": "Google Research",
+   "citation": "Demszky D, Movshovitz-Attias D, Ko J, Cowen A, Nemade G, Ravi S (2020). GoEmotions: A Dataset of Fine-Grained Emotions. ACL 2020.",
+   "licence_name": "Apache-2.0 (per the Hugging Face dataset card google-research-datasets/go_emotions)",
+   "licence_url": "https://www.apache.org/licenses/LICENSE-2.0",
+   "redistribution": "not_permitted",
+   "commercial_use": "permitted",
+   "research_only_restrictions": "None in the licence as recorded. SAHAY policy is never to redistribute datasets or trained weights. The licence was taken from the dataset card and should be confirmed against the repository before any product use (D-9b condition a).",
+   "attribution_requirements": "Cite Demszky et al. (2020).",
+   "consent_statement": "Public Reddit comments collected by the publisher; authors did not consent to this use individually.",
+   "privacy_risks": [
+    "Real user-generated text from Reddit; the publisher masked names with [NAME], but other identifiers may remain."
+   ],
+   "demographics": "Reddit users; not described per record.",
+   "label_definitions": "27 emotions plus neutral, multi-label. SAHAY maps anger, fear, sadness, joy and neutral to affect:<class> for the shadow text branch only.",
+   "splits": "train / dev / test TSV upstream",
+   "local_relative_path": "corpus/text/english/goemotions/",
+   "archive_filename": "",
+   "byte_size": 4395066,
+   "sha256": null,
+   "archive_safety_status": "not_applicable",
+   "extraction_status": "not_applicable",
+   "review_status": "metadata_pending",
+   "approved_uses": [],
+   "prohibited_uses": [
+    "download_without_approved_ext_decision",
+    "d4_acoustic_distress",
+    "victim_facing_output"
+   ],
+   "contamination_risk": "none known for SAHAY fixtures",
+   "limitations": [
+    "English only; Reddit register; label noise documented upstream; not distressed-caller language."
+   ],
+   "date_checked": "2026-09-24",
+   "evidence_urls": [
+    "https://huggingface.co/datasets/google-research-datasets/go_emotions",
+    "https://github.com/google-research/google-research/tree/master/goemotions"
+   ],
+   "unresolved_questions": [
+    "Download and first-fetch sha256 pending at run R5 (text preprocessing)."
+   ],
+   "download_status": "not_downloaded",
+   "ext_decision": "EXT-125 APPROVED 2026-09-24 (shadow text-affect training)",
+   "holdout_status": "not_holdout",
+   "sahay_dimension_mappings": {},
+   "official_locked_test_allowed": false,
+   "sensitivity_flags": [
+    "real_user_generated_text",
+    "minors_possible",
+    "potential_victim_narratives"
+   ]
   }
  ]
 }

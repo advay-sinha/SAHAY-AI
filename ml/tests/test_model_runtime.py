@@ -779,6 +779,12 @@ class TestGatedPipeline(RootCase):
         self.assertFalse(gated.asr.loaded)
 
 
+def _ml_sources():
+    """ML source files, excluding virtual environments and caches beneath ml/ (e.g. ml/.venv)."""
+    return [p for p in ML.rglob("*.py")
+            if not any(part.startswith(".") or part == "__pycache__" for part in p.relative_to(ML).parts)]
+
+
 class TestBenchmarkBoundary(RootCase):
     def test_ungated_decoding_is_private_and_labelled_benchmark_only(self):
         from ml.runtime.asr import _transcribe_ungated_for_benchmark
@@ -801,10 +807,10 @@ class TestBenchmarkBoundary(RootCase):
         self.assertTrue(callable(asr_mod._transcribe_ungated_for_benchmark))
 
     def test_only_the_benchmark_references_the_bypass(self):
-        users = sorted(p.relative_to(ML).as_posix() for p in ML.rglob("*.py")
+        users = sorted(p.relative_to(ML).as_posix() for p in _ml_sources()
                        if "tests" not in p.parts and "_transcribe_ungated_for_benchmark" in p.read_text("utf-8"))
         self.assertEqual(users, ["runtime/asr.py", "runtime/benchmark.py"])
-        decode_users = sorted(p.relative_to(ML).as_posix() for p in ML.rglob("*.py")
+        decode_users = sorted(p.relative_to(ML).as_posix() for p in _ml_sources()
                               if "tests" not in p.parts and "._decode(" in p.read_text("utf-8"))
         self.assertEqual(decode_users, ["runtime/asr.py"])
 
@@ -864,12 +870,13 @@ class TestModelFirewall(unittest.TestCase):
     APP = ("assessment.py", "dialogue", "guardrails", "svi", "nlp", "asr", "tts", "acoustics", "eval", "data")
 
     def test_no_application_module_imports_the_runtime(self):
-        # ml/training and ml/shadow (Task 7, EXT-119) are explicit ML-only tooling that may use the
-        # runtime; test_shadow_training proves no application module imports *them*.
+        # ml/training and ml/shadow (Task 7, EXT-119) and ml/ser (M12, EXT-124/126) are explicit
+        # ML-only tooling that may use the runtime; test_shadow_training proves no application
+        # module imports *them*.
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.runtime|\.\.runtime|\.runtime)\b", re.M)
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
-            if rel.startswith(("runtime/", "tests/", "training/", "shadow/")):
+            if rel.startswith(("runtime/", "tests/", "training/", "shadow/", "ser/")):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 

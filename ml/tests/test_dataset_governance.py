@@ -70,11 +70,25 @@ class TestRegistry(unittest.TestCase):
         self.assertIn("d4_acoustic_distress", rec["prohibited_uses"])
 
     def test_proposal_entries_are_not_downloaded_and_invent_no_licence(self):
-        for rid in ("common_voice_hi", "ravdess_audio_speech", "crema_d", "iemocap", "daic_woz"):
+        for rid in ("common_voice_hi", "iemocap", "daic_woz"):
             rec = gov.get(REG, rid)
             self.assertEqual(rec["download_status"], "not_downloaded")
             self.assertEqual(rec["licence_name"], "unknown")
             self.assertIsNone(rec["sha256"])
+
+    def test_approved_but_not_downloaded_entries_cite_their_licence_evidence(self):
+        # EXT-003 / EXT-104 / EXT-125 (2026-09-24): licence terms were verified from the source
+        # (EXT-128 lookup) before download. A licence is recorded only with https evidence, and
+        # nothing is approved for use until the owner's download passes its integrity check.
+        for rid in ("ravdess_audio_speech", "crema_d", "goemotions"):
+            rec = gov.get(REG, rid)
+            self.assertEqual(rec["download_status"], "not_downloaded", rid)
+            self.assertIsNone(rec["sha256"], rid)
+            self.assertEqual(rec["review_status"], "metadata_pending", rid)
+            self.assertEqual(rec["approved_uses"], [], rid)
+            self.assertIn("APPROVED 2026-09-24", rec["ext_decision"], rid)
+            self.assertTrue(rec["evidence_urls"] and all(u.startswith("https://") for u in rec["evidence_urls"]), rid)
+            self.assertIn("d4_acoustic_distress", rec["prohibited_uses"], rid)
 
     def test_all_language_and_modality_combinations_are_supported(self):
         for modality, lang in (("text", "en"), ("text", "hi"), ("text", "hi-Latn"), ("audio", "en"),

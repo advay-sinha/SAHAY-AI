@@ -1,0 +1,11 @@
+# Isolated emotion2vec environment `sahay-ser-e2v` (EXT-127, D-14). Outside Git, beside
+# sahay-ml-models, CPython 3.12. Never install these into sahay-ml-models.
+#
+# This file states the top-level request. The exact resolved set is captured by the owner at
+# run point R1 with `pip freeze > ml/ser/requirements-e2v.lock` and committed with the results.
+--extra-index-url https://download.pytorch.org/whl/cu128
+torch==2.11.0+cu128
+torchaudio==2.11.0+cu128
+funasr==1.4.16
+onnx
+onnxruntime==1.30.0

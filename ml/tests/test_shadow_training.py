@@ -422,11 +422,11 @@ class TestModelCardStatus(unittest.TestCase):
 
 class TestShadowFirewall(unittest.TestCase):
     def test_no_application_module_imports_training_or_shadow(self):
-        pattern = re.compile(r"^\s*(from|import)\s+(ml\.(training|shadow)|\.\.(training|shadow)|\.(training|shadow))\b",
-                             re.M)
+        pattern = re.compile(r"^\s*(from|import)\s+(ml\.(training|shadow|ser)|\.\.(training|shadow|ser)|"
+                             r"\.(training|shadow|ser))\b", re.M)
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
-            if rel.startswith(("training/", "shadow/", "tests/")):
+            if rel.startswith(("training/", "shadow/", "ser/", "tests/")):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 
