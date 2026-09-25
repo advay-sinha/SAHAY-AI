@@ -1,7 +1,7 @@
 """Voice-activity detection interface.
 
-Silero VAD (EXT-005) is PROPOSED. The approved-today fallback is a manual
-whole-utterance submit button, which requires no VAD at all.
+Silero VAD is approved through EXT-118 and runs in ml/runtime (GatedTranscriber). The manual
+whole-utterance submit button remains the fallback, which requires no VAD at all.
 
 Endpoint target: ~700 ms of silence (CONTRACTS.md section 8).
 """

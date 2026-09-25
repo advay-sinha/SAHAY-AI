@@ -1,8 +1,8 @@
 """Speech synthesis interface.
 
-No TTS model or voice is approved (EXT-103, PROPOSED). Fixed scripts are
-pre-synthesised rather than generated at runtime, so the demo path needs no
-online TTS.
+EXT-103 (approved 2026-09-24): fixed scripts use human-recorded audio; validated
+generated turns may use a built-in offline OS voice. No TTS model is downloaded, so
+the demo path needs no online TTS.
 
 Nothing may be synthesised unless guardrails.validate returned ok, or the text
 is an APPROVED fixed script.

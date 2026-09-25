@@ -4,7 +4,7 @@ from typing import Any, Dict, Optional, Protocol
 
 
 class Transcriber(Protocol):
-    """Implemented later by a faster-whisper adapter (EXT-004, PROPOSED)."""
+    """Implemented by the gated faster-whisper path in ml/runtime (EXT-118); backend wiring is EXT-120."""
 
     def transcribe(self, pcm16: bytes, sample_rate: int = 16000, lang_hint: Optional[str] = None) -> Dict[str, Any]:
         """Return {"text", "lang", "lang_confidence", "asr_confidence", "duration_ms"}."""

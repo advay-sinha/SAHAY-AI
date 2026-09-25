@@ -14,10 +14,10 @@ Claude reads this file before any install, download, API use or service addition
 | ID | Item | Exact scope | Purpose | Status | Decision date | Decided by | Notes/fallback |
 |---|---|---|---|---|---|---|---|
 | EXT-001 | Repository Python/npm packages | Exact pinned manifests + generated lockfiles | Local application development | APPROVED | 2026-09-10 | Project owner | Installed and verified; all 7 local checks pass |
-| EXT-002 | Mozilla Common Voice Hindi | One named release; selected Hindi evaluation splits | ASR WER/CER | PROPOSED | | | Use own corpus for smoke tests |
-| EXT-003 | RAVDESS | Audio_Speech_Actors_01-24.zip only | Auxiliary SER baseline | PROPOSED | | | Use own scripted audio only |
-| EXT-004 | faster-whisper | small model; CPU int8 local use | ASR | PROPOSED | | | Text input and transcript fixtures |
-| EXT-005 | Silero VAD | One pinned model/release | Endpointing | PROPOSED | | | Manual whole-utterance submit button |
+| EXT-002 | Mozilla Common Voice Hindi | One named release; selected Hindi evaluation splits | ASR WER/CER | APPROVED | 2026-09-24 | Project owner | Release is chosen at M11; the owner downloads it (the portal may need a login). See the 2026-09-24 batch entry. |
+| EXT-003 | RAVDESS | Audio_Speech_Actors_01-24.zip only | SER training and evaluation (M12) | APPROVED | 2026-09-24 | Project owner | 208,468,073 bytes, md5 `bc696df654c87fed845eb13823edef8a`, CC BY-NC-SA 4.0 |
+| EXT-004 | faster-whisper | small model; CPU int8 local use | ASR | APPROVED via EXT-118 | 2026-09-11 | Project owner | Superseded by EXT-118 (pinned Whisper Small, CT2 FP16 with a CPU int8 fallback) |
+| EXT-005 | Silero VAD | One pinned model/release | Endpointing | APPROVED via EXT-118 | 2026-09-11 | Project owner | Superseded by EXT-118 (silero-vad 6.2.1) |
 | EXT-113 | Node.js runtime target | Node.js 24.19.0 LTS; `engines` >=24 <25 | Frontend and mobile toolchain | APPROVED (amended) | 2026-09-10 | Project owner | Amended from Node 22: winget no longer offers 22 under OpenJS.NodeJS.LTS |
 | EXT-114 | CPython 3.11.9 (Windows x64) | Interpreter only, alongside existing 3.12 and 3.13.2 | backend/.venv and ml/.venv | APPROVED (installed) | 2026-09-10 | Project owner | Installed 2026-09-10; 3.12/3.13 untouched |
 
@@ -27,8 +27,8 @@ Claude reads this file before any install, download, API use or service addition
 |---|---|---|---|
 | EXT-101 | FFmpeg | PROPOSED | When audio conversion is implemented |
 | EXT-102 | Android SDK/ADB | PROPOSED | When physical-phone testing starts |
-| EXT-103 | TTS model/voice | PROPOSED | After fixed prompt scripts are approved |
-| EXT-104 | CREMA-D | PROPOSED | P2 |
+| EXT-103 | TTS model/voice | APPROVED 2026-09-24 (scope in batch entry) | M13 |
+| EXT-104 | CREMA-D | APPROVED 2026-09-24: `AudioWAV` only | M12 |
 | EXT-105 | Dreaddit | PROPOSED | P2 |
 | EXT-106 | MuRIL/IndicBERT/XLM-R weights | PROPOSED | P2 |
 | EXT-107 | External LLM API and key | PROPOSED | P2 optional |
@@ -369,4 +369,138 @@ Invariant 8
                  explicit decision addressing Invariant 8, licensing, privacy,
                  model behavior and rollback. For this decision, "working MVP"
                  means the ML-owned local CLI demonstration only.
+```
+
+```text
+Date:            2026-09-24
+ID:              EXT-128 (D-15) — read-only metadata lookups
+Decision:        APPROVED and performed 2026-09-24
+Scope:           HTTP GET of public metadata only: Hugging Face model and
+                 dataset API and model cards, the PyPI JSON for funasr, the
+                 Zenodo record API for RAVDESS, GitHub raw licence and README
+                 files, and HEAD requests for the GoEmotions TSVs. No model,
+                 dataset or package file was downloaded.
+Findings:        Recorded in the entries below. Two corrections to the plan:
+                 (1) WavLM Base+ is CC BY-SA 3.0 (the UniSpeech licence linked
+                 from its model card), not MIT; (2) emotion2vec+ large ships a
+                 single 1.95 GB model.pt under the FunASR Model Open Source
+                 License v1.1, and its fine-tuning data list is unpublished
+                 ("details of data engineering will be announced later").
+Decision maker:  Project owner, 2026-09-24.
+```
+
+```text
+Date:            2026-09-24
+ID and exact
+  version/release:
+                 Batch approval of plan decisions D-1 to D-14
+                 (docs/plan/ML_NATIONAL_MVP.md, section 5). The project owner
+                 approved every listed decision on 2026-09-24.
+
+EXT-003 (D-5a)   RAVDESS, Zenodo record 1188976 (v1.0.0, doi
+                 10.5281/zenodo.1188976), file Audio_Speech_Actors_01-24.zip
+                 only: 208,468,073 bytes, md5 bc696df654c87fed845eb13823edef8a.
+                 Licence CC BY-NC-SA 4.0 (non-commercial, share-alike,
+                 attribution). Scope: local SER training and evaluation.
+EXT-104 (D-5b)   CREMA-D AudioWAV/ only, fetched by `git lfs pull --include
+                 "AudioWAV/*"` into the existing local clone: 7,442 files,
+                 577.8 MB, sha256 per file taken from the local LFS pointers.
+                 Licence ODbL 1.0. A mirror is allowed only if every file
+                 matches its pointer sha256. AudioMP3 and VideoFlash are
+                 excluded.
+EXT-121 (D-4)    numpy 2.5.3 and torchaudio 2.11.0+cu128 (EXT-118 pins) may be
+                 used for prosody and D4 features: resample,
+                 detect_pitch_frequency, energy, and pause and rate measures.
+                 No new package.
+EXT-122 (D-7)    The pinned Whisper Small upstream weights (EXT-118,
+                 model.safetensors sha256 1d773488…) may be loaded frozen as an
+                 SER feature extractor, a challenger only. It does not
+                 transcribe on this path.
+EXT-123 (D-9a)   Text-affect training in shadow: fine-tuning MuRIL (Stage A
+                 init plus a base-MuRIL ablation) and XLM-R base (extending
+                 EXT-118's comparison-only scope) on EmoInHindi mapped to
+                 affect:neutral|happy|sad|angry|fearful, a deterministic
+                 Roman-script transliterated copy, and GoEmotions (EXT-125).
+                 Outputs stay private and are shown only in the local ML demo.
+EXT-124 (D-10)   microsoft/wavlm-base-plus at revision
+                 4c66d4806a428f2e922ccfa1a962776e232d487b: pytorch_model.bin
+                 377,617,425 bytes, sha256 3bb273a6ace99408b50cfc81afdbb7ef
+                 2de02da2eab0234e18db608ce692fe51, plus config.json and
+                 preprocessor_config.json. Licence CC BY-SA 3.0 (corrected;
+                 the plan said MIT). Fine-tuned weights are derivatives: keep
+                 them private; any redistribution would need to be CC BY-SA.
+                 Loaded weights-only, offline.
+EXT-125 (D-11)   GoEmotions, google-research/goemotions/data/{train,dev,test}
+                 .tsv and emotions.txt (3,519,053 / 439,059 / 436,706 / 248
+                 bytes at master on 2026-09-24). The Hugging Face dataset card
+                 states Apache-2.0. The raw URLs are not immutable, so sha256
+                 is recorded at first fetch and verified afterwards. The
+                 comments are public Reddit text: shadow training only.
+EXT-126 (D-13)   emotion2vec/emotion2vec_plus_large at revision
+                 6c303ba987b86b93193de93e34bb2b077a6bedc4: model.pt
+                 1,945,790,254 bytes, sha256 be501a01f26fcdc7663a062dff86af83
+                 9afbaef7c4de32f5e42d7e1ad2784da4, plus config.yaml,
+                 configuration.json and tokens.txt. Licence: FunASR Model Open
+                 Source License v1.1 (use, modification and sharing allowed with
+                 attribution and retained model names; "reference and learning
+                 purposes"; Alibaba may revise the terms unilaterally). Frozen
+                 inference only (zero-shot 9→5 and embeddings). Its fine-tuning
+                 data is unpublished and its seed stage used EmoBox, so RAVDESS
+                 and CREMA-D results for it are labelled
+                 possibly_seen_in_pretraining.
+EXT-127 (D-14)   Isolated environment `sahay-ser-e2v` (CPython 3.12,
+                 outside Git, beside sahay-ml-models): torch 2.11.0+cu128 plus
+                 funasr 1.4.16 (wheel sha256 f95943f6…d08bf450d, MIT) with its
+                 resolved dependencies. The exact lock is produced by the
+                 owner's `pip freeze` at run R1 and committed as
+                 ml/ser/requirements-e2v.lock. It is only for emotion2vec
+                 feature extraction, the zero-shot run and ONNX export. The
+                 model loads from a local path with disable_update=True and
+                 networking blocked; the modelscope hub is never contacted.
+                 sahay-ml-models is never modified.
+EXT-120 (D-2)    GatedTranscriber (EXT-118) may be integrated behind the
+                 backend ASR adapter for whole-utterance upload (VF-11): local
+                 only, no public listener.
+EXT-002 (D-3)    Common Voice Hindi: one release, evaluation split only, for
+                 WER/CER. Plus consented, team-recorded fictional audio.
+EXT-103 (D-6)    TTS: human-recorded audio for the approved fixed scripts,
+                 plus a built-in offline Windows voice for validated generated
+                 turns. No TTS model is downloaded.
+D-1              A fourth, regional language is approved in principle. The
+                 language is not yet chosen, and it ships only with a fluent
+                 human reviewer.
+D-8 (lead)       SER → D4 mapping: SER plus text affect is at most 30% of D4
+                 (at most 3.6 SVI points). Selection uses the team-dev slice
+                 (2 speakers). The promotion gate requires 5-class UAR ≥ 0.45
+                 on the team's Hindi and English gate speakers, no class recall
+                 below 0.20, and a neutral negative control. Affect never
+                 affects the crisis pre-check, routing, overrides or forced
+                 bands.
+D-9b             Text affect in the product D4 is approved by the owner, but
+                 it activates only when all of these hold: (a) the EmoInHindi
+                 and GoEmotions licences are confirmed and recorded (EmoInHindi
+                 is licence_pending); (b) the text head passes the D-8 gate on
+                 human-written E6 data; (c) a config flag defaults to off, as
+                 the rollback. Until then it stays shadow-only. This is the
+                 separate decision EXT-119's invariant 8 clarification
+                 requires, and these conditions are its privacy, licensing,
+                 behaviour and rollback terms.
+Decision:        APPROVED (as scoped above)
+Reason:          Problem Statement 26093 requires speech analytics and emotion
+                 AI. The owner requires SER in the national MVP, uses MuRIL
+                 where it fits, and keeps text and speech as separate models
+                 sized for the RTX 4060 (8 GB) laptop.
+Storage/runtime
+  location:      Models under SAHAY_MODELS_ROOT, audio and text datasets under
+                 SAHAY_DATASETS_ROOT, and features, checkpoints and reports
+                 under SAHAY_TRAINING_ROOT. Nothing goes into Git except code,
+                 manifests, the lock file and aggregate reports.
+Fallback or
+  migration
+  action:        If emotion2vec hits a deferral trigger (X1–X5 in the plan),
+                 WavLM Base+ becomes primary, then the Whisper-encoder head,
+                 then prosody only. If a download fails verification, stop:
+                 no silent substitution.
+Decision maker:  Project owner, 2026-09-24. All downloads and training runs
+                 are executed manually by the owner (run points R1–R7).
 ```

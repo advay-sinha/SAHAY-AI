@@ -9,8 +9,8 @@
 #
 # Per the EXT-001 instruction, no ML package is added while the pure modules
 # are being built. ASR, VAD, TTS, acoustics and classifier dependencies arrive
-# only with their own approvals:
-#   EXT-004  faster-whisper small        PROPOSED
-#   EXT-005  Silero VAD                  PROPOSED
-#   EXT-103  TTS model/voice             PROPOSED
-#   EXT-106  MuRIL/IndicBERT/XLM-R       PROPOSED, P2
+# only with their own approvals, and live in private environments outside this file:
+#   EXT-118  Whisper Small, Silero VAD, MuRIL, XLM-R  APPROVED -> ml/runtime/requirements-models.txt
+#   EXT-121  numpy/torchaudio for prosody (lazy)       APPROVED -> same private environment
+#   EXT-127  FunASR for emotion2vec (isolated env)     APPROVED -> ml/ser/requirements-e2v.txt
+#   EXT-103  TTS: human-recorded fixed scripts + built-in OS voice; no model
