@@ -73,6 +73,16 @@ class TestRegistry(unittest.TestCase):
             self.assertFalse(rec["official_locked_test_allowed"], rec["id"])
             self.assertEqual(rec["sahay_dimension_mappings"], {}, rec["id"])
 
+    def test_ser_approved_datasets_pass_the_use_guard_and_keep_their_safety_prohibitions(self):
+        for rid in self.SER_APPROVED:
+            for purpose in ("training", "evaluation"):
+                gov.select_for(REG, rid, purpose)  # raises if the record contradicts its approval
+            prohibited = set(gov.get(REG, rid)["prohibited_uses"])
+            for use in ("d4_acoustic_distress", "svi_dimension_population", "crisis_or_danger_label_substitution",
+                        "diagnosis", "locked_test", "victim_facing_output", "redistribution",
+                        "external_service_upload"):
+                self.assertIn(use, prohibited, (rid, use))
+
     def test_emoinhindi_is_registered_as_text_at_the_text_path(self):
         rec = gov.get(REG, "emoinhindi")
         self.assertEqual(rec["modality"], "text")

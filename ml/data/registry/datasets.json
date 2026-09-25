@@ -261,8 +261,18 @@
     "ser_evaluation"
    ],
    "prohibited_uses": [
-    "download_without_approved_ext_decision",
-    "d4_acoustic_distress"
+    "threshold_tuning",
+    "locked_test",
+    "svi_dimension_population",
+    "d4_acoustic_distress",
+    "crisis_or_danger_label_substitution",
+    "diagnosis",
+    "redistribution",
+    "commercial_use",
+    "victim_facing_output",
+    "external_service_upload",
+    "committing_derived_text",
+    "download_without_approved_ext_decision"
    ],
    "contamination_risk": "emotion2vec+ may have seen this corpus in training (possibly_seen_in_pretraining); WavLM Base+ has not.",
    "limitations": [
@@ -321,8 +331,6 @@
     "ser_evaluation"
    ],
    "prohibited_uses": [
-    "training",
-    "evaluation",
     "threshold_tuning",
     "locked_test",
     "svi_dimension_population",
