@@ -335,6 +335,19 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
 - Report by language: M1 critical-event miss rate, M7 P/R/F1, false escalations, abstention coverage, M2 and M3 latency, and M6 WER.
 - AE-15 interpretable baseline (P1; cut first if short of time): a stdlib logistic-regression comparison row. It adds no new package.
 - **Exit:** the evaluation table ships with its evidence class stated on every number. If the locked or blind count is still 0, the table says so explicitly.
+- **Status (2026-09-27):** the table builder is done (`python -m ml.eval.table`, `eval-table-1.0`; tests in `ml/tests/test_eval_table.py`).
+  - What the builder guarantees:
+    - An unmeasured metric is `pending`, never zero.
+    - Every row names its source file and evidence class.
+    - Output is aggregates only.
+    - A wording guard refuses clinical or production claims, and refuses "official" while the locked set is empty.
+  - Current table: `ml/eval/results/eval-table-2026-09-27.md`, built from `eval-2026-09-27.json` and the private run reports. It has 95 rows: 83 measured, 10 pending, 1 enforced by tests (M8) and 1 unvalidated (D4).
+  - Headline results, all on exposed fixtures (evidence class exposed):
+    - critical-event miss rate: 1 of 17 on dev and 1 of 14 on candidates;
+    - red-team: 39 of 39;
+    - coercion recall on candidates: 0.40 (2 of 5).
+  - Pending: the locked set, M2, M3, M4, M6 and M9.
+  - Still open in M14: the exposed-failure fixes above, the fixtures that need human review and the blind corpus (both ⛔), and the AE-15 row.
 
 ### M15 — Shadow model (optional; not recommended before the finale)
 
