@@ -192,3 +192,48 @@ The documented differences are `emergency` as a pathway, `closed` covering "clos
 - Backend source: `backend/app/core/enums.py`. The Pydantic `Literal`s are built from it, and the duplicate backend timeline lists are gone.
 - Mirrors: `frontend/src/types/contracts.ts` and `ml/assessment.py` (`TEXT_CHANNELS`).
 - The mirror test checks all of them: `test_contract_mirror.py::TestEnumMirror`.
+
+---
+
+## PC-11 — `POST /sessions/{id}/audio` request and response — **PROPOSED (owner-approved 2026-09-27; awaiting D-11 lead confirmation)**
+
+Plan step M11, decision EXT-120. `CONTRACTS.md` is **not** edited until the four leads confirm.
+
+```
+CONTRACT CHANGE PROPOSAL
+Contract:     POST /sessions/{id}/audio   (CONTRACTS §1 FALLBACK line, §4 REST)
+Current:      "whole-utterance fallback (501 in the text-first slice)". No request or response shape.
+Proposed:
+  POST /sessions/{id}/audio?lang=hi|en        victim session token (same rule as /sessions/{id}/end)
+    body        raw audio bytes; Content-Type audio/wav (16-bit PCM, mono, 8–48 kHz)
+                | audio/mp4 | audio/aac (M4A/AAC, what expo-audio records on Android)
+    limits      ≤ 60 s of audio, ≤ 5 MB
+    lang        optional; defaults to the session language; only hi and en
+    200 →       {turn_id: string | null, status: "accepted" | "no_speech" | "audio_unreadable"}
+    errors      413 too large · 415 unsupported Content-Type · 409 not an audio-channel session
+                (mobile_voice | upload), consent declined, or session not in intake ·
+                503 ASR unavailable (client offers Chat). Error body follows CONTRACTS §9.
+    semantics   "accepted": the transcript enters the SAME path as chat.message — crisis
+                pre-check first, then the dialogue policy — and the victim receives the
+                unchanged transcript.line and assistant.turn events. The response never
+                contains a transcript confidence, audio quality, emotion, score or band.
+    console     ASR confidence is stored on the turn (existing column turns.asr_confidence)
+                and reported in the existing assessment `uncertainty` block together with
+                speech duration and audio quality. Low confidence or poor audio makes the
+                assessment abstain (needs_human, invariant 6). No new event, field or enum.
+Reason:       Voice intake (VF-11, M11). Without it, no spoken turn can reach the dialogue.
+Breaks:       Nothing; additive. Backend: the 501 stub in backend/app/api/sessions.py is
+              replaced. Frontend: none. Mobile: none yet (capture is a stub; it becomes a
+              consumer later). ML: none.
+Migration:    Additive. No data migration (turns.asr_confidence already exists).
+Alternative:  Voice stays an ML-owned local demonstration; the product stays text-only.
+```
+
+Internal, not part of the contract: the backend reaches speech recognition through an ASR adapter (`ASR_PROVIDER=mock` by default, or `local_service`). `local_service` calls a separate local speech-to-text process, owned by the ML team, that binds to 127.0.0.1 only and runs voice-activity detection before speech recognition. This is within EXT-120: local only, no public listener.
+
+| Lead (D-11) | Confirmation |
+|---|---|
+| AI/ML and Safety | Project owner, 2026-09-27 |
+| Backend | pending |
+| Executive Web | pending |
+| Mobile/Victim Experience | pending |

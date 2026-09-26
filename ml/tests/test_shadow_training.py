@@ -422,11 +422,12 @@ class TestModelCardStatus(unittest.TestCase):
 
 class TestShadowFirewall(unittest.TestCase):
     def test_no_application_module_imports_training_or_shadow(self):
-        pattern = re.compile(r"^\s*(from|import)\s+(ml\.(training|shadow|ser|textaffect)|"
-                             r"\.\.(training|shadow|ser|textaffect)|\.(training|shadow|ser|textaffect))\b", re.M)
+        pattern = re.compile(r"^\s*(from|import)\s+(ml\.(training|shadow|ser|textaffect|voice)|"
+                             r"\.\.(training|shadow|ser|textaffect|voice)|\.(training|shadow|ser|textaffect|voice))\b",
+                             re.M)
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
-            if rel.startswith(("training/", "shadow/", "ser/", "textaffect/", "tests/")):
+            if rel.startswith(("training/", "shadow/", "ser/", "textaffect/", "voice/", "tests/")):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 

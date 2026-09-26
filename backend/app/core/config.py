@@ -112,6 +112,11 @@ class Settings(BaseSettings):
     LLM_PROVIDER: Literal["mock", "external"] = "mock"
     LLM_MODEL: str = ""
     LLM_API_KEY: str = ""
+    # Speech recognition (EXT-120, PC-11). "mock" needs nothing running; "local_service" calls the
+    # ML-owned speech-to-text process, which listens on the loopback interface only.
+    ASR_PROVIDER: Literal["mock", "local_service"] = "mock"
+    ASR_SERVICE_URL: str = "http://127.0.0.1:8765"
+    ASR_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0, le=120)
     ASSESSMENT_RUNNER: Literal["local", "external"] = "local"
     # "local" is the deterministic keyword index; "external" is reserved for a
     # future vector store. Mirrors the local/external naming ASSESSMENT_RUNNER uses.
@@ -133,6 +138,15 @@ class Settings(BaseSettings):
     TURN_LATENCY_TARGET_MS: int = 3000
     VAD_SILENCE_MS: int = 700
 
+
+    @field_validator("ASR_SERVICE_URL")
+    @classmethod
+    def _loopback_asr(cls, value: str) -> str:
+        from urllib.parse import urlparse
+        url = urlparse(value)
+        if url.scheme != "http" or url.hostname not in ("127.0.0.1", "::1") or url.path not in ("", "/"):
+            raise ValueError("ASR_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
+        return value.rstrip("/")
 
     @field_validator("AUDIO_STORAGE_PATH")
     @classmethod

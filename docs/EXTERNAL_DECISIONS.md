@@ -539,3 +539,20 @@ Licence/cost:    Project-owner risk acceptance for the licence_pending datasets,
                  for local, non-commercial hackathon model development only.
 Decision maker:  Project owner, 2026-09-26.
 ```
+
+```text
+Date:            2026-09-27
+ID:              EXT-120 — implementation note (no new dependency)
+Scope:           Backend settings ASR_PROVIDER (mock | local_service; default mock),
+                 ASR_SERVICE_URL (http://127.0.0.1 or http://[::1] only; default
+                 http://127.0.0.1:8765) and ASR_TIMEOUT_SECONDS, added to .env.example.
+                 The ML-owned speech-to-text process (`python -m ml.voice.service`)
+                 runs in sahay-ml-models, refuses any non-loopback bind, loads its
+                 models with network connections blocked, and uses only EXT-118
+                 packages (PyAV decoding through faster-whisper). No package, model or
+                 service was added. The upload endpoint stays 501 until the leads
+                 confirm contract change PC-11.
+Measured:        Warm latency 323–374 ms for a 1.6 s clip on the RTX 4060 (contract
+                 budget ≤ 0.6 s); silence returns no_speech in 134 ms without Whisper.
+Decision maker:  Project owner, 2026-09-27 (M11 approval).
+```

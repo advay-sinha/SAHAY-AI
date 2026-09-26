@@ -3,8 +3,9 @@
 ``GatedTranscriber`` runs the VAD first and passes its intervals, unchanged, to the ASR
 boundary, which validates them and decodes only those regions. When the VAD finds no speech,
 Whisper is neither invoked nor even loaded. VAD output means speech presence only; it is never
-read as distress, emotion, danger, crisis, an SVI input or D4. No transcript from this path is
-fed to the assessment pipeline.
+read as distress, emotion, danger, crisis, an SVI input or D4. Under EXT-120 the transcript may
+reach the dialogue only through the backend ASR adapter (whole-utterance upload, PC-11), where
+it takes exactly the same path as a typed turn: crisis pre-check first, then the dialogue policy.
 """
 
 from typing import Any
@@ -30,6 +31,7 @@ class GatedTranscriber:
             self.asr.load()  # Whisper is loaded only when there is speech to decode
         result = self.asr.transcribe(samples, language, speech.intervals, sample_rate=sample_rate)
         result.runtime["vad_speech_s"] = speech.speech_s
+        result.runtime["vad_intervals"] = [(float(s), float(e)) for s, e in speech.intervals]
         return result
 
     def unload(self) -> None:
