@@ -224,7 +224,7 @@ Both are predeclared before any training (D-8).
 | **R2** | `ml.data.ser_corpus build`, then `ml.ser.preprocess audio`, then `ml.ser.preprocess whisper` (model environment) | **Owner** | — |
 | **R2b** | `ml.ser.e2v_features` in `sahay-ser-e2v`: embeddings and zero-shot scores. The ONNX export moves to after selection (R6b), because it is needed only if emotion2vec wins. | **Owner** | D-13, D-14 |
 | M12d ✅ | `ml.ser.train`: prosody logistic-regression baseline (speaker-normalised and pooled), Whisper-encoder head (learned layer weights), emotion2vec+ zero-shot (forced 5-class and abstaining 9→5), emotion2vec+ head, and WavLM Base+ fine-tune (CNN and lower 6 layers frozen, weighted layers, attentive statistics pooling, bf16). Best epoch by validation UAR; test scored once per corpus and sex; `--regime crema` adds cross-corpus. Smoke-tested on a 240-clip subset: every command ran with 0 network attempts; WavLM used 2.0 GB peak VRAM. | ML lead | D-7 |
-| **R3** | Rerun R2 (the interval fix recovers 86 clips), then `baseline`, `whisper-head`, `e2v-zeroshot` and `e2v-head`, each for `--regime both` and `--regime crema`. All short, on cached features. | **Owner** | — |
+| **R3** ✅ | Rerun R2 (the interval fix recovers 86 clips), then `baseline`, `whisper-head`, `e2v-zeroshot` and `e2v-head`, each for `--regime both` and `--regime crema`. All short, on cached features. | **Owner** | — |
 | **R4** | `wavlm --regime both` (8 epochs, about 20–30 min), then `wavlm --regime crema`. Then `compare`. | **Owner** | — |
 | M12e ✅ | Text-affect corpus `ml.data.affect_corpus`: EmoInHindi turns mapped to 5 affect classes (19,059 Hindi turns; dialogue-disjoint 70/15/15), a Hinglish copy via the new `ml.nlp.transliterate` (standard library; schwa deletion; Hinglish spellings), and optional GoEmotions (single-label; fetch pins the sha256 on first download) | ML lead | D-9a, D-11 |
 | **R5** | `ml.data.affect_corpus fetch-goemotions` (optional; paste the output so the registry can record it), then `ml.data.affect_corpus build` | **Owner** | — |
@@ -248,6 +248,28 @@ Both are predeclared before any training (D-8).
 | Deferral triggers | X1–X4 are clear. emotion2vec stays the primary candidate. X5 is decided at R6b. |
 
 **M12c finding (2026-09-26):** the first smoke test showed that the YIN voicing rule, tuned on clean synthetic tones (CMND < 0.15, a fixed −50 dBFS floor), rejected most real voiced frames: loud frames of acted clips have median CMND minima of 0.23 to 0.36. Voicing now uses aperiodicity < 0.45 plus a clip-relative level floor (95th percentile − 35 dB, never below −70 dBFS). Voiced ratios on the smoke clips rose from 0.02–0.31 to 0.48–0.71, and pitch matches an independent tracker (torchaudio: 158 Hz against YIN's 150 Hz on the same clip).
+
+#### R2 rerun, R3 and R4 results (2026-09-26, measured; acted English corpora, actor-disjoint)
+
+R2 rerun: 6,961 usable clips (the 86 interval-clamp failures recovered), 74 without speech. All runs had 0 network attempts. UAR is the average of the five per-class recalls (chance 0.20).
+
+| Model | Evidence class | Regime "both": val / test CREMA-D / test RAVDESS | Regime "crema": val / test CREMA-D / **cross RAVDESS** |
+|---|---|---|---|
+| Prosody logistic regression, speaker-normalised | clean | 0.589 / 0.580 / 0.432 | 0.597 / 0.594 / **0.487** |
+| Prosody logistic regression, pooled | clean | 0.513 / 0.527 / 0.357 | 0.532 / 0.544 / **0.345** (min class 0.005) |
+| Whisper-encoder head | clean | 0.844 / 0.767 / 0.784 | 0.841 / 0.751 / **0.706** |
+| emotion2vec+ zero-shot (forced 5) | possibly seen in pretraining | 0.840 / 0.766 / 0.809 | 0.821 / 0.766 / **0.868** |
+| emotion2vec+ head | possibly seen in pretraining | 0.869 / 0.784 / 0.796 | 0.858 / 0.790 / **0.872** |
+| WavLM Base+ fine-tune | clean | crashed at epoch 4 (val 0.785); see below | 0.766 / 0.735 / **0.447** (min class 0.016) |
+
+What these show, within their limits:
+- **Speaker normalisation matters.** The prosody baseline gains 0.07 validation UAR and 0.14 cross-corpus UAR from per-speaker normalisation. This supports the deployed design, where D4 measures deviation from the caller's own in-session baseline.
+- **The Whisper-encoder head is the strongest clean result:** 0.75–0.78 on unseen actors and 0.71 on an unseen corpus. It adds no model download or extra environment, and Whisper is already loaded for speech recognition.
+- **emotion2vec+ scores highest**, but its RAVDESS and CREMA-D numbers may be inflated by pretraining exposure. Only the team recordings (R6b) can separate skill from memory.
+- **WavLM Base+ generalises worst:** cross-corpus UAR 0.45, with one class almost never recalled. It stays a comparison row, not a candidate.
+- None of this is Indian or phone speech. The selection (R6b) and the gate (R7) remain the deciding evidence.
+
+**WavLM "both" crash:** Windows ran out of commit (virtual) memory, not physical RAM. The page file is 2 GB on a 98%-full C: drive and cannot grow; the commit limit is 34 GB, with about 18.8 GB in use at idle. Fix: move or enlarge the page file on D:, then rerun that one command.
 
 #### External help needed (owner or team actions)
 

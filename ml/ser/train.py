@@ -218,7 +218,7 @@ def run_head(kind: str, corpus: Path, rows: List[Dict[str, Any]], regime: str, s
     preds = [AFFECT[int(i)] for i in probs.argmax(dim=-1)]
     extra = {}
     if kind == "whisper-head":
-        extra["layer_weights"] = [round(float(w), 4) for w in torch.softmax(fit["model"].layer_logits, 0)]
+        extra["layer_weights"] = [round(float(w), 4) for w in torch.softmax(fit["model"].layer_logits.detach(), 0)]
     return {"variants": {"default": {"best_epoch": fit["best_epoch"], "history": fit["history"],
                                      "trainable_parameters": trainable_parameters(fit["model"]),
                                      "scores": score_sets(rows, sets, preds, evidence), "_probs": probs,
