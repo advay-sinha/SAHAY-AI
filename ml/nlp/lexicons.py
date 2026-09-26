@@ -21,6 +21,10 @@ reported as unavailable rather than guessed.
 
 from typing import Dict, List, Tuple
 
+#: Lexicon version. "draft" = written and tested, NOT yet reviewed by a human (see
+#: ml/eval/reviews/d5-anxiety-low-mood-review.md). Bump on every change.
+LEXICON_VERSION = "detectors-v1.1-draft"
+
 TIER_SCORES = {3: 85.0, 2: 65.0, 1: 45.0}
 
 #: Corroboration across turns may raise a score, but never across a tier's
@@ -66,6 +70,31 @@ LEXICONS: Dict[str, Lexicon] = {
         ("flashback", 2), ("neend nahi", 2), ("baar baar yaad", 2), ("sapne aate", 2),
         ("नींद नहीं", 2), ("बार-बार याद", 2), ("बार बार याद", 2),
         ("shaking", 1), ("kaanp", 1), ("काँप", 1),
+        # v1.1 (draft, M10): anxiety and low-mood phrasing the person uses about themself,
+        # so the Problem Statement's anxiety and depression indicators are covered as
+        # LINGUISTIC indicators, never a diagnosis. Deliberately excluded: hopelessness and
+        # "no point" wording (crisis-adjacent; the crisis lexicon owns D2), bare "tension",
+        # "chinta" and "pareshan" (too generic: "chinta mat karo", "police ne pareshan kiya").
+        # English
+        ("panic attack", 2), ("panic attacks", 2), ("heart keeps racing", 2), ("can't stop worrying", 2),
+        ("cannot stop worrying", 2), ("constantly worried", 2), ("lost interest in everything", 2),
+        ("stopped eating", 2), ("can't eat", 2), ("cry every day", 2), ("crying every day", 2),
+        ("cry all the time", 2), ("feel numb", 2), ("feel empty", 2),
+        ("anxious", 1), ("on edge", 1), ("can't concentrate", 1), ("cannot concentrate", 1),
+        ("feel low", 1), ("feeling low", 1), ("no energy", 1),
+        # Hinglish (romanised)
+        ("ghabrahat", 2), ("dil ghabrata", 2), ("dil baith", 2), ("bechaini", 2), ("man nahi lagta", 2),
+        ("mann nahi lagta", 2), ("kuch accha nahi lagta", 2), ("kuch acha nahi lagta", 2),
+        ("rota rehta", 2), ("roti rehti", 2), ("roz rota", 2), ("roz roti", 2), ("bhookh nahi", 2),
+        ("bhook nahi", 2), ("khana nahi kha pa", 2), ("himmat toot", 2),
+        ("tension mein", 1), ("tension ho rahi", 1), ("chinta hoti", 1), ("chinta lagi", 1),
+        ("chinta mein", 1), ("dimaag kaam nahi", 1),
+        # Hindi (Devanagari)
+        ("घबराहट", 2), ("दिल घबराता", 2), ("दिल बैठ", 2), ("बेचैनी", 2), ("मन नहीं लगता", 2),
+        ("कुछ अच्छा नहीं लगता", 2), ("रोता रहता", 2), ("रोती रहती", 2), ("रोज़ रोती", 2), ("रोज रोती", 2),
+        ("भूख नहीं", 2), ("खाना नहीं खा पा", 2), ("हिम्मत टूट", 2),
+        ("टेंशन में", 1), ("टेंशन हो रही", 1), ("चिंता होती", 1), ("चिंता लगी", 1), ("चिंता में", 1),
+        ("दिमाग काम नहीं", 1),
     ],
     # D6 — social isolation, boycott, displacement.
     "D6": [

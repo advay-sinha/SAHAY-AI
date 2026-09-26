@@ -83,7 +83,7 @@ The phases are ordered by dependency. ⛔ marks a human-only step: no model or c
   - Extend the `nlp/langid.py` script detection.
   - Add crisis and detector lexicons, validator output rules and fallbacks in that language.
   - ⛔ A fluent human writes and reviews the fixtures in that language.
-- Widen the lexicons to cover the anxiety and low-mood phrasing the PS names. Add it under the existing D5 label ("trauma-associated indicators") so no contract change is needed. Every addition gets negation tests and near-miss tests in every language.
+- Widen the lexicons to cover the anxiety and low-mood phrasing the PS names. Add it under the existing D5 label ("trauma-associated indicators") so no contract change is needed. Every addition gets negation tests and near-miss tests in every language. **Done as a draft, 2026-09-27:** D5 v1.1 (`detectors-v1.1-draft`) adds English, Hinglish and Hindi anxiety and low-mood terms (tiers 1–2), with negation, near-miss, crisis-overlap and no-diagnosis tests. The exposed evaluation is unchanged (0 fields). Awaiting human review (`ml/eval/reviews/d5-anxiety-low-mood-review.md`).
 - **Exit:** every `(state, lang)` fixed script is APPROVED, the validator red-team passes in every shipped language, and no language ships without its own fixtures.
 
 ### M11 — Voice pipeline in the product (ASR) — **wired 2026-09-27 (PC-11)**
