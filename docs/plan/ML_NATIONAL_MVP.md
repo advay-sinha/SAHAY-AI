@@ -226,10 +226,10 @@ Both are predeclared before any training (D-8).
 | M12d ✅ | `ml.ser.train`: prosody logistic-regression baseline (speaker-normalised and pooled), Whisper-encoder head (learned layer weights), emotion2vec+ zero-shot (forced 5-class and abstaining 9→5), emotion2vec+ head, and WavLM Base+ fine-tune (CNN and lower 6 layers frozen, weighted layers, attentive statistics pooling, bf16). Best epoch by validation UAR; test scored once per corpus and sex; `--regime crema` adds cross-corpus. Smoke-tested on a 240-clip subset: every command ran with 0 network attempts; WavLM used 2.0 GB peak VRAM. | ML lead | D-7 |
 | **R3** | Rerun R2 (the interval fix recovers 86 clips), then `baseline`, `whisper-head`, `e2v-zeroshot` and `e2v-head`, each for `--regime both` and `--regime crema`. All short, on cached features. | **Owner** | — |
 | **R4** | `wavlm --regime both` (8 epochs, about 20–30 min), then `wavlm --regime crema`. Then `compare`. | **Owner** | — |
-| M12e | Text-affect preprocessing code: EmoInHindi to `affect:` mapping, transliteration, optional GoEmotions | ML lead | D-9a, D-11 |
-| **R5** | Run text-affect preprocessing | **Owner** | — |
-| M12f | MuRIL and XLM-R text-affect training code | ML lead | D-9a |
-| **R6** | Train MuRIL (Stage A init, then base init) and XLM-R | **Owner** | — |
+| M12e ✅ | Text-affect corpus `ml.data.affect_corpus`: EmoInHindi turns mapped to 5 affect classes (19,059 Hindi turns; dialogue-disjoint 70/15/15), a Hinglish copy via the new `ml.nlp.transliterate` (standard library; schwa deletion; Hinglish spellings), and optional GoEmotions (single-label; fetch pins the sha256 on first download) | ML lead | D-9a, D-11 |
+| **R5** | `ml.data.affect_corpus fetch-goemotions` (optional; paste the output so the registry can record it), then `ml.data.affect_corpus build` | **Owner** | — |
+| M12f ✅ | `ml.textaffect.train`: MuRIL from the Stage A encoder, base MuRIL and XLM-R base; mean pooling and a 5-way head; bf16; best epoch by pooled validation UAR; test per language plus Hindi user turns; Hinglish scores labelled `transliterated_augmentation`. Smoke-tested: 5.2–6.0 GB peak VRAM, about 950 MB of weights per run. | ML lead | D-9a |
+| **R6** | `ml.textaffect.train muril-stagea`, `muril-base` and `xlmr-base` (about 10–20 min each), then `compare` | **Owner** | — |
 | M12g | ⛔ Team recordings (see external help) | **Team** | Consent |
 | **R6b** | Selection run on the team-dev slice (2 speakers) | **Owner** | M12g done |
 | **R7** | One-shot gate evaluation of the selected SER model and text head on the remaining team speakers | **Owner** | M12g done |

@@ -876,7 +876,7 @@ class TestModelFirewall(unittest.TestCase):
         pattern = re.compile(r"^\s*(from|import)\s+(ml\.runtime|\.\.runtime|\.runtime)\b", re.M)
         for path in ML.rglob("*.py"):
             rel = path.relative_to(ML).as_posix()
-            if rel.startswith(("runtime/", "tests/", "training/", "shadow/", "ser/")):
+            if rel.startswith(("runtime/", "tests/", "training/", "shadow/", "ser/", "textaffect/")):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 
