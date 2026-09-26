@@ -241,7 +241,7 @@ Both are predeclared before any training (D-8).
 | **R6b** | Selection run on the team-dev slice (2 speakers) | **Owner** | M12g done |
 | **R7** | One-shot gate evaluation of the selected SER model and text head on the remaining team speakers | **Owner** | M12g done |
 | M12h ✅ | D4 from voice (`ml/acoustics/d4.py`, standard library, `d4-prosody-1.0`): upward deviation of pitch, pitch variability, loudness and pausing from the caller's own first two usable voice turns; needs at least 3 usable voice turns, otherwise it is unmeasured and the assessment abstains; confidence capped at 0.6. Speech-emotion slot capped at 30% (D-8) and OFF until R7 passes. SAFE-SIGNAL: a neutral verification prompt in the uncertainty block when D4 and text severity (max of D1, D2, D3, D5) differ by more than 40. Hard overrides are untouched (calm voice plus crisis words is still Critical). Prosody is stored in `turns.asr_quality`. | ML lead | D-8, M11 |
-| M12i | Model cards and the evaluation report. Every number states its evidence class. | ML lead | — |
+| M12i ✅ | Cards: `ml/ser/MODEL_CARD.md` (SER candidates, with bootstrap 95% intervals), `ml/textaffect/MODEL_CARD.md` (MuRIL text affect, shadow) and `ml/acoustics/D4_CARD.md` (D4 rule, unvalidated). Key findings: the neural SER candidates are statistically indistinguishable on acted English; the three text encoders overlap on every language; "fearful" (SER) and "sad" (Hindi text) are the weakest classes. | ML lead | — |
 
 #### R1 results (2026-09-26, verified locally with no network)
 
