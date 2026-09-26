@@ -96,15 +96,16 @@ class TestRegistry(unittest.TestCase):
             self.assertEqual(rec["licence_name"], "unknown")
             self.assertIsNone(rec["sha256"])
 
-    def test_approved_but_not_downloaded_entries_cite_their_licence_evidence(self):
+    def test_approved_datasets_cite_their_licence_evidence(self):
         # EXT-003 / EXT-104 / EXT-125 (2026-09-24): licence terms were verified from the source
         # (EXT-128 lookup) before download. A licence is recorded only with https evidence, and
         # nothing is approved for use until the owner's download passes its integrity check.
         for rid in ("goemotions",):
             rec = gov.get(REG, rid)
-            self.assertEqual(rec["download_status"], "not_downloaded", rid)
-            self.assertIsNone(rec["sha256"], rid)
-            self.assertEqual(rec["review_status"], "metadata_pending", rid)
+            # Fetched and pinned 2026-09-26; the licence still needs confirming before any product use.
+            self.assertEqual(rec["download_status"], "downloaded", rid)
+            self.assertRegex(rec["sha256"], r"^[0-9a-f]{64}$", rid)
+            self.assertEqual(rec["review_status"], "licence_pending", rid)
             self.assertEqual(rec["approved_uses"], [], rid)
             self.assertIn("APPROVED 2026-09-24", rec["ext_decision"], rid)
             self.assertTrue(rec["evidence_urls"] and all(u.startswith("https://") for u in rec["evidence_urls"]), rid)

@@ -260,7 +260,7 @@ R2 rerun: 6,961 usable clips (the 86 interval-clamp failures recovered), 74 with
 | Whisper-encoder head | clean | 0.844 / 0.767 / 0.784 | 0.841 / 0.751 / **0.706** |
 | emotion2vec+ zero-shot (forced 5) | possibly seen in pretraining | 0.840 / 0.766 / 0.809 | 0.821 / 0.766 / **0.868** |
 | emotion2vec+ head | possibly seen in pretraining | 0.869 / 0.784 / 0.796 | 0.858 / 0.790 / **0.872** |
-| WavLM Base+ fine-tune | clean | crashed at epoch 4 (val 0.785); see below | 0.766 / 0.735 / **0.447** (min class 0.016) |
+| WavLM Base+ fine-tune | clean | 0.806 / 0.758 / 0.758 (rerun 2026-09-26) | 0.766 / 0.735 / **0.447** (min class 0.016) |
 
 What these show, within their limits:
 - **Speaker normalisation matters.** The prosody baseline gains 0.07 validation UAR and 0.14 cross-corpus UAR from per-speaker normalisation. This supports the deployed design, where D4 measures deviation from the caller's own in-session baseline.
@@ -270,6 +270,19 @@ What these show, within their limits:
 - None of this is Indian or phone speech. The selection (R6b) and the gate (R7) remain the deciding evidence.
 
 **WavLM "both" crash:** Windows ran out of commit (virtual) memory, not physical RAM. The page file is 2 GB on a 98%-full C: drive and cannot grow; the commit limit is 34 GB, with about 18.8 GB in use at idle. Fix: move or enlarge the page file on D:, then rerun that one command.
+
+#### R5 / R6 text-affect: v1 invalidated by leakage (2026-09-26)
+
+The first text-affect runs scored about 0.94–0.96 UAR on Hindi and Hinglish test data with all three encoders. A leakage check then showed that **84% of the test sentences (and 85% of validation) appeared verbatim in training**. EmoInHindi has only 5,331 distinct Hindi sentences across 19,059 turns, because its dialogues reuse template lines, and v1 split by dialogue. Those numbers measure memorisation and are **not reported as results**.
+
+Corpus v2 (`textaffect/corpus-v2`, runs in `textaffect/runs-v2`) is sentence-disjoint:
+- exact duplicates are collapsed, keeping a majority label only when at least 2/3 of copies agree (335 turns dropped for conflict);
+- near-duplicates (word-set Jaccard ≥ 0.8) are grouped into one split;
+- a final pass drops any validation or test text that also occurs in training.
+
+Result: 5,184 distinct Hindi sentences, with 0% exact and 0% ≥ 0.8 near-duplicate overlap across splits (15% of test sentences still share ≥ 0.7 of their words with some training sentence, which is typical of short everyday sentences). GoEmotions is included, with neutral capped at twice the largest other class in train and val (test complete). Model selection uses the mean of the per-language validation UARs.
+
+The MuRIL tokenizer warning ("incorrect regex pattern") is spurious: base and Stage A MuRIL tokenise 3,000 of 3,000 sampled sentences identically, with 0 unknown tokens.
 
 #### External help needed (owner or team actions)
 

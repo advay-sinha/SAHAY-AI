@@ -16,14 +16,21 @@ row per utterance labelled ``affect:neutral|happy|sad|angry|fearful``:
 * **GoEmotions** (en; optional): single-label examples only. anger -> angry; fear,
   nervousness -> fearful; sadness -> sad; joy -> happy; neutral -> neutral.
 
-Splits: EmoInHindi is dialogue-disjoint (70/15/15 by a seeded hash of the dialogue id);
-GoEmotions keeps its upstream train/dev/test. Affect labels are emotion categories for a
+Splits are **sentence-disjoint**. EmoInHindi dialogues reuse template lines: v1 split by
+dialogue, and 84% of its test sentences also appeared verbatim in training, so its scores
+measured memorisation. v2 collapses exact duplicates (after whitespace and punctuation
+normalisation) into one row with a majority label (at least 2/3 agreement, otherwise dropped),
+and groups near-duplicates (word-set Jaccard >= 0.8) so that each group shares one split,
+assigned from a seeded hash of the group's representative text (70/15/15). A final pass drops
+any validation or test row whose normalised text also occurs in training, for every dataset.
+GoEmotions keeps its upstream train/dev/test, subject to that final pass. Affect labels are emotion categories for a
 shadow model only: never crisis, danger, D4, SVI, band or routing labels. Text never leaves
 the private roots and is never printed.
 """
 
 import argparse
 import csv
+import re
 import hashlib
 import io
 import json
@@ -38,10 +45,10 @@ from . import governance
 from ..nlp.transliterate import to_hinglish
 
 AFFECT = ("neutral", "happy", "sad", "angry", "fearful")
-CORPUS_VERSION = "textaffect-corpus-v1"
+CORPUS_VERSION = "textaffect-corpus-v2"
 SPLIT_SEED = "sahay-textaffect-2026-09"
 TRAINING_ROOT_ENV = "SAHAY_TRAINING_ROOT"
-OUT_DIR = ("textaffect", "corpus-v1")
+OUT_DIR = ("textaffect", "corpus-v2")
 
 EMOINHINDI_MAP = {"anger": "angry", "fear": "fearful", "apprehensive": "fearful", "sad": "sad", "joy": "happy",
                   "neutral": "neutral"}
@@ -56,6 +63,15 @@ GOEMOTIONS = {
 }
 GOEMOTIONS_SPLIT = {"train": "train", "dev": "val", "test": "test"}
 MIN_TEXT_CHARS = 3
+#: A repeated sentence keeps its majority label only if at least this share of its copies agree.
+MAJORITY_SHARE = 2 / 3
+#: Sentences whose word sets overlap at least this much (Jaccard) are one near-duplicate group
+#: and always land in the same split. v2 without it still had 18% of test sentences at >= 0.8.
+NEAR_DUPLICATE_JACCARD = 0.8
+#: GoEmotions is mostly neutral. In train and val its neutral rows are capped at this multiple of
+#: the largest other class (deterministic by hash); test stays complete (UAR is prior-invariant).
+GOEMOTIONS_NEUTRAL_CAP = 2.0
+_NORMALISE = re.compile(r"[\s\u0964\u0965.,!?;:'\"()\[\]{}\-\u2013\u2014\u2026]+")
 
 
 class AffectCorpusError(Exception):
@@ -100,9 +116,47 @@ def goemotions_label(label_ids: str, names: Sequence[str]) -> Tuple[Optional[str
     return (target, "single") if target else (None, "unmapped_emotion")
 
 
-def dialogue_split(dialogue_id: str) -> str:
-    bucket = int(hashlib.sha256(f"{SPLIT_SEED}:{dialogue_id}".encode("utf-8")).hexdigest()[:8], 16) % 100
+def text_key(text: str) -> str:
+    """Normalised form used for duplicate detection and splitting."""
+    return _NORMALISE.sub(" ", str(text)).strip().lower()
+
+
+def text_split(key: str) -> str:
+    bucket = int(hashlib.sha256(f"{SPLIT_SEED}:{key}".encode("utf-8")).hexdigest()[:8], 16) % 100
     return "test" if bucket < 15 else "val" if bucket < 30 else "train"
+
+
+def near_duplicate_groups(keys: Sequence[str], threshold: float = NEAR_DUPLICATE_JACCARD) -> Dict[str, str]:
+    """Map each key to a group representative: union of pairs whose word-set Jaccard >= threshold."""
+    parent = {k: k for k in keys}
+
+    def find(k: str) -> str:
+        while parent[k] != k:
+            parent[k] = parent[parent[k]]
+            k = parent[k]
+        return k
+
+    sets = [(k, frozenset(k.split())) for k in keys]
+    sets.sort(key=lambda kv: len(kv[1]))
+    for i, (ki, si) in enumerate(sets):
+        if not si:
+            continue
+        for kj, sj in sets[i + 1:]:
+            if len(si) < threshold * len(sj):
+                break                      # sorted by size: every later set is too large to reach the threshold
+            inter = len(si & sj)
+            if inter and inter / (len(si) + len(sj) - inter) >= threshold:
+                ri, rj = find(ki), find(kj)
+                if ri != rj:
+                    parent[max(ri, rj)] = min(ri, rj)
+    return {k: find(k) for k in keys}
+
+
+def enforce_split_disjoint(rows: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], int]:
+    """Drop validation or test rows whose normalised text also occurs in training (same language)."""
+    train = {(r["language"], text_key(r["text"])) for r in rows if r["split"] == "train"}
+    kept = [r for r in rows if r["split"] == "train" or (r["language"], text_key(r["text"])) not in train]
+    return kept, len(rows) - len(kept)
 
 
 # --- sources -------------------------------------------------------------------------------------
@@ -113,11 +167,10 @@ def _count(counter: Dict[str, int], key: str) -> None:
 
 
 def emoinhindi_rows(records: Iterable[Mapping[str, Any]]) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
-    rows: List[Dict[str, Any]] = []
+    """One row per distinct sentence (plus its Hinglish copy), labelled by majority, split by text."""
     dropped: Dict[str, int] = {}
+    groups: Dict[str, Dict[str, Any]] = {}
     for rec in records:
-        dialogue = str(rec["record_id"])
-        split = dialogue_split(dialogue)
         for turn in rec.get("turns") or []:
             text = str(turn.get("text") or "").strip()
             if len(text) < MIN_TEXT_CHARS:
@@ -127,15 +180,32 @@ def emoinhindi_rows(records: Iterable[Mapping[str, Any]]) -> Tuple[List[Dict[str
             if label is None:
                 _count(dropped, reason)
                 continue
-            base = {"dataset": "emoinhindi", "group": dialogue, "split": split, "label": f"affect:{label}",
-                    "label_rule": reason, "speaker": turn.get("speaker"), "turn_index": turn.get("turn_index")}
-            rows.append({**base, "id": f"emoinhindi:{dialogue}:{turn.get('turn_index')}:hi", "language": "hi",
-                         "script": "devanagari", "text": text, "derivation": "source"})
-            romanised = to_hinglish(text)
-            if romanised != text:
-                rows.append({**base, "id": f"emoinhindi:{dialogue}:{turn.get('turn_index')}:hinglish",
-                             "language": "hinglish", "script": "latin", "text": romanised,
-                             "derivation": "transliterated"})
+            key = text_key(text)
+            g = groups.setdefault(key, {"text": text, "labels": {}, "speakers": {}, "rules": {}, "n": 0})
+            g["n"] += 1
+            _count(g["labels"], label)
+            _count(g["speakers"], str(turn.get("speaker")))
+            _count(g["rules"], reason)
+    cluster = near_duplicate_groups(sorted(groups))
+    rows: List[Dict[str, Any]] = []
+    for key, g in sorted(groups.items()):
+        label, votes = max(g["labels"].items(), key=lambda kv: (kv[1], kv[0]))
+        if votes / g["n"] < MAJORITY_SHARE:
+            dropped["conflicting_labels"] = dropped.get("conflicting_labels", 0) + g["n"]
+            continue
+        if g["n"] > 1:
+            dropped["collapsed_duplicates"] = dropped.get("collapsed_duplicates", 0) + g["n"] - 1
+        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()[:16]
+        group = hashlib.sha256(cluster[key].encode("utf-8")).hexdigest()[:16]
+        base = {"dataset": "emoinhindi", "group": group, "split": text_split(cluster[key]), "label": f"affect:{label}",
+                "label_rule": "majority" if len(g["labels"]) > 1 else max(g["rules"], key=g["rules"].get),
+                "speaker": max(g["speakers"], key=g["speakers"].get), "copies": g["n"], "turn_index": None}
+        rows.append({**base, "id": f"emoinhindi:{digest}:hi", "language": "hi", "script": "devanagari",
+                     "text": g["text"], "derivation": "source"})
+        romanised = to_hinglish(g["text"])
+        if romanised != g["text"]:
+            rows.append({**base, "id": f"emoinhindi:{digest}:hinglish", "language": "hinglish", "script": "latin",
+                         "text": romanised, "derivation": "transliterated"})
     return rows, dropped
 
 
@@ -168,7 +238,27 @@ def goemotions_rows(root: Path) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
                          "group": cid or f"{split_name}:{n}", "split": GOEMOTIONS_SPLIT[split_name],
                          "language": "en", "script": "latin", "text": text, "label": f"affect:{label}",
                          "label_rule": reason, "derivation": "source", "speaker": None, "turn_index": None})
-    return rows, dropped
+    return cap_neutral(rows, dropped)
+
+
+def cap_neutral(rows: List[Dict[str, Any]], dropped: Dict[str, int]) -> Tuple[List[Dict[str, Any]], Dict[str, int]]:
+    out: List[Dict[str, Any]] = []
+    for split in ("train", "val", "test"):
+        part = [r for r in rows if r["split"] == split]
+        if split == "test":
+            out += part
+            continue
+        others: Dict[str, int] = {}
+        for r in part:
+            if r["label"] != "affect:neutral":
+                _count(others, r["label"])
+        cap = int(GOEMOTIONS_NEUTRAL_CAP * max(others.values(), default=0))
+        neutral = sorted((r for r in part if r["label"] == "affect:neutral"),
+                         key=lambda r: hashlib.sha256(f"{SPLIT_SEED}:{r['id']}".encode("utf-8")).hexdigest())
+        out += [r for r in part if r["label"] != "affect:neutral"] + neutral[:cap]
+        if len(neutral) > cap:
+            dropped[f"neutral_capped_{split}"] = len(neutral) - cap
+    return out, dropped
 
 
 # --- GoEmotions fetch and verification -------------------------------------------------------------
@@ -256,6 +346,8 @@ def build(datasets_root: Path, out_dir: Path, registry: Optional[Mapping[str, An
     except (governance.GovernanceError, AffectCorpusError) as exc:
         manifest["sources"]["goemotions"] = {"skipped": str(exc)}
 
+    rows, cross_split = enforce_split_disjoint(rows)
+    manifest["cross_split_duplicates_dropped"] = cross_split
     out_dir.mkdir(parents=True, exist_ok=True)
     body = "".join(json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n" for r in rows).encode("utf-8")
     (out_dir / "examples.jsonl").write_bytes(body)

@@ -7,7 +7,7 @@
 
 Protocol:
   * training uses the ``train`` split of every language present (hi, hinglish, en);
-  * the best epoch is chosen on pooled validation UAR only;
+  * the best epoch is chosen on the mean of the per-language validation UARs only;
   * test is scored once, per language, plus the Hindi user turns alone;
   * the Hinglish rows are heuristic transliterations, so their scores are labelled
     ``transliterated_augmentation``; only human-written Hinglish can test real Hinglish;
@@ -35,12 +35,12 @@ from ..ser import metrics as sm
 from . import AFFECT_CLASSES
 
 AFFECT = AFFECT_CLASSES
-CORPUS_DIR = ("textaffect", "corpus-v1")
-RUNS_DIR = ("textaffect", "runs")
-TRAIN_VERSION = "textaffect-train-1.0"
+CORPUS_DIR = ("textaffect", "corpus-v2")
+RUNS_DIR = ("textaffect", "runs-v2")
+TRAIN_VERSION = "textaffect-train-1.1"
 MAX_LEN = 128
 ENCODERS = ("muril-stagea", "muril-base", "xlmr-base")
-EVIDENCE = {"hi": "source_corpus_dialogue_disjoint", "hinglish": "transliterated_augmentation",
+EVIDENCE = {"hi": "source_corpus_sentence_disjoint", "hinglish": "transliterated_augmentation",
             "en": "source_corpus_upstream_split"}
 
 
@@ -71,12 +71,22 @@ def eval_sets(rows: Sequence[Mapping[str, Any]]) -> Dict[str, List[int]]:
     sets: Dict[str, List[int]] = {"train": [i for i, r in enumerate(rows) if r["split"] == "train"],
                                   "val": [i for i, r in enumerate(rows) if r["split"] == "val"]}
     for lang in sorted({r["language"] for r in rows}):
+        sets[f"val:{lang}"] = [i for i, r in enumerate(rows) if r["split"] == "val" and r["language"] == lang]
         sets[f"test:{lang}"] = [i for i, r in enumerate(rows) if r["split"] == "test" and r["language"] == lang]
     sets["test:hi_user_turns"] = [i for i, r in enumerate(rows) if r["split"] == "test" and r["language"] == "hi"
                                   and r.get("speaker") == "user"]
     if not sets["train"] or not sets["val"]:
         raise TextAffectError("the training or validation split is empty")
     return {k: v for k, v in sets.items() if v}
+
+
+def selection_uar(rows: Sequence[Mapping[str, Any]], sets: Mapping[str, List[int]], preds: Mapping[int, str]) -> float:
+    """Mean of the per-language validation UARs, so no language dominates model selection."""
+    uars = []
+    for name, idx in sets.items():
+        if name.startswith("val:") and idx:
+            uars.append(sm.evaluate([rows[i]["affect"] for i in idx], [preds[i] for i in idx], AFFECT)["uar"] or 0.0)
+    return round(sum(uars) / len(uars), 4) if uars else 0.0
 
 
 def score_sets(rows: Sequence[Mapping[str, Any]], sets: Mapping[str, List[int]],
@@ -196,8 +206,8 @@ def run(name: str, corpus: Path, training_root: Path, models_root: Optional[str]
             sched.step()
             total += loss.item() * len(chunk)
         vprobs = predict(model, tokenizer, texts, sets["val"], device)
-        uar = sm.evaluate([rows[i]["affect"] for i in sets["val"]], [AFFECT[int(k)] for k in vprobs.argmax(-1)],
-                          AFFECT)["uar"] or 0.0
+        vpred = {i: AFFECT[int(k)] for i, k in zip(sets["val"], vprobs.argmax(-1))}
+        uar = selection_uar(rows, sets, vpred)
         history.append({"epoch": epoch, "train_loss": round(total / len(order), 5), "val_uar": uar,
                         "epoch_seconds": round(time.perf_counter() - t0, 1)})
         print(json.dumps({"epoch": epoch, "val_uar": uar, "seconds": history[-1]["epoch_seconds"]}), flush=True)

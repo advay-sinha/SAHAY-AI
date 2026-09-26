@@ -722,7 +722,7 @@
   {
    "id": "goemotions",
    "name": "GoEmotions (simplified TSV splits)",
-   "version": "google-research/goemotions/data {train,dev,test}.tsv and emotions.txt at master on 2026-09-24 (3,519,053 / 439,059 / 436,706 / 248 bytes); sha256 recorded at first fetch",
+   "version": "google-research/goemotions/data {train,dev,test}.tsv and emotions.txt at master on 2026-09-24 (3,519,053 / 439,059 / 436,706 / 248 bytes); sha256 recorded at first fetch; fetched 2026-09-26, 4 files verified; registry sha256 is that of the private sha256-pins.json",
    "modality": "text",
    "primary_language": "en",
    "additional_languages": [],
@@ -744,13 +744,13 @@
    "demographics": "Reddit users; not described per record.",
    "label_definitions": "27 emotions plus neutral, multi-label. SAHAY maps anger, fear, sadness, joy and neutral to affect:<class> for the shadow text branch only.",
    "splits": "train / dev / test TSV upstream",
-   "local_relative_path": "corpus/text/english/goemotions/",
+   "local_relative_path": "corpus/text/english/goemotions",
    "archive_filename": "",
    "byte_size": 4395066,
-   "sha256": null,
+   "sha256": "adfdb7027b217d3b672f9660e74a91a4fe2e63f01d359994b36e2c9a408417a8",
    "archive_safety_status": "not_applicable",
    "extraction_status": "not_applicable",
-   "review_status": "metadata_pending",
+   "review_status": "licence_pending",
    "approved_uses": [],
    "prohibited_uses": [
     "download_without_approved_ext_decision",
@@ -761,16 +761,16 @@
    "limitations": [
     "English only; Reddit register; label noise documented upstream; not distressed-caller language."
    ],
-   "date_checked": "2026-09-24",
+   "date_checked": "2026-09-26",
    "evidence_urls": [
     "https://huggingface.co/datasets/google-research-datasets/go_emotions",
     "https://github.com/google-research/google-research/tree/master/goemotions"
    ],
    "unresolved_questions": [
-    "Download and first-fetch sha256 pending at run R5 (text preprocessing)."
+    "Confirm the Apache-2.0 licence against the google-research repository before any product use (D-9b condition a)."
    ],
-   "download_status": "not_downloaded",
-   "ext_decision": "EXT-125 APPROVED 2026-09-24 (shadow text-affect training)",
+   "download_status": "downloaded",
+   "ext_decision": "EXT-125 APPROVED 2026-09-24 (shadow text-affect training); fetched and pinned 2026-09-26",
    "holdout_status": "not_holdout",
    "sahay_dimension_mappings": {},
    "official_locked_test_allowed": false,

@@ -78,10 +78,46 @@ class TestAffectRows(unittest.TestCase):
         self.assertEqual(hg["text"], "mujhe dar lag raha hai")
         self.assertEqual(hg["derivation"], "transliterated")
 
-    def test_dialogue_disjoint_split_is_deterministic(self):
-        splits = {ac.dialogue_split(f"d{i}") for i in range(300)}
+    def test_text_split_is_deterministic(self):
+        splits = {ac.text_split(f"sentence {i}") for i in range(300)}
         self.assertEqual(splits, {"train", "val", "test"})
-        self.assertEqual(ac.dialogue_split("abc"), ac.dialogue_split("abc"))
+        self.assertEqual(ac.text_split("abc"), ac.text_split("abc"))
+
+    def test_duplicates_collapse_with_majority_and_conflicts_drop(self):
+        recs = [self._record("d1", [("मुझे डर लग रहा है", "fear")]),
+                self._record("d2", [("मुझे डर लग रहा है।", "fear")]),        # same after normalisation
+                self._record("d3", [("मुझे डर लग रहा है", "sad")]),
+                self._record("d4", [("वो आ गए", "anger"), ("वो आ गए", "joy")])]  # 1 vs 1: conflict
+        rows, dropped = ac.emoinhindi_rows(recs)
+        hi = [r for r in rows if r["language"] == "hi"]
+        self.assertEqual(len(hi), 1)
+        self.assertEqual((hi[0]["label"], hi[0]["copies"], hi[0]["label_rule"]), ("affect:fearful", 3, "majority"))
+        self.assertEqual(dropped["collapsed_duplicates"], 2)
+        self.assertEqual(dropped["conflicting_labels"], 2)
+
+    def test_near_duplicates_share_a_group(self):
+        keys = ["they came to my house again last night", "they came to my house again last evening",
+                "the water was cut off"]
+        groups = ac.near_duplicate_groups(keys, threshold=0.7)
+        self.assertEqual(groups[keys[0]], groups[keys[1]])
+        self.assertNotEqual(groups[keys[0]], groups[keys[2]])
+
+    def test_no_validation_or_test_text_survives_in_training(self):
+        rows = [{"language": "en", "split": "train", "text": "I am scared"},
+                {"language": "en", "split": "test", "text": "i am scared!"},
+                {"language": "en", "split": "val", "text": "something else"},
+                {"language": "hi", "split": "test", "text": "I am scared"}]
+        kept, dropped = ac.enforce_split_disjoint(rows)
+        self.assertEqual(dropped, 1)
+        self.assertEqual([(r["language"], r["split"]) for r in kept], [("en", "train"), ("en", "val"), ("hi", "test")])
+
+    def test_neutral_cap_keeps_test_complete(self):
+        rows = ([{"id": f"n{i}", "split": s, "label": "affect:neutral"} for s in ("train", "test") for i in range(10)]
+                + [{"id": "a1", "split": "train", "label": "affect:angry"}])
+        kept, dropped = ac.cap_neutral(rows, {})
+        self.assertEqual(sum(1 for r in kept if r["split"] == "train" and r["label"] == "affect:neutral"), 2)
+        self.assertEqual(sum(1 for r in kept if r["split"] == "test"), 10)
+        self.assertEqual(dropped, {"neutral_capped_train": 8})
 
     def test_goemotions_requires_verified_fetch(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -117,6 +153,12 @@ class TestTrainingHelpers(unittest.TestCase):
         self.assertEqual(sets["test:hinglish"], [3])
         with self.assertRaises(tt.TextAffectError):
             tt.eval_sets([{"split": "test", "language": "hi", "speaker": "user"}])
+
+    def test_selection_averages_languages(self):
+        rows = [{"affect": a} for a in ("sad", "sad", "angry", "angry")]
+        sets = {"val:hi": [0, 1], "val:en": [2, 3]}
+        preds = {0: "sad", 1: "sad", 2: "sad", 3: "sad"}   # hi perfect (1.0), en all wrong (0.0)
+        self.assertEqual(tt.selection_uar(rows, sets, preds), 0.5)
 
     def test_hinglish_scores_are_labelled_as_augmentation(self):
         self.assertEqual(tt.EVIDENCE["hinglish"], "transliterated_augmentation")
