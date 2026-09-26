@@ -284,6 +284,21 @@ Result: 5,184 distinct Hindi sentences, with 0% exact and 0% ≥ 0.8 near-duplic
 
 The MuRIL tokenizer warning ("incorrect regex pattern") is spurious: base and Stage A MuRIL tokenise 3,000 of 3,000 sampled sentences identically, with 0 unknown tokens.
 
+#### R6 text-affect v2 results (2026-09-26, sentence-disjoint corpus, measured)
+
+Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
+
+| Encoder | Hindi | Hinglish (transliterated) | Hindi user turns | English (GoEmotions) |
+|---|---|---|---|---|
+| MuRIL base | 0.742 (0.720) | 0.713 (0.693) | 0.703 (0.690) | 0.815 (0.596) |
+| XLM-R base | 0.748 (0.731) | 0.705 (0.680) | 0.710 (0.699) | 0.805 (0.595) |
+| MuRIL Stage A | crashed at epoch 3 (val 0.763 after 2 epochs); rerun pending | | | |
+
+- The honest level is about **0.70–0.75 UAR** on unseen Hindi and Hinglish sentences (chance 0.20), against 0.94 in the leaky v1.
+- MuRIL and XLM-R are within 0.01 of each other; neither is clearly better yet.
+- **English macro-F1 (0.60) is far below its UAR (0.81)** because the English test set keeps GoEmotions' full neutral share while training was neutral-capped, so emotion precision drops on neutral-heavy text. UAR is the prior-invariant headline metric.
+- The Stage A crash was caused by a laptop power-source change at 22:50:59: the NVIDIA driver logged events 14 and 153 two seconds later, plus a low-virtual-memory warning. It was not a code fault.
+
 #### External help needed (owner or team actions)
 
 | # | What | Why it needs the owner or team | When |
