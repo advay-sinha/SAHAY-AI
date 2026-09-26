@@ -22,7 +22,7 @@ UP    binary   16 kHz mono PCM16 · 500 ms frames · 8-byte header: uint32 seq |
 DOWN  binary   assistant TTS chunks, prefixed with turn_id header
       text     events below
 
-FALLBACK       POST /sessions/{id}/audio     whole-utterance upload (always available)
+FALLBACK       POST /sessions/{id}/audio     whole-utterance upload (PC-11, section 4)
 RECONNECT      client resumes from last acknowledged seq; server de-duplicates
 ```
 
@@ -88,7 +88,7 @@ In `dimension.update`, a dimension that is unavailable (for example D4 on a type
 ```
 POST /auth/login                          {username, password} → {token, role, display_name}
 POST /sessions                            {channel, consent, lang} → CreateSessionResponse (below)
-POST /sessions/{id}/audio                 whole-utterance fallback (501 in the text-first slice)
+POST /sessions/{id}/audio?lang=hi|en      whole-utterance voice turn (PC-11) → AudioUploadResponse (below)
 POST /sessions/{id}/end                   → {case_id, reference_no}
 GET  /queue                               → band-ranked case summaries, codes only
 GET  /cases/{id}                          full escalation packet
@@ -166,6 +166,27 @@ svi.compute(dimension_scores, confidences, quality)
 `quality.structurally_unavailable` (PC-08) lists dimensions with no measurement path on the channel. Only `D4` may be listed, and a listed dimension must not also carry a score.
 
 ---
+
+### Whole-utterance voice turn — PC-11 (lead decision 2026-09-27)
+
+```
+POST /sessions/{id}/audio?lang=hi|en        victim session token for that session only
+  body      raw audio bytes; Content-Type audio/wav (16-bit PCM, mono, 8–48 kHz)
+            | audio/mp4 | audio/aac (M4A/AAC)
+  limits    ≤ 60 s of audio, ≤ 5 MB
+  lang      optional; defaults to the session language; hi or en only
+  200 →     AudioUploadResponse {turn_id: string | null,
+                                 status: "accepted" | "no_speech" | "audio_unreadable"}
+  errors    400 bad lang · 403 not the session's victim token · 413 too large or too long ·
+            415 unsupported Content-Type · 409 not an audio-channel session (mobile_voice | upload),
+            consent not granted, or session ended · 503 speech recognition unavailable
+```
+
+- `accepted`: the transcript enters the **same path as `chat.message`**: crisis pre-check first, then the dialogue policy. The victim receives the unchanged `transcript.line` and `assistant.turn` events. `turn_id` is the new victim turn.
+- `no_speech` and `audio_unreadable` create no turn (`turn_id: null`). The client may ask the person to try again or offer Chat.
+- The response **never** contains a transcript confidence, audio quality, emotion, score or band (`extra="forbid"`).
+- Console only: the ASR confidence is stored on the turn (`turns.asr_confidence`), and the audio measurements in `turns.asr_quality`. Both are reported in the assessment `uncertainty` block. Poor audio or low ASR confidence sets the `poor_audio` quality flag, so the assessment abstains (`needs_human`, invariant 6).
+- No new event, and no new victim-visible field.
 
 ## 6. Database tables
 

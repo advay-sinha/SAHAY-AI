@@ -24,6 +24,14 @@ from typing import Dict, Tuple
 SESSION_CHANNELS: Tuple[str, ...] = ("mobile_voice", "mobile_chat", "portal_chat", "upload")
 #: Channels on which acoustic distress (D4) cannot be measured by design (PC-08).
 TEXT_CHANNELS: Tuple[str, ...] = ("mobile_chat", "portal_chat")
+#: Channels that may upload a whole-utterance voice turn (PC-11).
+AUDIO_CHANNELS: Tuple[str, ...] = ("mobile_voice", "upload")
+#: POST /sessions/{id}/audio response statuses (PC-11).
+AUDIO_UPLOAD_STATUSES: Tuple[str, ...] = ("accepted", "no_speech", "audio_unreadable")
+#: Accepted upload media types (PC-11).
+AUDIO_MEDIA_TYPES: Tuple[str, ...] = ("audio/wav", "audio/x-wav", "audio/wave", "audio/vnd.wave",
+                                      "audio/mp4", "audio/m4a", "audio/x-m4a", "audio/aac")
+AUDIO_MAX_BYTES = 5 * 1024 * 1024
 
 SESSION_STATES: Tuple[str, ...] = (
     "S0", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "SX", "SH",
@@ -82,3 +90,4 @@ INTERNAL_ERROR_DETAIL = "Internal error"
 
 assert set(TIMELINE_LABELS) == set(TIMELINE_STAGES)
 assert set(TEXT_CHANNELS) <= set(SESSION_CHANNELS)
+assert set(AUDIO_CHANNELS) <= set(SESSION_CHANNELS) and not set(AUDIO_CHANNELS) & set(TEXT_CHANNELS)

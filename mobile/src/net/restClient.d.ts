@@ -85,3 +85,11 @@ export function fetchTimeline(options: {
   signal?: AbortSignal;
   timeoutMs?: number;
 }): Promise<TimelineResult>;
+
+/** POST /sessions/{id}/audio response (PC-11). No confidence, quality, emotion or score. */
+export type AudioUploadStatus = "accepted" | "no_speech" | "audio_unreadable";
+
+export interface AudioUploadResponse {
+  turn_id: string | null;
+  status: AudioUploadStatus;
+}

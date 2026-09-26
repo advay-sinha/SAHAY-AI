@@ -90,7 +90,10 @@ async def run_cycle(case_id: str) -> None:
 
         crisis_fired = session.state == "SX" or bool((await db.execute(select(Alert.id).where(
             Alert.case_id == case_id, Alert.type == "crisis"))).first())
-        turn_dicts = [{"id": t.id, "speaker": t.speaker, "text": t.text, "state": t.state} for t in turns]
+        turn_dicts = [{"id": t.id, "speaker": t.speaker, "text": t.text, "state": t.state,
+                       **({"asr": {"confidence": t.asr_confidence, **(t.asr_quality or {})}}
+                          if (t.asr_confidence is not None or t.asr_quality) else {})}
+                      for t in turns]
         session_id = session.id
         channel = session.channel
         trigger = victim[-1].id

@@ -219,5 +219,37 @@ class TestRecommendations(unittest.TestCase):
         self.assertEqual(recommend({}, None, crisis=False), [])
 
 
+
+class TestVoiceTurns(unittest.TestCase):
+    """PC-11: voice turns carry ASR measurements; poor audio abstains (invariant 6)."""
+
+    TEXT = "They came back last night and said they will beat us if we do not withdraw the complaint."
+
+    def _turns(self, asr):
+        return [{"id": "t1", "speaker": "victim", "text": self.TEXT, "state": "S1", "asr": asr}]
+
+    def test_poor_audio_or_low_asr_confidence_abstains(self):
+        from ml.assessment import assess
+        for asr in ({"confidence": 0.9, "poor_audio": True}, {"confidence": 0.3, "low_asr_confidence": True}):
+            out = assess(self._turns(asr), True, channel="mobile_voice")
+            self.assertTrue(out["needs_human"])
+            self.assertIsNone(out["svi"])
+            self.assertTrue(out["uncertainty"]["quality_flags"].get("poor_audio"))
+
+    def test_uncertainty_reports_the_lowest_asr_confidence(self):
+        from ml.assessment import assess
+        turns = self._turns({"confidence": 0.9}) + [
+            {"id": "t2", "speaker": "victim", "text": "Please help us.", "state": "S1", "asr": {"confidence": 0.7}}]
+        out = assess(turns, True, channel="mobile_voice")
+        self.assertEqual(out["uncertainty"]["asr_confidence"], 0.7)
+        self.assertEqual(out["uncertainty"]["voice_turns"], 2)
+
+    def test_typed_turns_are_unchanged(self):
+        from ml.assessment import assess
+        out = assess([{"id": "t1", "speaker": "victim", "text": self.TEXT, "state": "S1"}], True,
+                     channel="mobile_chat")
+        self.assertEqual(out["uncertainty"]["asr_confidence"], "not applicable — typed text")
+        self.assertFalse(out["uncertainty"]["quality_flags"].get("poor_audio", False))
+
 if __name__ == "__main__":
     unittest.main()

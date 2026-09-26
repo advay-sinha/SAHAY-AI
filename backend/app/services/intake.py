@@ -185,6 +185,17 @@ def _turn_dicts(turns: List[Turn]) -> List[Dict[str, Any]]:
     return [{"id": t.id, "speaker": t.speaker, "text": t.text, "state": t.state} for t in turns]
 
 
+#: The console-only audio measurements kept on a voice turn (PC-11).
+ASR_QUALITY_KEYS = ("poor_audio", "low_asr_confidence", "speech_s", "duration_s")
+
+
+def _asr_quality(asr: Dict[str, Any]) -> Dict[str, Any]:
+    q = asr.get("quality") or {}
+    out = {k: asr.get(k) for k in ASR_QUALITY_KEYS if k in asr}
+    out.update({k: q.get(k) for k in ("snr_db", "clipping_ratio") if k in q})
+    return out
+
+
 async def _upsert_crisis_alert(db: AsyncSession, case: Case, turn_id: str) -> bool:
     """Raise (or extend) the crisis alert. Returns True if newly raised."""
     alert = (await db.execute(
@@ -209,8 +220,10 @@ async def submit_turn(
     text: str,
     lang: Optional[str] = None,
     victim_index: Optional[int] = None,
+    asr: Optional[Dict[str, Any]] = None,
 ) -> Outbound:
-    """Handle one victim text turn. See the module docstring for the order."""
+    """Handle one victim turn: typed, or a transcribed voice turn (PC-11) carrying ``asr``
+    measurements. Both take exactly the same path; see the module docstring for the order."""
     out = Outbound()
     text = (text or "").strip()
     if not text:
@@ -241,7 +254,9 @@ async def submit_turn(
 
     # 1. persist the victim turn, in the state it was said in
     victim = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq, speaker="victim",
-                  text=text, lang=lang, state=session.state, created_at=audit.now())
+                  text=text, lang=lang, state=session.state, created_at=audit.now(),
+                  asr_confidence=(asr or {}).get("asr_confidence"),
+                  asr_quality=_asr_quality(asr) if asr else None)
     db.add(victim)
     try:
         await db.flush()

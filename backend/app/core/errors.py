@@ -29,3 +29,17 @@ class Conflict(DomainError):
     """An invalid state transition or a clash with an existing record."""
 
     status_code = 409
+
+
+class PayloadTooLarge(DomainError):
+    status_code = 413
+
+
+class UnsupportedMediaType(DomainError):
+    status_code = 415
+
+
+class ServiceUnavailable(DomainError):
+    """A local dependency (for example speech recognition) is not reachable."""
+
+    status_code = 503

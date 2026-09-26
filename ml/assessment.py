@@ -138,7 +138,14 @@ def assess(
     )
     crisis = crisis_fired or bool(dims["D2"].get("evidence_turn_ids"))
 
+    # Voice turns (PC-11) carry their ASR confidence and audio measurements. Poor audio or a
+    # low ASR confidence on any victim voice turn makes the assessment abstain (invariant 6).
+    voice = [t["asr"] for t in victim if isinstance(t.get("asr"), Mapping)]
+    confidences = [float(a["confidence"]) for a in voice if a.get("confidence") is not None]
+    poor_audio = any(bool(a.get("poor_audio")) or bool(a.get("low_asr_confidence")) for a in voice)
+
     quality = {
+        "poor_audio": poor_audio,
         "low_language_confidence": bool(language["low"]),
         "poor_input_quality": letters < MIN_TOTAL_LETTERS,
         "conflicting_evidence": conflicting_safety(structured),
@@ -200,7 +207,11 @@ def assess(
             "acoustic": ("structurally unavailable — typed channel; D4 excluded and weights "
                          "renormalised (not measured, not zero)") if text_channel
                         else "not measured — no acoustic model in this build; assessment abstains",
-            "asr_confidence": "not applicable — typed text" if text_channel else "not measured",
+            "asr_confidence": ("not applicable — typed text" if text_channel
+                               else round(min(confidences), 4) if confidences else "not measured"),
+            "asr_confidence_note": ("lowest uncalibrated ASR confidence across the victim's voice turns"
+                                    if confidences else None),
+            "voice_turns": len(voice),
             "model_agreement": "not applicable — single deterministic rule set",
             "quality_flags": {k: v for k, v in quality.items() if v},
         },

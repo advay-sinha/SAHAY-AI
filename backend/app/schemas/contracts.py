@@ -190,6 +190,16 @@ class EndSessionResponse(VictimSafeModel):
     reference_no: str
 
 
+class AudioUploadResponse(VictimSafeModel):
+    """POST /sessions/{id}/audio response, FROZEN by PC-11 (lead decision 2026-09-27).
+
+    Only these two fields: no transcript confidence, audio quality, emotion, score or band.
+    """
+
+    turn_id: Optional[str]
+    status: Literal["accepted", "no_speech", "audio_unreadable"]
+
+
 class ChatMessage(BaseModel):
     type: Literal["chat.message"] = "chat.message"
     text: str

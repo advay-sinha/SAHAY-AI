@@ -86,7 +86,14 @@ The phases are ordered by dependency. ⛔ marks a human-only step: no model or c
 - Widen the lexicons to cover the anxiety and low-mood phrasing the PS names. Add it under the existing D5 label ("trauma-associated indicators") so no contract change is needed. Every addition gets negation tests and near-miss tests in every language.
 - **Exit:** every `(state, lang)` fixed script is APPROVED, the validator red-team passes in every shipped language, and no language ships without its own fixtures.
 
-### M11 — Voice pipeline in the product (ASR)
+### M11 — Voice pipeline in the product (ASR) — **wired 2026-09-27 (PC-11)**
+
+Status:
+- `ml.voice.service` listens on 127.0.0.1 only. Measured warm latency is 323–374 ms per 1.6 s clip.
+- The backend reaches it through the ASR adapter (`ASR_PROVIDER=mock` by default).
+- `POST /sessions/{id}/audio` is frozen by PC-11 and implemented. A transcript takes the same path as a typed turn, crisis pre-check first.
+- ASR confidence and audio quality are stored for the console only (`turns.asr_quality`, migration `8c1e5a7d3f20`). Poor audio or low ASR confidence makes the assessment abstain.
+- Still open: WER/CER on Common Voice Hindi (H10, account-gated), mobile recording (Team C), and applying the migration to the runtime database.
 
 - 🔑 D-2: integrate `GatedTranscriber` into the backend. EXT-118 explicitly excludes backend integration, so this needs a new decision (proposed EXT-120).
 - Wire the whole-utterance upload path (VF-11): 16 kHz mono → Silero VAD → Whisper on speech intervals only. An empty interval list gives `no_speech`, never a score.

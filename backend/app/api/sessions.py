@@ -6,17 +6,26 @@ forbid unknown fields, so an assessment field cannot be added by accident.
 Text turns and human requests arrive over the session WebSocket as the
 contract's `chat.message` and `request_human` events (CONTRACTS.md section 1);
 they are handled in app/ws/session.py through the same services used here.
+Voice turns arrive as a whole-utterance upload (PC-11) and join the same path.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Optional
+
+from fastapi import APIRouter, Depends, Query, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from ..adapters.asr import ASRRejected, ASRUnavailable, get_provider as get_asr
 from ..core.auth import Principal, ensure_session_access, require_any
+from ..core.config import get_settings
 from ..core.db import get_session
+from ..core.enums import AUDIO_CHANNELS, AUDIO_MAX_BYTES, AUDIO_MEDIA_TYPES
+from ..core.errors import (BadRequest, Conflict, Forbidden, PayloadTooLarge, ServiceUnavailable,
+                           UnsupportedMediaType)
 from ..core.security import create_token
-from ..schemas.contracts import CreateSessionRequest, CreateSessionResponse, EndSessionResponse
-from ..services import intake
-from ..services.consent import session_capabilities
+from ..schemas.contracts import (AudioUploadResponse, CreateSessionRequest, CreateSessionResponse,
+                                 EndSessionResponse)
+from ..services import audit, intake
+from ..services.consent import CONSENT_GRANTED, session_capabilities
 from ..services.events import publish
 from ..ws.events import ROLE_VICTIM
 
@@ -48,10 +57,77 @@ async def create_session(
     )
 
 
-@router.post("/{session_id}/audio")
-async def upload_audio(session_id: str):
-    """Whole-utterance audio fallback. Audio is deferred in the text-first slice."""
-    raise HTTPException(status.HTTP_501_NOT_IMPLEMENTED, "audio intake is deferred")
+@router.post("/{session_id}/audio", response_model=AudioUploadResponse)
+async def upload_audio(
+    session_id: str,
+    request: Request,
+    lang: Optional[str] = Query(default=None),
+    principal: Principal = Depends(require_any),
+    db: AsyncSession = Depends(get_session),
+) -> AudioUploadResponse:
+    """Whole-utterance voice turn (PC-11).
+
+    The audio is transcribed through the ASR adapter. A transcript then takes exactly the
+    same path as a typed ``chat.message`` (intake.submit_turn): crisis pre-check first, then
+    the dialogue policy. The response carries only ``turn_id`` and ``status``; the ASR
+    confidence and audio measurements stay on the server for the console.
+    """
+    ensure_session_access(principal, session_id)
+    if principal.role != ROLE_VICTIM:
+        raise Forbidden("only the session's own victim token may upload audio")
+    media = (request.headers.get("content-type") or "").split(";")[0].strip().lower()
+    if media not in AUDIO_MEDIA_TYPES:
+        raise UnsupportedMediaType("send audio/wav, audio/mp4 or audio/aac")
+    declared = request.headers.get("content-length")
+    if declared and declared.isdigit() and int(declared) > AUDIO_MAX_BYTES:
+        raise PayloadTooLarge("audio is larger than 5 MB")
+
+    session = await intake.get_session_row(db, session_id)
+    if session.ended_at is not None:
+        raise Conflict("session has ended")
+    if session.channel not in AUDIO_CHANNELS:
+        raise Conflict("this session is not a voice session")
+    if await intake.consent_for(db, session_id) != CONSENT_GRANTED:
+        raise Conflict("consent has not been granted")
+    lang = lang or session.lang
+    if lang not in ("hi", "en"):
+        raise BadRequest("lang must be hi or en")
+
+    audio = await request.body()
+    if not audio:
+        raise BadRequest("the request carried no audio")
+    if len(audio) > AUDIO_MAX_BYTES:
+        raise PayloadTooLarge("audio is larger than 5 MB")
+
+    try:
+        result = await get_asr(get_settings()).transcribe(audio, media, lang)
+    except ASRRejected as exc:
+        if exc.status == 413:
+            raise PayloadTooLarge("audio is longer than 60 seconds or larger than 5 MB") from None
+        if exc.status == 415:
+            raise UnsupportedMediaType("send audio/wav, audio/mp4 or audio/aac") from None
+        raise BadRequest("the audio request was refused") from None
+    except ASRUnavailable:
+        raise ServiceUnavailable("speech recognition is unavailable; please use Chat") from None
+
+    case = await intake.case_for_session(db, session_id)
+    text = (result.get("text") or "").strip() if result["status"] == "transcribed" else ""
+    if not text:
+        outcome = "no_speech" if result["status"] in ("transcribed", "no_speech") else "audio_unreadable"
+        await audit.record(db, f"asr.{outcome}", case_id=case.id,
+                           detail={"duration_s": result.get("duration_s"), "speech_s": result.get("speech_s")})
+        await db.commit()
+        return AudioUploadResponse(turn_id=None, status=outcome)
+
+    out = await intake.submit_turn(db, session_id, text, lang, asr=result)
+    await audit.record(db, "asr.accepted", case_id=case.id, detail={
+        "asr_confidence": result.get("asr_confidence"), "poor_audio": result.get("poor_audio"),
+        "low_asr_confidence": result.get("low_asr_confidence"), "timings_ms": result.get("timings_ms")})
+    await db.commit()
+    publish(session_id, case.id, out)
+    turn_id = next((p["turn_id"] for kind, p in out.events
+                    if kind == "transcript.line" and p.get("speaker") == "victim"), None)
+    return AudioUploadResponse(turn_id=turn_id, status="accepted")
 
 
 @router.post("/{session_id}/end", response_model=EndSessionResponse)

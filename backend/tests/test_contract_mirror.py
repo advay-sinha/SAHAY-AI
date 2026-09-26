@@ -271,5 +271,31 @@ class TestOverrideThresholdsAreDocumented(unittest.TestCase):
         self.assertAlmostEqual(float(match.group(1)), CONFIDENCE_FLOOR, places=6)
 
 
+class TestAudioUploadMirror(unittest.TestCase):
+    """PC-11: backend enum, Pydantic schema, mobile type and CONTRACTS.md agree."""
+
+    def test_statuses_agree_everywhere(self):
+        import typing
+        from backend.app.core.enums import AUDIO_UPLOAD_STATUSES
+        from backend.app.schemas.contracts import AudioUploadResponse
+
+        schema = sorted(typing.get_args(AudioUploadResponse.model_fields["status"].annotation))
+        mobile_src = read(REPO_ROOT / "mobile" / "src" / "net" / "restClient.d.ts")
+        match = re.search(r"AudioUploadStatus\s*=\s*([^;]+);", mobile_src)
+        self.assertIsNotNone(match, msg="AudioUploadStatus missing from mobile/src/net/restClient.d.ts")
+        mobile = sorted(re.findall(r'"([^"]+)"', match.group(1)))
+        self.assertEqual(sorted(AUDIO_UPLOAD_STATUSES), schema)
+        self.assertEqual(mobile, schema)
+        doc = read(CONTRACTS_MD)
+        for status in AUDIO_UPLOAD_STATUSES:
+            self.assertIn(f'"{status}"', doc)
+
+    def test_the_response_has_exactly_two_victim_safe_fields(self):
+        from backend.app.schemas.contracts import AudioUploadResponse
+
+        self.assertEqual(set(AudioUploadResponse.model_fields), {"turn_id", "status"})
+        self.assertEqual(AudioUploadResponse.model_config.get("extra"), "forbid")
+
+
 if __name__ == "__main__":
     unittest.main()

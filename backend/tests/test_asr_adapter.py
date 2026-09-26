@@ -11,7 +11,7 @@ import threading
 import unittest
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
-from app.adapters import asr
+from backend.app.adapters import asr
 
 HAVE_SETTINGS = importlib.util.find_spec("pydantic_settings") is not None
 
@@ -97,7 +97,7 @@ class TestMock(unittest.TestCase):
 @unittest.skipUnless(HAVE_SETTINGS, "pydantic-settings is not installed")
 class TestSettings(unittest.TestCase):
     def _settings(self, **kw):
-        from app.core.config import Settings
+        from backend.app.core.config import Settings
         return Settings(DATABASE_URL="sqlite+aiosqlite:///:memory:", **kw)
 
     def test_defaults_are_mock_and_loopback(self):

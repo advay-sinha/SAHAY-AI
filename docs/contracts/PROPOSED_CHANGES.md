@@ -195,9 +195,9 @@ The documented differences are `emergency` as a pathway, `closed` covering "clos
 
 ---
 
-## PC-11 — `POST /sessions/{id}/audio` request and response — **PROPOSED (owner-approved 2026-09-27; awaiting D-11 lead confirmation)**
+## PC-11 — `POST /sessions/{id}/audio` request and response — **APPROVED AND FROZEN (2026-09-27)**
 
-Plan step M11, decision EXT-120. `CONTRACTS.md` is **not** edited until the four leads confirm.
+Plan step M11, decision EXT-120. Applied to `CONTRACTS.md` §1 and §4 after lead confirmation. Addition while applying: the audio measurements are stored in a new nullable column, `turns.asr_quality` (JSON; the table list in §6 is unchanged).
 
 ```
 CONTRACT CHANGE PROPOSAL
@@ -234,6 +234,6 @@ Internal, not part of the contract: the backend reaches speech recognition throu
 | Lead (D-11) | Confirmation |
 |---|---|
 | AI/ML and Safety | Project owner, 2026-09-27 |
-| Backend | pending |
-| Executive Web | pending |
-| Mobile/Victim Experience | pending |
+| Backend | Confirmed 2026-09-27, relayed by the project owner |
+| Executive Web | Confirmed 2026-09-27, relayed by the project owner |
+| Mobile/Victim Experience | Confirmed 2026-09-27, relayed by the project owner |

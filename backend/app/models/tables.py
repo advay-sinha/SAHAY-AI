@@ -83,6 +83,9 @@ class Turn(TimestampMixin, Base):
     was_fallback: Mapped[bool] = mapped_column(Boolean, default=False)
     guardrail_reason: Mapped[str] = mapped_column(String(120), default="")
     asr_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    # PC-11: console-only audio measurements for a voice turn (poor_audio, low_asr_confidence,
+    # snr_db, clipping_ratio, speech_s, duration_s). Never sent to a victim client.
+    asr_quality: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
     lang_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
     # Assistant turns: "draft" (unreviewed fallback text) or "" for victim turns.
     review_status: Mapped[str] = mapped_column(String(24), default="")
