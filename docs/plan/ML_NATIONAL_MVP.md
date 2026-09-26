@@ -240,7 +240,7 @@ Both are predeclared before any training (D-8).
 | M12g | ⛔ Team recordings (see external help) | **Team** | Consent |
 | **R6b** | Selection run on the team-dev slice (2 speakers) | **Owner** | M12g done |
 | **R7** | One-shot gate evaluation of the selected SER model and text head on the remaining team speakers | **Owner** | M12g done |
-| M12h | D4 fusion scorer, SAFE-SIGNAL, wiring into `assess()` for audio channels, and the payload no-leak test | ML lead | D-8, M11 |
+| M12h ✅ | D4 from voice (`ml/acoustics/d4.py`, standard library, `d4-prosody-1.0`): upward deviation of pitch, pitch variability, loudness and pausing from the caller's own first two usable voice turns; needs at least 3 usable voice turns, otherwise it is unmeasured and the assessment abstains; confidence capped at 0.6. Speech-emotion slot capped at 30% (D-8) and OFF until R7 passes. SAFE-SIGNAL: a neutral verification prompt in the uncertainty block when D4 and text severity (max of D1, D2, D3, D5) differ by more than 40. Hard overrides are untouched (calm voice plus crisis words is still Critical). Prosody is stored in `turns.asr_quality`. | ML lead | D-8, M11 |
 | M12i | Model cards and the evaluation report. Every number states its evidence class. | ML lead | — |
 
 #### R1 results (2026-09-26, verified locally with no network)

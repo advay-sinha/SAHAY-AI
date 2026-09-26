@@ -193,6 +193,10 @@ def _asr_quality(asr: Dict[str, Any]) -> Dict[str, Any]:
     q = asr.get("quality") or {}
     out = {k: asr.get(k) for k in ASR_QUALITY_KEYS if k in asr}
     out.update({k: q.get(k) for k in ("snr_db", "clipping_ratio") if k in q})
+    # Prosody measurements feed D4 (plan M12h): deviation from the caller's own baseline.
+    if isinstance(asr.get("prosody"), dict):
+        out["prosody"] = asr["prosody"]
+        out["prosody_reasons"] = list(asr.get("prosody_reasons") or [])
     return out
 
 

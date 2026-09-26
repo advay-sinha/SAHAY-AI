@@ -46,7 +46,7 @@ from ..ws.hub import hub
 from ..services.consent import CONSENT_GRANTED
 
 SEVERITY_RANK = {"medium": 1, "high": 2, "critical": 3}
-MODEL_VERSION = "text-lexicon-v1"
+MODEL_VERSION = "text-lexicon-v1+d4-prosody-1.0"
 
 
 def _alert_event(kind: str, severity: str, evidence) -> Dict[str, Any]:

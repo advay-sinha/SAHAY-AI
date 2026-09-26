@@ -16,15 +16,19 @@ Acoustic distress (D4), PC-08 (lead decision 2026-09-11):
   * typed channels (mobile_chat, portal_chat): D4 has no measurement path. It
     is declared STRUCTURALLY unavailable, reported as unavailable (never zero)
     and the SVI is renormalised over the other eight weights (denominator 0.88);
-  * audio channels (mobile_voice, upload): D4 should be measured. No acoustic
-    model runs in this build, so D4 is missing at runtime. That is NOT
-    rescaled: the assessment abstains (Needs Human Assessment).
+  * audio channels (mobile_voice, upload): D4 is measured from the caller's
+    voice turns (plan M12h, ml/acoustics/d4.py): deviation of pitch, loudness
+    and pausing from the caller's own first two usable turns. With fewer than
+    three usable voice turns D4 is missing, which is NOT rescaled: the
+    assessment abstains (Needs Human Assessment). Speech-emotion input to D4
+    stays off until its promotion gate passes (D-8).
 
 Nothing here is clinically validated.
 """
 
-from typing import Any, Dict, List, Mapping, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
+from .acoustics.d4 import safe_signal, score_d4
 from .guardrails import crisis_check
 from .nlp import langid
 from .nlp.detectors import TEXT_DIMENSIONS, match_turn, score_crisis, score_dimension, unavailable
@@ -33,7 +37,7 @@ from .nlp.recommend import recommend
 from .svi import compute
 from .svi.dimensions import DIMENSION_ORDER
 
-PIPELINE_VERSION = "text-lexicon-v1"
+PIPELINE_VERSION = "text-lexicon-v1+d4-prosody-1.0"
 
 #: Channels (CONTRACTS.md section 8) on which acoustic distress cannot exist.
 #: Mirrors backend/app/core/enums.py TEXT_CHANNELS (test_contract_mirror).
@@ -44,6 +48,16 @@ AUDIO_CHANNELS = ("mobile_voice", "upload")
 MIN_TOTAL_LETTERS = 20
 
 _COERCION_TERMS = ("withdraw", "take back", "not to complain", "wapas", "वापस")
+
+
+#: Text dimensions compared with D4 for the SAFE-SIGNAL verification prompt.
+TEXT_SEVERITY_DIMENSIONS = ("D1", "D2", "D3", "D5")
+
+
+def _text_severity(dims: Mapping[str, Mapping[str, Any]]) -> Optional[float]:
+    scores = [float(dims[d]["score"]) for d in TEXT_SEVERITY_DIMENSIONS
+              if d in dims and dims[d].get("score") is not None]
+    return max(scores) if scores else None
 
 
 def _victim(turns: Sequence[Mapping[str, Any]]) -> List[Mapping[str, Any]]:
@@ -121,10 +135,14 @@ def assess(
     for dim in TEXT_DIMENSIONS:
         dims[dim] = score_dimension(dim, victim)
     dims["D2"] = score_crisis(victim, crisis_check)
+    voice = [t for t in victim if isinstance(t.get("asr"), Mapping)]
     if text_channel:
         dims["D4"] = unavailable("D4", "structurally_unavailable_on_text_channel")
-    else:
+    elif not any(isinstance((t.get("asr") or {}).get("prosody"), Mapping) for t in voice):
         dims["D4"] = unavailable("D4", "acoustic_model_not_running")
+    else:
+        d4 = score_d4(voice)
+        dims["D4"] = d4 if d4["score"] is not None else {**unavailable("D4", d4["reason"]), **d4}
 
     structured = extract(victim)
     language = langid.aggregate(str(t["text"]) for t in victim)
@@ -140,9 +158,10 @@ def assess(
 
     # Voice turns (PC-11) carry their ASR confidence and audio measurements. Poor audio or a
     # low ASR confidence on any victim voice turn makes the assessment abstain (invariant 6).
-    voice = [t["asr"] for t in victim if isinstance(t.get("asr"), Mapping)]
-    confidences = [float(a["confidence"]) for a in voice if a.get("confidence") is not None]
-    poor_audio = any(bool(a.get("poor_audio")) or bool(a.get("low_asr_confidence")) for a in voice)
+    asr = [t["asr"] for t in voice]
+    confidences = [float(a["confidence"]) for a in asr if a.get("confidence") is not None]
+    poor_audio = any(bool(a.get("poor_audio")) or bool(a.get("low_asr_confidence")) for a in asr)
+    d4_measured = dims["D4"].get("score") is not None
 
     quality = {
         "poor_audio": poor_audio,
@@ -152,7 +171,7 @@ def assess(
         "crisis_interrupt_fired": crisis,
         "immediate_danger_confirmed": immediate,
         # Audio channel with no acoustic measurement: abstain, never rescale.
-        "acoustic_not_measured": not text_channel,
+        "acoustic_not_measured": not text_channel and not d4_measured,
     }
 
     scores = {k: v["score"] for k, v in dims.items() if v.get("score") is not None}
@@ -206,12 +225,16 @@ def assess(
             "language_confidence": language["confidence"],
             "acoustic": ("structurally unavailable — typed channel; D4 excluded and weights "
                          "renormalised (not measured, not zero)") if text_channel
-                        else "not measured — no acoustic model in this build; assessment abstains",
+                        else ("measured — deviation from the caller's own voice baseline (d4-prosody-1.0); "
+                              "uncalibrated, confidence capped; speech emotion off until its gate passes")
+                        if d4_measured
+                        else "not measured — fewer than three usable voice turns; assessment abstains",
             "asr_confidence": ("not applicable — typed text" if text_channel
                                else round(min(confidences), 4) if confidences else "not measured"),
             "asr_confidence_note": ("lowest uncalibrated ASR confidence across the victim's voice turns"
                                     if confidences else None),
             "voice_turns": len(voice),
+            "safe_signal": safe_signal(dims["D4"].get("score"), _text_severity(dims)),
             "model_agreement": "not applicable — single deterministic rule set",
             "quality_flags": {k: v for k, v in quality.items() if v},
         },
