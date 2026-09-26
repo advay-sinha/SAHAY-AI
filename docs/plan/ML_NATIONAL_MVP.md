@@ -292,10 +292,10 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
 |---|---|---|---|---|
 | MuRIL base | 0.742 (0.720) | 0.713 (0.693) | 0.703 (0.690) | 0.815 (0.596) |
 | XLM-R base | 0.748 (0.731) | 0.705 (0.680) | 0.710 (0.699) | 0.805 (0.595) |
-| MuRIL Stage A | crashed at epoch 3 (val 0.763 after 2 epochs); rerun pending | | | |
+| **MuRIL Stage A (selected)** | 0.745 (0.721) | 0.699 (0.674) | 0.707 (0.694) | 0.812 (0.590) |
 
 - The honest level is about **0.70–0.75 UAR** on unseen Hindi and Hinglish sentences (chance 0.20), against 0.94 in the leaky v1.
-- MuRIL and XLM-R are within 0.01 of each other; neither is clearly better yet.
+- **Selection (by the predeclared rule, mean per-language validation UAR):** MuRIL Stage A 0.767, XLM-R 0.766, MuRIL base 0.763. MuRIL Stage A is the text-affect shadow model, but the margin (0.001–0.004) is within seed noise, so the three encoders are effectively tied on test.
 - **English macro-F1 (0.60) is far below its UAR (0.81)** because the English test set keeps GoEmotions' full neutral share while training was neutral-capped, so emotion precision drops on neutral-heavy text. UAR is the prior-invariant headline metric.
 - The Stage A crash was caused by a laptop power-source change at 22:50:59: the NVIDIA driver logged events 14 and 153 two seconds later, plus a low-virtual-memory warning. It was not a code fault.
 
