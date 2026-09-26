@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SAHAY-AI — Human Tasks for the National MVP</title>
+<style>
+  @page { size: 21cm 29.7cm; margin: 1.8cm 1.6cm 2.0cm 1.6cm; }
+  body { font-family: "Segoe UI", "Nirmala UI", Arial, sans-serif; color: #111827; font-size: 9.5pt; line-height: 1.4; }
+  .hi { font-family: "Nirmala UI", "Mangal", sans-serif; }
+  h1 { font-size: 21pt; margin: 0 0 4pt 0; color: #1e3a8a; }
+  h2 { font-size: 14pt; color: #1e3a8a; border-bottom: 2px solid #1e3a8a; padding-bottom: 2pt; margin: 16pt 0 7pt 0; page-break-after: avoid; }
+  h3 { font-size: 11pt; margin: 11pt 0 4pt 0; page-break-after: avoid; }
+  h4 { font-size: 10pt; margin: 8pt 0 3pt 0; color: #4b5563; page-break-after: avoid; }
+  p { margin: 3pt 0 6pt 0; }
+  li { margin: 1pt 0; }
+  table { width: 100%; border-collapse: collapse; margin: 5pt 0 9pt 0; font-size: 8.7pt; }
+  th, td { border: 1px solid #b6bcc6; padding: 3pt 5pt; vertical-align: top; text-align: left; }
+  th { background: #e5e7eb; font-weight: bold; }
+  code { font-family: Consolas, monospace; font-size: 8.3pt; background: #f3f4f6; }
+  pre { font-family: Consolas, monospace; font-size: 8.2pt; background: #f3f4f6; padding: 5pt; }
+  .cover { border-left: 6px solid #1e3a8a; padding: 3pt 0 3pt 10pt; margin-bottom: 10pt; }
+  .meta { color: #4b5563; font-size: 9pt; }
+  .box { border: 1px solid #d1d5db; padding: 6pt 8pt; margin: 6pt 0 9pt 0; }
+  .warn { border-left: 5px solid #b91c1c; background: #fef2f2; }
+  .note { border-left: 5px solid #1e3a8a; background: #eff6ff; }
+  .done { border-left: 5px solid #15803d; background: #f0fdf4; }
+  .tag { font-size: 7.5pt; font-weight: bold; color: #ffffff; padding: 0 4px; }
+  .p0 { background: #b91c1c; } .p1 { background: #b45309; } .p2 { background: #15803d; }
+  .section { page-break-before: always; }
+  .small { font-size: 8.3pt; color: #4b5563; }
+</style>
+</head>
+<body>
+
+<div class="cover">
+  <h1>SAHAY-AI — Human Tasks for the National MVP</h1>
+  <div class="meta">Smart India Hackathon · Problem Statement 26093 · Ministry of Social Justice and Empowerment<br>
+  ML workstream · prepared 2026-09-26 · branch <code>feat/ml-ser-m12</code> · companion to <code>docs/plan/ML_NATIONAL_MVP.md</code></div>
+</div>
+
+<div class="box note">
+  <strong>Why this document exists.</strong> About 55% of the ML work for the national MVP is done once the current training runs (R2 rerun, R3, R4) finish. What remains is limited less by code than by work that <strong>only people may do</strong>:
+  <ul>
+    <li>writing and approving what the assistant says to a victim;</li>
+    <li>a counsellor's review of the crisis script;</li>
+    <li>real voices for the speech-emotion gate;</li>
+    <li>independently written test material.</li>
+  </ul>
+  The repository enforces this: unreviewed scripts cannot be spoken, AI-authored reviews are refused, and the official evaluation stays at zero samples until humans write it. This document lists every such task, who can do it, exactly what to produce, how long it takes, and when it counts as done.
+</div>
+
+<div class="box warn">
+  <strong>Rules that apply to every task below.</strong>
+  <ol>
+    <li><strong>Humans only.</strong> No AI system, language model, translation tool or text generator may write, translate, rewrite, label or review any script, test sample, sentence or review record. A model writing the test for a model measures nothing.</li>
+    <li><strong>Fictional only.</strong> Never use a real case, a real person's story, a news report or any identifying detail: names, phone numbers, addresses, FIR or case numbers, Aadhaar numbers, and so on. This is safety invariant 8.</li>
+    <li><strong>Pseudonymous IDs.</strong> Recordings and review records use roster IDs such as <code>SPK03</code> or <code>person-004</code>, never names in file names.</li>
+    <li><strong>Nothing personal in Git.</strong> Audio, recordings, consent forms and rosters stay in the private folders beneath <code>D:\Code\sides\sih-dataset\</code>. Only code, manifests and aggregate numbers are committed.</li>
+    <li><strong>Separation of roles.</strong> Nobody reviews or approves their own work.</li>
+  </ol>
+</div>
+
+<h2>1. Summary of all human tasks</h2>
+<table>
+  <thead><tr><th style="width:4%">#</th><th style="width:26%">Task</th><th style="width:7%">Priority</th><th style="width:20%">Who</th><th style="width:15%">Effort</th><th style="width:28%">Blocks</th></tr></thead>
+  <tbody>
+    <tr><td>H1</td><td>Decide, write and approve the fixed scripts S0, S9, SX and SH (Hindi and English)</td><td><b style="color:#b91c1c">[P0]</b></td><td>Project owner, 2 dialogue reviewers, native Hindi speaker, legal input</td><td>~2–3 days elapsed, ~10 person-hours</td><td>Every voice demo. The app refuses to speak a fixed turn until these are approved.</td></tr>
+    <tr><td>H2</td><td>Recruit a counsellor or psychology faculty reviewer and get SX reviewed</td><td><b style="color:#b91c1c">[P0]</b></td><td>Project owner recruits; counsellor reviews</td><td>1–2 h of the counsellor's time</td><td>SX approval and the Day-8 gate. The reviewer must be named in the deck.</td></tr>
+    <tr><td>H3</td><td>Review the question and fallback wording, now marked <code>DRAFT_UNREVIEWED</code></td><td><b style="color:#b91c1c">[P0]</b></td><td>2 dialogue reviewers, 1 native Hindi speaker</td><td>~3–4 person-hours</td><td>Spoken questions S2–S8. Unreviewed text cannot reach speech.</td></tr>
+    <tr><td>H4</td><td>Record the fixed-script audio (human voices)</td><td><b style="color:#b91c1c">[P0]</b></td><td>2 voice talents (hi, en), quiet room</td><td>~2 h</td><td>Spoken S0, S9, SX and SH (EXT-103: human-recorded)</td></tr>
+    <tr><td>H5</td><td>Emotion speech recordings: at least 6 speakers, 5 emotions, Hindi and English (+ Hinglish)</td><td><b style="color:#b91c1c">[P0]</b></td><td>6+ team members or volunteers, 1 coordinator</td><td>~1 h per speaker + ~4 h coordination</td><td>Choosing the SER model (R6b) and the promotion gate (R7). SER cannot feed the score without this.</td></tr>
+    <tr><td>H6</td><td>Write text-emotion evaluation sentences (Hindi and Hinglish)</td><td><b style="color:#b45309">[P1]</b></td><td>2–4 writers + 1 independent labeller</td><td>~20–30 person-hours</td><td>The MuRIL text-emotion gate (plan M12f and R7)</td></tr>
+    <tr><td>H7</td><td>Build the blind evaluation corpus: 180 scenarios, 360 blind reviews</td><td><b style="color:#b45309">[P1]</b></td><td>3 authors, 4 reviewers, 1 adjudicator, 1 corpus owner (at least 5 distinct people)</td><td>~90–150 person-hours</td><td>Every official safety number: critical-miss rate and detector precision and recall. Locked count stays 0 without it.</td></tr>
+    <tr><td>H8</td><td>Complete the pending safety-review confirmations</td><td><b style="color:#b45309">[P1]</b></td><td>The named reviewers personally</td><td>~1 h</td><td>A valid two-person review record for the crisis pre-check and safety hardening</td></tr>
+    <tr><td>H9</td><td>Decide on a 4th language, and staff it if yes</td><td><b style="color:#b45309">[P1]</b></td><td>Project owner, plus a fluent reviewer for that language</td><td>Decision: 1 h; staffing: see H9</td><td>The M10 language scope</td></tr>
+    <tr><td>H10</td><td>Account-gated data actions: Common Voice Hindi, and optionally IITKGP-SEHSC</td><td><b style="color:#b45309">[P1]</b></td><td>Project owner</td><td>~1–2 h</td><td>Hindi speech-recognition error rate (WER) (M11); optional Hindi SER data</td></tr>
+    <tr><td>H11</td><td>Expert review of the provisional SVI weights and bands</td><td><b style="color:#15803d">[P2]</b></td><td>A counsellor or helpline expert + the AI/ML lead</td><td>~2 h</td><td>Judge credibility. The weights are labelled provisional until then.</td></tr>
+    <tr><td>H12</td><td>Timed decision test: an outside reader decides on a case packet in under 90 s</td><td><b style="color:#15803d">[P2]</b></td><td>3–5 readers from outside the team</td><td>~30 min each</td><td>Success metric M4 in the deck</td></tr>
+    <tr><td>H13</td><td>Real-phone testing, demo rehearsal and a backup video</td><td><b style="color:#b45309">[P1]</b></td><td>Whole team</td><td>~1 day before freeze</td><td>Definition of done: tested on a real phone and on the demo laptop</td></tr>
+  </tbody>
+</table>
+
+<div class="box note nobreak">
+  <strong>Suggested order.</strong>
+  <ul>
+    <li><strong>Start this week, in parallel:</strong> H1, H2 and H3 (these block the demo); H5 (the longest lead time for SER); H7 roster and a pilot of 15–20 samples.</li>
+    <li><strong>Next week:</strong> H4, once the scripts are approved; H6; H8; H9; H10.</li>
+    <li><strong>Before the freeze:</strong> H11, H12 and H13.</li>
+  </ul>
+  The owner's manual compute runs (R2–R7) happen alongside; they are listed in section 14.
+</div>
+
+<!-- ============================ H1 ============================ -->
+<br class="section" style="page-break-before: always" clear="all">
+<h2>H1 · Fixed scripts S0, S9, SX and SH <b style="color:#b91c1c">[P0]</b></h2>
+<p><strong>What they are.</strong> Four utterances that are <em>never</em> generated by a model. They are written by people, approved, recorded, and played back as they are.</p>
+<table>
+  <thead><tr><th>Script</th><th>When it plays</th><th>What it must contain (from <code>docs/dialogue/STATES.md</code>)</th></tr></thead>
+  <tbody>
+    <tr><td><strong>S0</strong> Opening</td><td>Start of every session</td><td>Identifies the assistant as an AI; says a human officer reviews everything; says the person may ask for a human at any time; invites them to speak in their own words. <strong>No question.</strong></td></tr>
+    <tr><td><strong>S9</strong> Closing</td><td>End of intake</td><td>Confirms the account is recorded; gives the reference number; says what happens next. <strong>No promise of any outcome, timeline, arrest or compensation.</strong></td></tr>
+    <tr><td><strong>SX</strong> Crisis interrupt</td><td>Any turn where crisis or self-harm language is detected. Unconditional.</td><td>Acknowledges; says plainly that a person will speak with them now; asks them to stay. <strong>Nothing else: no advice, no assessment, no question.</strong> Intake never resumes.</td></tr>
+    <tr><td><strong>SH</strong> Human handoff</td><td>On request, or when the system escalates</td><td>Confirms the transfer and asks the person to stay.</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 1 — settle these decisions before anyone writes wording</h3>
+<p class="small">Source: <code>docs/dialogue/FIXED_SCRIPTS_REVIEW.md</code>. Record each answer (who decided, date) in that file.</p>
+<table>
+  <thead><tr><th style="width:8%">ID</th><th>Decision</th><th style="width:22%">Who decides</th></tr></thead>
+  <tbody>
+    <tr><td>S0-1</td><td>How the assistant names itself: a product name, "an automated system", or neither. This decides whether it sounds government-operated.</td><td>Project owner + legal</td></tr>
+    <tr><td>S0-2</td><td>Whether the opening says the conversation is recorded, or leaves that to the consent screen only.</td><td>Legal + Team A</td></tr>
+    <tr><td>S0-3</td><td>Whether NHAA 14566 is named.</td><td>Project owner</td></tr>
+    <tr><td>S0-4</td><td>Sentence count. The rules say one sentence per utterance, but S0 carries four required facts, so confirm S0 is an exception and set the maximum number of sentences.</td><td>Two dialogue reviewers</td></tr>
+    <tr><td>S0-5</td><td>Hindi register: formal <span class="hi">आप</span> throughout. Is any Hinglish allowed in the Hindi script?</td><td>Native Hindi reviewer</td></tr>
+    <tr><td>S0-6</td><td>Open invitation ("tell me what happened") or bounded?</td><td>Team A</td></tr>
+    <tr><td>S9-1</td><td>Reference-number format, and whether it is spoken digit by digit, only shown on screen, or both.</td><td>Project owner + Team B</td></tr>
+    <tr><td>S9-2</td><td><strong>Highest-risk sentence:</strong> what "what happens next" may factually claim. It must describe the process without promising a timeline, an arrest, an outcome or compensation. Sign off the exact words, not a paraphrase.</td><td>Legal + project owner</td></tr>
+    <tr><td>S9-3</td><td>Whether a callback is promised at all. If the demo cannot call back, the script must not imply that it will.</td><td>Project owner</td></tr>
+    <tr><td>S9-4</td><td>The closing when the assessment abstained. It must be <em>identical</em> to the normal closing, so the victim can't infer an assessment.</td><td>Two dialogue reviewers</td></tr>
+    <tr><td>S9-5</td><td>Whether the closing repeats the right to a human.</td><td>Team A</td></tr>
+    <tr><td>SX-1</td><td>Name and review date of the counsellor or psychology faculty reviewer (see H2).</td><td>Project owner</td></tr>
+    <tr><td>SX-2</td><td>The acknowledgement wording. It must not minimise. Every minimising phrase in <code>ml/guardrails/lexicons/prohibitions.py</code> is banned in both languages; check the chosen wording against that list.</td><td>Counsellor + two dialogue reviewers</td></tr>
+    <tr><td>SX-3</td><td>"A person will speak with you now" may only be said if the demo can deliver it. Decide the wording for when no executive is available.</td><td>Project owner + Team B</td></tr>
+    <tr><td>SX-4</td><td>Whether a helpline number is spoken. Referring someone elsewhere mid-crisis is a clinical decision.</td><td>Counsellor + legal</td></tr>
+    <tr><td>SX-5</td><td>Whether SX says anything about what was detected. The recommendation is no; confirm it explicitly.</td><td>Counsellor</td></tr>
+    <tr><td>SX-6</td><td>What the person hears while waiting: silence, a repeat, or a held-line message.</td><td>Team A + Team C</td></tr>
+    <tr><td>SX-7</td><td>Whether SX differs when the crisis words were someone else's ("he told me to kill myself"). The pre-check currently fires on both.</td><td>Counsellor</td></tr>
+    <tr><td>SH-1</td><td>One script or two: a handoff the victim asked for versus one the system escalated.</td><td>Team A</td></tr>
+    <tr><td>SH-2</td><td>What is said when consent was declined and the session goes to a person anyway.</td><td>Legal + Team A</td></tr>
+    <tr><td>SH-3</td><td>The "a person has joined" notice in the victim's language: part of SH, or a separate string?</td><td>Team A + Team C</td></tr>
+    <tr><td>SH-4</td><td>Expected-wait wording, if any. Never state a duration the demo cannot meet.</td><td>Project owner</td></tr>
+  </tbody>
+</table>
+
+<h3>Step 2 — write the wording (Hindi and English, separately)</h3>
+<ul>
+  <li>Plain words; the fewest sentences the decisions allow; formal register.</li>
+  <li><strong>Never use:</strong>
+    <ul>
+      <li>advice (legal, medical or procedural);</li>
+      <li>diagnosis;</li>
+      <li>any promise about outcomes, timelines, arrest or compensation;</li>
+      <li>requests for graphic detail, or asking "why";</li>
+      <li>blaming or testing the account;</li>
+      <li>minimising comfort phrases such as "calm down", "don't worry", "be strong", "I understand how you feel" or "at least…", in either language.</li>
+    </ul>
+  </li>
+  <li><strong>The Hindi is written as Hindi, not translated from English.</strong> SX in particular must be reviewed as crisis language in its own right.</li>
+</ul>
+
+<h3>Step 3 — approval (a <code>type:dialogue</code> change)</h3>
+<ol>
+  <li>Two reviewers approve each script, and a native Hindi speaker approves each Hindi script. SX also needs the counsellor from H2.</li>
+  <li>The ML lead records each approved script in <code>ml/dialogue/scripts/fixed_scripts.py</code> with the exact text, <code>status="APPROVED"</code>, the reviewer's name and the review date, and updates <code>docs/dialogue/STATES.md</code> in the same commit.</li>
+  <li>Check: <code>GET /health</code> reports <code>fixed_scripts_ready: true</code>.</li>
+</ol>
+<div class="box done nobreak"><strong>Done when:</strong> all 8 records (S0, S9, SX and SH × hi and en) are APPROVED, each with a named reviewer and a date; SX is counsellor-reviewed; and the health check is green. <strong>Do not</strong> add placeholder text to make a demo run: the code refuses to speak on purpose.</div>
+
+<!-- ============================ H2 ============================ -->
+<h2>H2 · Counsellor or psychology faculty reviewer <b style="color:#b91c1c">[P0]</b></h2>
+<ul>
+  <li><strong>Who:</strong> a practising counsellor, clinical psychologist or psychology faculty member. Crisis-line experience is preferred. They must not be part of the development team.</li>
+  <li><strong>What they review:</strong>
+    <ul>
+      <li>the SX wording in both languages;</li>
+      <li>decisions SX-2, SX-4, SX-5 and SX-7;</li>
+      <li>optionally, the S9-2 sentence and the prohibition list in <code>ml/guardrails/lexicons/prohibitions.py</code>.</li>
+    </ul>
+  </li>
+  <li><strong>What to hand them:</strong>
+    <ul>
+      <li>a one-page brief (what SAHAY-AI is, and that the AI is a bounded intake tool, not a counsellor);</li>
+      <li>the SX decision table from H1;</li>
+      <li>the draft SX text in Hindi and English;</li>
+      <li>the list of banned phrases.</li>
+    </ul>
+  </li>
+  <li><strong>What they give back:</strong> written approval or requested changes, their name, credentials and the date, and whether they agree to be named in the deck. A signed note or an email is enough.</li>
+  <li><strong>Time:</strong> 1–2 hours. Book them early: this is the single hardest external dependency.</li>
+</ul>
+<div class="box done nobreak"><strong>Done when:</strong> the SX records carry the counsellor's name and review date, and the deck names the reviewer.</div>
+
+<!-- ============================ H3 ============================ -->
+<h2>H3 · Review the question and fallback wording <b style="color:#b91c1c">[P0]</b></h2>
+<p>The state machine asks at most one licensed question per state. Each question also has a pre-written fallback, which is spoken when a generated phrasing fails the safety validator or when the language model is off. Both English and Hindi are currently marked <code>DRAFT_UNREVIEWED</code> in <code>ml/dialogue/intents.py</code>, so none of them can be spoken yet.</p>
+<table>
+  <thead><tr><th>State</th><th>Licensed question (English, from STATES.md)</th></tr></thead>
+  <tbody>
+    <tr><td>S1</td><td>No question: acknowledgement only. The fallback is "Thank you for telling me. Please go on."</td></tr>
+    <tr><td>S2</td><td>Are you safe right now — can the person who harmed you reach you?</td></tr>
+    <tr><td>S3</td><td>Does anyone need medical help right now?</td></tr>
+    <tr><td>S4</td><td>Who was involved, and when did this happen?</td></tr>
+    <tr><td>S5</td><td>Are the threats still continuing — has anyone told you not to complain?</td></tr>
+    <tr><td>S6</td><td>Is there someone with you right now?</td></tr>
+    <tr><td>S7</td><td>Has a complaint or FIR been filed — do you have legal help?</td></tr>
+    <tr><td>S8</td><td>What help are you looking for right now?</td></tr>
+  </tbody>
+</table>
+<h4>Reviewer checklist, per question and per language</h4>
+<ul>
+  <li>Exactly one question, and only the one the state allows.</li>
+  <li>None of the prohibited content (see H1, step 2).</li>
+  <li>Hindi: natural spoken Hindi, formal <span class="hi">आप</span>, understandable to a rural caller, and not a word-for-word translation.</li>
+  <li>Would a frightened person who may be overheard be able to answer it safely?</li>
+  <li>The fallback says the same thing as the licensed question.</li>
+</ul>
+<div class="box done nobreak"><strong>Done when:</strong> two reviewers, one of them a native Hindi speaker, sign off both languages, and the ML lead sets <code>REVIEW_STATUS</code> to <code>APPROVED</code> for <code>en</code> and <code>hi</code> in a <code>type:dialogue</code> commit.</div>
+
+<!-- ============================ H4 ============================ -->
+<h2>H4 · Record the fixed-script audio <b style="color:#b91c1c">[P0]</b></h2>
+<p>Decision EXT-103: the fixed scripts are <strong>recorded by human voices</strong>; no speech-synthesis model is downloaded. Start only after H1 is approved. Any later wording change means re-recording.</p>
+<ul>
+  <li><strong>Voices:</strong> one Hindi and one English speaker. They need a calm, clear, neutral delivery at a moderate pace and must not sound rushed. The same voice should record every script in its language.</li>
+  <li><strong>Format:</strong> WAV, 16-bit PCM, mono, 16 kHz or 48 kHz, in a quiet room with no echo, with the phone or microphone about 20–30 cm away. Leave ~0.5 s of silence before and after each script.</li>
+  <li><strong>Takes:</strong> 3 takes per script; the dialogue reviewers pick the best. Files are named <code>S0_hi_take1.wav</code> and so on.</li>
+  <li><strong>Check:</strong> the recorded words must match the approved text <em>exactly</em>. A reviewer listens and confirms this before the file is accepted.</li>
+  <li><strong>Storage:</strong> the private folder only, beneath <code>DATA_ROOT/audio/fixed/</code>. The ML lead records the asset names in <code>ml/tts/presynth.py</code>. Audio is never committed.</li>
+</ul>
+<div class="box done nobreak"><strong>Done when:</strong> 8 approved WAV files exist (4 scripts × 2 languages), each verified against the text, and the presynth registry lists no missing script.</div>
+
+<!-- ============================ H5 ============================ -->
+<br class="section" style="page-break-before: always" clear="all">
+<h2>H5 · Emotion speech recordings <b style="color:#b91c1c">[P0]</b></h2>
+<p><strong>Why.</strong> The speech-emotion models (emotion2vec+, WavLM and Whisper-encoder heads) are trained and compared on RAVDESS and CREMA-D. Both are acted <em>English</em> studio speech, and emotion2vec may already have been trained on them. The only honest test of how SER performs on Indian speakers on a phone is <strong>your own recordings</strong>. They are used for <strong>evaluation only</strong>, never for training:</p>
+<ul>
+  <li><strong>2 speakers ("team-dev"):</strong> choose which SER model is used (run R6b).</li>
+  <li><strong>At least 4 other speakers ("gate"):</strong> decide whether SER may feed the distress score (run R7). The rule: average recall across the 5 emotions (UAR) of at least 0.45 in Hindi and in English, no emotion below 0.20, and no rise in the score on neutral speech.</li>
+</ul>
+
+<h3>People</h3>
+<table>
+  <thead><tr><th>Role</th><th>Count</th><th>Requirements</th></tr></thead>
+  <tbody>
+    <tr><td>Speakers</td><td><strong>≥ 6</strong> (8 is better)</td><td>A mix of women and men (at least 2 of each if possible), different ages and regional accents. Each speaks Hindi and English; Hinglish is a bonus. They need not be trained actors: natural, believable delivery beats theatrical acting.</td></tr>
+    <tr><td>Coordinator</td><td>1</td><td>Runs the sessions, keeps the metadata sheet and consent forms, and assigns speakers to team-dev or gate <em>before</em> any model is run on their audio.</td></tr>
+  </tbody>
+</table>
+
+<h3>What each speaker records</h3>
+<table>
+  <thead><tr><th>Dimension</th><th>Values</th></tr></thead>
+  <tbody>
+    <tr><td>Emotions (5)</td><td>neutral · happy · sad · angry · fearful</td></tr>
+    <tr><td>Sentences</td><td>10 carrier sentences per language (the same 10 for every speaker)</td></tr>
+    <tr><td>Languages</td><td>Hindi and English (required); Hinglish (optional, recommended)</td></tr>
+    <tr><td>Conditions (2)</td><td><strong>Quiet</strong> (a closed room) and <strong>noisy</strong> (a fan, TV, traffic or kitchen noise nearby, at a realistic level)</td></tr>
+    <tr><td>Clips per speaker</td><td>10 × 5 × 2 = <strong>100 per language</strong>, so 200 for Hindi and English (300 with Hinglish)</td></tr>
+    <tr><td>Session length</td><td>About 45–60 minutes, with breaks. Record one emotion at a time across all 10 sentences, so the speaker stays in character.</td></tr>
+  </tbody>
+</table>
+
+<h3>Carrier sentences (the team writes them, by hand)</h3>
+<ul>
+  <li><strong>Neutral content only.</strong> The emotion must be carried by the <em>voice</em>, not the words. Example English shape: "The bus to the market leaves at nine."</li>
+  <li><strong>Do not include:</strong> emotion words, violence, threats, crisis language, caste, religion, names or places. This keeps the test about tone, and it avoids triggering the crisis detector during tests.</li>
+  <li><strong>Length:</strong> 6–12 words (about 2–4 seconds spoken).</li>
+  <li><strong>Hindi:</strong> the Hindi sentences are written natively in Hindi, not translated. The Hinglish set is written the way people actually talk.</li>
+  <li><strong>Before recording:</strong> a second team member checks each set.</li>
+</ul>
+
+<h3>Recording specification</h3>
+<ul>
+  <li><strong>Device:</strong> an ordinary smartphone, held as if on a call, or on a table about 30 cm away. Realistic beats studio quality.</li>
+  <li><strong>Format:</strong> WAV, 16-bit PCM, mono, 16 kHz or higher. The pipeline reads WAV directly.
+    <ul><li>If a phone can only save M4A or MP3, keep the files as they are and tell the ML lead. Converting them needs FFmpeg, which is decision EXT-101 and not yet approved.</li></ul>
+  </li>
+  <li>About 0.5 s of silence before and after each sentence. One sentence per file.</li>
+  <li><strong>File name:</strong> <code>SPK03_hi_fearful_noisy_s07_t1.wav</code>, which is speaker, language (<code>hi</code>, <code>en</code> or <code>hg</code>), emotion, condition, sentence number and take. No personal names anywhere.</li>
+  <li><strong>Re-record</strong> if the clip is clipped (distorted), cut off, or the speaker laughed or stumbled.</li>
+</ul>
+
+<h3>Acting guidance for speakers</h3>
+<ul>
+  <li><strong>Neutral:</strong> reading calmly, as if giving directions.</li>
+  <li><strong>Happy:</strong> pleased, as if sharing good news.</li>
+  <li><strong>Sad:</strong> low, as if something disappointing happened.</li>
+  <li><strong>Angry:</strong> firm, irritated, raised but not shouting into the microphone.</li>
+  <li><strong>Fearful:</strong> worried, hurried or unsteady, as if something is wrong nearby.</li>
+  <li>Moderate intensity, the way people really speak. Exaggeration makes the test easier and less honest.</li>
+  <li>A speaker may stop at any time. Fearful and sad takes can be uncomfortable, so give breaks.</li>
+</ul>
+
+<h3>Metadata sheet (private, one row per speaker)</h3>
+<p><code>speaker_id, sex, age_band, native_language(s), region/accent (broad), device_model, room_quiet, room_noisy_source, recorded_on, assigned_set (team-dev | gate), consent_form_id</code></p>
+
+<h3>Consent form (each speaker signs before recording)</h3>
+<ol>
+  <li>Purpose: evaluating a speech-emotion component of the SAHAY-AI hackathon prototype.</li>
+  <li>The content is fictional, neutral sentences; no personal story is recorded.</li>
+  <li>The recordings are stored privately on the project laptop. They are never published, uploaded or committed to Git, and are used only for evaluation.</li>
+  <li>Only aggregate numbers (for example "UAR 0.52") appear in reports and the deck. Voices are never played publicly without separate written permission.</li>
+  <li>The right to withdraw and have the recordings deleted at any time, by contacting the coordinator.</li>
+  <li>The retention period: deletion after the hackathon unless the speaker agrees otherwise in writing.</li>
+  <li>The speaker's pseudonymous ID, a signature and the date.</li>
+</ol>
+<div class="box done nobreak"><strong>Done when:</strong> at least 6 speakers are recorded (at least 2 team-dev and at least 4 gate) in Hindi and English, each with 100 clips per language across both conditions; the metadata sheet and consent forms are complete; and the files are in <code>D:\Code\sides\sih-dataset\corpus\audio\team_recordings\</code>. The ML lead then adds a manifest and the owner runs R6b and R7.</div>
+
+<!-- ============================ H6 ============================ -->
+<br class="section" style="page-break-before: always" clear="all">
+<h2>H6 · Text-emotion evaluation sentences <b style="color:#b45309">[P1]</b></h2>
+<p><strong>Why.</strong> The MuRIL text-emotion branch reads the transcript and estimates the same 5 emotions. It is trained on EmoInHindi, a copy converted to Roman script and GoEmotions, but it can only be tested fairly on sentences its developers did not write.</p>
+<table>
+  <thead><tr><th>Item</th><th>Minimum</th><th>Target</th></tr></thead>
+  <tbody>
+    <tr><td>Hindi (Devanagari)</td><td>40 per emotion = 200</td><td>100 per emotion = 500</td></tr>
+    <tr><td>Hinglish (Roman script)</td><td>40 per emotion = 200</td><td>100 per emotion = 500</td></tr>
+    <tr><td>English (optional)</td><td>—</td><td>40 per emotion</td></tr>
+  </tbody>
+</table>
+<ul>
+  <li><strong>Writers:</strong> 2–4 people, native or fluent. Each sentence is <em>fictional</em>, one to two sentences long, first person, the way a person would type or say it to a helpline. Mix explicit wording ("I am so scared") with implicit wording ("I keep checking the door").</li>
+  <li><strong>Hinglish:</strong> natural spelling variation ("nahi", "nhi", "nahin"), chat-style typing and code-switching mid-sentence.</li>
+  <li><strong>Labels:</strong> the writer proposes one of neutral, happy, sad, angry or fearful. A <strong>second person labels independently without seeing the writer's label</strong>. Where they disagree, drop the sentence or have a third person decide. Record the agreement rate.</li>
+  <li><strong>Not allowed:</strong> real incidents, names or identifiers; caste or religion used as the source of difficulty; sentences copied, translated or paraphrased from any dataset or from the repository's test files.</li>
+  <li><strong>Format:</strong> CSV <code>id, language, script, text, writer_label, second_label, final_label, writer_id, labeller_id</code>, UTF-8, kept in the private folder.</li>
+</ul>
+<div class="box done nobreak"><strong>Done when:</strong> at least 200 Hindi and 200 Hinglish sentences exist with final labels, the agreement rate is recorded, and the file is in <code>D:\Code\sides\sih-dataset\corpus\text\team_affect\</code>.</div>
+
+<!-- ============================ H7 ============================ -->
+<h2>H7 · Blind evaluation corpus (the official safety numbers) <b style="color:#b45309">[P1]</b></h2>
+<p>Every safety number published so far is <em>regression</em> evidence: it comes from test cases the team had already seen. The official critical-miss rate and detector precision and recall need an <strong>independent, human-written, blind-reviewed</strong> corpus. The tooling is finished (<code>ml/eval/blind/</code>); the corpus is zero because nobody has written it. The full rules are in <code>ml/eval/blind/STAFFING.md</code>, <code>AUTHOR_INSTRUCTIONS.md</code> and <code>REVIEWER_INSTRUCTIONS.md</code>. Give those files to the people concerned.</p>
+
+<h3>Roles (the minimum is 5 distinct people; 7–8 is comfortable)</h3>
+<table>
+  <thead><tr><th>Role</th><th>Min</th><th>Requirements</th></tr></thead>
+  <tbody>
+    <tr><td>Authors</td><td>3</td><td>Between them, one writes English, one writes Hindi in Devanagari and one writes Hinglish. <strong>None may have read <code>ml/eval/corpus/*.json</code> or <code>ml/eval/results/*</code>.</strong> Anyone who has may only be a reviewer or adjudicator.</td></tr>
+    <tr><td>Reviewers</td><td>4</td><td>At least 2 read Hindi, at least 2 are competent in Hindi-English code-switching, and at least 2 read English. Nobody reviews their own writing.</td></tr>
+    <tr><td>Adjudicator</td><td>1</td><td>Authored nothing in v1. Reads Hindi and English and is code-switch competent. Cannot be either of the reviewers in a disagreement.</td></tr>
+    <tr><td>Corpus owner</td><td>1</td><td>Runs the commands and keeps the private root, the backups and the ledger heads. May also review, but never their own authored samples, and cannot be the adjudicator.</td></tr>
+  </tbody>
+</table>
+
+<h3>Volume and effort</h3>
+<table>
+  <thead><tr><th>Work</th><th>Quantity</th><th>Effort</th></tr></thead>
+  <tbody>
+    <tr><td>Scenarios written (1–12 turns, fictional)</td><td>180 (60 en, 60 hi, 60 Hinglish)</td><td>15–30 min each → 60–90 person-hours</td></tr>
+    <tr><td>Blind reviews (two per scenario)</td><td>360</td><td>5–10 min each → 30–60 person-hours</td></tr>
+    <tr><td>Adjudications</td><td>~18–27 (10–15%)</td><td>+ third blind reviews for crisis disagreements</td></tr>
+  </tbody>
+</table>
+
+<h3>Coverage minimums (from <code>coverage_plan_v1.json</code>)</h3>
+<div>
+<table>
+  <thead><tr><th>Category</th><th>Total</th><th>Per lang.</th></tr></thead>
+  <tbody>
+    <tr><td>crisis_self_harm</td><td>18</td><td>6</td></tr>
+    <tr><td>immediate_danger</td><td>18</td><td>6</td></tr>
+    <tr><td>continuing_threat</td><td>21</td><td>6</td></tr>
+    <tr><td>medical_urgency</td><td>15</td><td>4</td></tr>
+    <tr><td>isolation_boycott_displacement</td><td>18</td><td>5</td></tr>
+    <tr><td>legal_urgency</td><td>18</td><td>5</td></tr>
+    <tr><td>communication_safety_coercion</td><td>18</td><td>5</td></tr>
+    <tr><td>explicit_human_request</td><td>15</td><td>5</td></tr>
+    <tr><td>low_distress_information_request</td><td>18</td><td>6</td></tr>
+    <tr><td>expected_abstention</td><td>12</td><td>4</td></tr>
+    <tr><td>no_alert_control</td><td>24</td><td>8</td></tr>
+    <tr><td>multi_label</td><td>30</td><td>10</td></tr>
+  </tbody>
+</table>
+<table>
+  <thead><tr><th>Challenge slice</th><th>Total</th></tr></thead>
+  <tbody>
+    <tr><td>explicit / clause-scoped negation</td><td>10 / 8</td></tr>
+    <tr><td>conditional language</td><td>8</td></tr>
+    <tr><td>quoted / attributed speech</td><td>10 / 8</td></tr>
+    <tr><td>danger + attributed language</td><td>8</td></tr>
+    <tr><td>past-tense disclosure · indirect language</td><td>8 · 10</td></tr>
+    <tr><td>code-switching · romanised Hindi · misspellings</td><td>12 · 12 · 12</td></tr>
+    <tr><td>regional vocabulary · polite understated danger</td><td>10 · 10</td></tr>
+    <tr><td>multiple weak signals · conflicting reassurance</td><td>10 · 8</td></tr>
+    <tr><td>role-play · prompt injection · embedded instructions</td><td>8 · 8 · 8</td></tr>
+    <tr><td>multi-turn evidence · later-turn evidence</td><td>15 · 10</td></tr>
+    <tr><td>repeated/corrected info · safe near-miss</td><td>8 · 12</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="small">Counts are minimums. One scenario can count toward several categories and slices. Difficulty must come from the language (negation, scope, tense, register, script, code-switching, turn order), <strong>never</strong> from caste, religion, region, gender, disability or occupation stereotypes. About a quarter must be plain, safe text, so that false alarms can be measured.</p>
+
+<h3>Steps</h3>
+<ol>
+  <li>Decide the real people and their roles. Write the roster to <code>&lt;SAHAY_EVAL_ROOT&gt;/assignments/v1/roster.json</code> from the template, setting <code>can_author</code>, <code>can_review</code>, <code>can_adjudicate</code>, languages and code-switch competence honestly.</li>
+  <li>Run <code>python -m ml.eval.blind_corpus roster-status</code> to confirm that Hindi and Hinglish each have 2 or more reviewers.</li>
+  <li>Give authors <code>AUTHOR_INSTRUCTIONS.md</code> and have each one confirm individually that they have not read the corpus or result files. Give reviewers <code>REVIEWER_INSTRUCTIONS.md</code>, including the Hindi and Hinglish sections.</li>
+  <li>Allocate each author a range of submission ids (for example <code>SUB-V1-HI-0001…0060</code>).</li>
+  <li><strong>Pilot first:</strong> take 15–20 samples all the way through, freeze nothing, and read <code>python -m ml.eval.blind_corpus status</code> to see where the process breaks.</li>
+  <li>Then write the rest, run blind reviews and adjudication, and freeze. The official evaluation runs <strong>once</strong>.</li>
+</ol>
+<div class="box warn nobreak">If the available people can't meet the independence rules (for example, only one person reads Hindi), the correct result is a <strong>smaller corpus in the languages that can be staffed, with the shortfall stated</strong>. It is never one reviewer signing twice.</div>
+
+<!-- ============================ H8 ============================ -->
+<br class="section" style="page-break-before: always" clear="all">
+<h2>H8 · Pending safety-review confirmations <b style="color:#b45309">[P1]</b></h2>
+<table>
+  <thead><tr><th>Document</th><th>What is pending</th><th>Who (personally)</th></tr></thead>
+  <tbody>
+    <tr><td><code>ml/eval/reviews/crisis-precheck-review.md</code> §17</td><td>"Second-reviewer confirmation", currently PENDING. The second record's reasoning is identical to the first, and its role is listed as the same. The second reviewer must confirm their identity, their actual (backend-familiar) role and that the reasoning is their own, in their own words.</td><td>The second reviewer named in record 2 (<code>@Ameya5006</code>). Nobody else may fill it in.</td></tr>
+    <tr><td><code>ml/eval/reviews/safety-hardening-review.md</code> §13–14</td><td>The reviewer checklist in §13 is unticked. Each reviewer ticks the items they actually did, including running the three commands themselves and a Hindi or Hinglish reader checking §§3–4. They then confirm their §14 record covers <em>this</em> change.</td><td>The two reviewers named in §14</td></tr>
+    <tr><td>Candidate fixture reviews (optional)</td><td><code>python -m ml.eval.review_workflow export</code> produces a packet per fixture. Crisis and immediate-danger fixtures need 2 real approvals. <em>Note:</em> candidate fixtures can never become official locked evidence because their results were published; only H7 produces official numbers.</td><td>Any 2 team reviewers</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================ H9 ============================ -->
+<h2>H9 · 4th language decision <b style="color:#b45309">[P1]</b></h2>
+<p>The current language scope is Hindi, English and Hinglish. A 4th, regional language was approved <em>in principle</em> (D-1), but it ships only if a fluent human can review it.</p>
+<ul>
+  <li><strong>Decide:</strong> which language, if any, and name the fluent reviewer.</li>
+  <li><strong>Recommendation:</strong> a language with its own script, such as <strong>Bengali, Tamil or Telugu</strong>, so that language detection stays simple. Marathi shares Devanagari with Hindi and is harder to tell apart.</li>
+  <li><strong>If yes, the people needed:</strong>
+    <ul>
+      <li>1 native writer and 1 native reviewer for the fixed scripts (H1) and the questions (H3);</li>
+      <li>a reviewer for the crisis and detector word lists in that language;</li>
+      <li>fixtures in that language written by a human;</li>
+      <li>voice recordings for H4.</li>
+    </ul>
+    Plan roughly 25–40 person-hours. It starts text-only; voice comes later.
+  </li>
+  <li><strong>If no:</strong> say so explicitly in the deck. "Hindi, English and Hinglish, evaluated" is stronger than "22 languages, untested".</li>
+</ul>
+
+<!-- ============================ H10 ============================ -->
+<h2>H10 · Data actions that need an account <b style="color:#b45309">[P1]</b></h2>
+<table>
+  <thead><tr><th>Item</th><th>Why</th><th>What the owner does</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Mozilla Common Voice — Hindi</strong> (EXT-002, approved)</td><td>Measures the Hindi speech-recognition error rate (WER/CER) for Whisper (M11)</td><td>Sign in at the Common Voice / Mozilla Data Collective site, choose one release, and download only the Hindi evaluation (test) split. Put it under <code>D:\Code\sides\sih-dataset\corpus\audio\common_voice_hi\</code> and send the ML lead the release name and file sizes for the registry.</td></tr>
+    <tr><td><strong>IITKGP-SEHSC</strong> (optional, D-12)</td><td>Acted Hindi emotional speech: the only in-language training audio for SER</td><td>Request access from IIT Kharagpur and sign their licence agreement. Useful only if it arrives well before the freeze.</td></tr>
+  </tbody>
+</table>
+
+<!-- ============================ H11–H13 ============================ -->
+<br class="section" style="page-break-before: always" clear="all">
+<h2>H11 · Expert review of the SVI weights <b style="color:#15803d">[P2]</b></h2>
+<p>The nine SVI dimension weights and the band cut-offs are marked <strong>PROVISIONAL</strong> in <code>ml/svi/dimensions.py</code>, and the console labels them that way.</p>
+<table>
+  <thead><tr><th>Dimension</th><th>Weight</th></tr></thead>
+  <tbody>
+    <tr><td>D1 Immediate safety threat</td><td>0.22</td></tr>
+    <tr><td>D2 Crisis or self-harm language</td><td>0.18</td></tr>
+    <tr><td>D3 Fear, intimidation, threats</td><td>0.13</td></tr>
+    <tr><td>D4 Acute distress</td><td>0.12</td></tr>
+    <tr><td>D5 Trauma-associated indicators</td><td>0.08</td></tr>
+    <tr><td>D6 Isolation</td><td>0.08</td></tr>
+    <tr><td>D7 Medical urgency</td><td>0.08</td></tr>
+    <tr><td>D8 Legal urgency</td><td>0.06</td></tr>
+    <tr><td>D9 Communication safety</td><td>0.05</td></tr>
+  </tbody>
+</table>
+<p>The bands are Low &lt; 30 ≤ Moderate &lt; 55 ≤ High &lt; 75 ≤ Critical. Hard overrides (crisis, confirmed danger) force Critical regardless of these weights.</p>
+<ul>
+  <li><strong>Who:</strong> the counsellor from H2 or a helpline or victim-support professional, together with the AI/ML lead.</li>
+  <li><strong>Output:</strong> "agree as provisional" or proposed changes with reasons, recorded as a lead decision. Changing a weight bumps <code>SCORING_VERSION</code> and follows the contract-change process.</li>
+</ul>
+
+<h2>H12 · Timed decision test (success metric M4) <b style="color:#15803d">[P2]</b></h2>
+<ul>
+  <li><strong>Who:</strong> 3–5 readers <strong>from outside the team</strong>. Ideally someone with helpline, NGO or legal-aid experience.</li>
+  <li><strong>How:</strong>
+    <ol>
+      <li>Give each reader 3 fictional case packets on the executive console, generated from the seed or scenario data.</li>
+      <li>Time from opening the packet to their decision (confirm, modify or reject, plus band acceptance), without playing any recording.</li>
+      <li>Target: under 90 s per packet.</li>
+      <li>Afterwards, ask what was unclear.</li>
+    </ol>
+  </li>
+  <li><strong>Record:</strong> reader ID, packet, seconds, decision and comments. Report the median and the worst case in the deck.</li>
+</ul>
+
+<h2>H13 · Real-device testing, demo rehearsal, backup video <b style="color:#b45309">[P1]</b></h2>
+<ul>
+  <li>Install the victim app on an <strong>outside Android phone</strong> (not a developer's) and run the full flow: consent → Hindi conversation → crisis interrupt → Critical alert → executive decision → takeover → victim timeline.</li>
+  <li>Run the same flow on the <strong>exact demo laptop</strong> with the network off, to prove the offline claim.</li>
+  <li>Rehearse the 90-second demo <strong>at least 5 times</strong> from the tagged build, timing each run.</li>
+  <li>Record a <strong>backup video</strong> of a clean run.</li>
+  <li>Check that the victim screen never shows a score, band, emotion or alert (safety invariant 3), by looking at the phone itself.</li>
+</ul>
+
+<!-- ============================ owner runs ============================ -->
+<h2>14 · The owner's manual compute runs (for reference)</h2>
+<table>
+  <thead><tr><th>Run</th><th>What</th><th>Needs</th></tr></thead>
+  <tbody>
+    <tr><td>R2 (rerun)</td><td>SER preprocessing again, after the interval fix (recovers 86 clips)</td><td>—</td></tr>
+    <tr><td>R3</td><td>Baseline, Whisper-head and emotion2vec (zero-shot and head) training, for both regimes</td><td>R2</td></tr>
+    <tr><td>R4</td><td>WavLM fine-tune for both regimes, then <code>compare</code></td><td>R2</td></tr>
+    <tr><td>R5</td><td>Text-emotion preprocessing (EmoInHindi, Roman-script copy, GoEmotions)</td><td>M12e code</td></tr>
+    <tr><td>R6</td><td>MuRIL and XLM-R text-emotion training</td><td>R5</td></tr>
+    <tr><td>R6b</td><td>SER model selection on the 2 team-dev speakers</td><td><strong>H5</strong></td></tr>
+    <tr><td>R7</td><td>One-time gate evaluation on the gate speakers, plus the text-emotion gate</td><td><strong>H5, H6</strong></td></tr>
+  </tbody>
+</table>
+
+<h2>15 · Sign-off tracker</h2>
+<table>
+  <thead><tr><th style="width:6%">#</th><th style="width:34%">Task</th><th style="width:20%">Owner (name)</th><th style="width:14%">Due date</th><th style="width:12%">Status</th><th style="width:14%">Evidence</th></tr></thead>
+  <tbody>
+    <tr><td>H1</td><td>Fixed scripts approved (8 records)</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H2</td><td>Counsellor review of SX</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H3</td><td>Questions and fallbacks approved (en, hi)</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H4</td><td>Fixed-script audio recorded and verified</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H5</td><td>≥ 6 speakers recorded, consent on file</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H6</td><td>≥ 400 labelled text-emotion sentences</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H7</td><td>Blind corpus: roster, pilot, 180 samples, freeze</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H8</td><td>Review confirmations completed</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H9</td><td>4th-language decision recorded</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H10</td><td>Common Voice Hindi downloaded</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H11</td><td>SVI weights expert review</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H12</td><td>Timed decision test (3–5 readers)</td><td></td><td></td><td></td><td></td></tr>
+    <tr><td>H13</td><td>Phone test, 5 rehearsals, backup video</td><td></td><td></td><td></td><td></td></tr>
+  </tbody>
+</table>
+<p class="small">Sources in the repository: <code>docs/dialogue/FIXED_SCRIPTS_REVIEW.md</code>, <code>docs/dialogue/STATES.md</code>, <code>ml/dialogue/intents.py</code>, <code>ml/eval/blind/STAFFING.md</code>, <code>AUTHOR_INSTRUCTIONS.md</code>, <code>REVIEWER_INSTRUCTIONS.md</code>, <code>coverage_plan_v1.json</code>, <code>ml/eval/reviews/*.md</code>, <code>ml/svi/dimensions.py</code>, <code>docs/plan/ML_NATIONAL_MVP.md</code> and <code>docs/EXTERNAL_DECISIONS.md</code>.</p>
+
+</body>
+</html>
