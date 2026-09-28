@@ -349,14 +349,45 @@ def stage_w_rows(root: Path) -> List[Dict[str, Any]]:
     return out
 
 
+def baseline_rows(root: Path) -> List[Dict[str, Any]]:
+    """AE-15: the standard-library logistic baseline, scored by the Stage W evaluator on the same sets."""
+    path = root / "baseline-lr" / "reports" / "evaluation.json"
+    source = "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json"
+    if not path.is_file():
+        return [row("AE15", "Interpretable logistic baseline", scope="all", status="not_available",
+                    evidence_class="none", source=source, note="no baseline report found")]
+    out: List[Dict[str, Any]] = []
+    for run in json.loads(path.read_text(encoding="utf-8"))["runs"]:
+        arm = run["arm"]
+        h = run["holdout"]
+        out.append(row("AE15", f"Logistic baseline macro F1, fictional holdout ({arm})", scope="synthetic holdout",
+                       status="measured", evidence_class="synthetic_development", source=source,
+                       value=h["macro"]["f1"], n=h.get("records")))
+        for target, w in sorted(run["weak_test"].items()):
+            if w["model"].get("auroc") is None:
+                continue
+            out.append(row("AE15", f"Logistic baseline AUROC vs source label: {target} ({arm})",
+                           scope="weak test bucket", status="measured",
+                           evidence_class="weak_supervision_from_source_label", source=source,
+                           value=w["model"]["auroc"], n=w["n"], note=f"recall {w['model']['recall']}"))
+        for corpus, ev in (("dev", "dev"), ("candidates", "candidate")):
+            e = run["exposed"][corpus]
+            out.append(row("AE15", f"Logistic baseline micro F1 vs deterministic rules ({arm})", scope=corpus,
+                           status="measured", evidence_class=EVAL_EVIDENCE[ev], source=source,
+                           value=e["model"]["micro_f1"], n=e["samples"],
+                           note=f"rules micro F1 {e['rules']['micro_f1']}"))
+    return out
+
+
 def private_rows(training_root: Optional[str], resamples: int, seed: int) -> List[Dict[str, Any]]:
     if not training_root or not Path(training_root).is_dir():
         return [row(mid, name, scope="all", status="not_available", evidence_class="none",
                     source="SAHAY_TRAINING_ROOT", note="private run reports are not available on this machine")
                 for mid, name in (("SER", "Speech emotion UAR"), ("TXT", "Text affect UAR"),
-                                  ("SHD", "Shadow safety detector (Stage W)"))]
+                                  ("SHD", "Shadow safety detector (Stage W)"),
+                                  ("AE15", "Interpretable logistic baseline"))]
     root = Path(training_root)
-    rows = ser_rows(root, resamples, seed) + text_rows(root, resamples, seed) + stage_w_rows(root)
+    rows = ser_rows(root, resamples, seed) + text_rows(root, resamples, seed) + stage_w_rows(root) + baseline_rows(root)
     if not any(r["metric_id"] == "SER" for r in rows):
         rows.append(row("SER", "Speech emotion UAR", scope="all", status="not_available", evidence_class="none",
                         source="SAHAY_TRAINING_ROOT/ser/runs", note="no run reports found"))
@@ -449,6 +480,7 @@ def render_markdown(table: Mapping[str, Any]) -> str:
         ("Speech emotion (shadow; acted English only)", ("SER",)),
         ("Text affect (shadow)", ("TXT",)),
         ("Shadow safety detector, Stage W (MuRIL, weak supervision; never routes)", ("SHD",)),
+        ("Interpretable baseline, AE-15 (standard-library logistic regression; same data and evaluator)", ("AE15",)),
         ("Not yet measured or enforced by tests (HANDOVER M2–M4, M6, M8, M9; D4)",
          ("M2", "M3", "M4", "M6", "M8", "M9", "D4")),
     )

@@ -20,7 +20,7 @@ It never reads ``locked.json`` or a blind corpus. The report holds ids and aggre
 
 import json
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
 
 from ..eval.blind.leakage import CORPUS_DIR
 from ..eval.predict import predict as deterministic
@@ -160,14 +160,23 @@ def _strip(summary: Mapping[str, Any]) -> Dict[str, Any]:
 def evaluate_run(run: Mapping[str, Any], root: Path, data: Mapping[str, Any], device: str) -> Dict[str, Any]:
     ckpt = sw.load_checkpoint(paths.confined(root, *run["checkpoint"].split("/")), device)
     net, tok = ckpt["net"], ckpt["tokenizer"]
+    scored = score_model(data, lambda rows: sw.predict(net, tok, rows, device)[0])
+    del net
+    tk.torch().cuda.empty_cache()
+    return {"arm": run["arm"], "seed": run["seed"], "selected_epoch": run["selected_epoch"], **scored}
+
+
+def score_model(data: Mapping[str, Any], predict_fn: Callable[[Sequence[Mapping[str, Any]]], List[List[float]]]
+                ) -> Dict[str, Any]:
+    """Score any 9-logit predictor (``predict_fn(rows) -> probabilities``) on every evaluation set."""
     n_det = len(sw.DETECTOR_LABELS)
-    probs, _ = sw.predict(net, tok, data["holdout"], device)
+    probs = predict_fn(data["holdout"])
     holdout = _strip(evaluate_rows(data["holdout"], [p[:n_det] for p in probs]))
     holdout["evidence_class"] = EVIDENCE["holdout"]
     weak: Dict[str, Any] = {}
     for source, rows in data["weak"].items():
         head = sw.LABELS.index(WEAK_HEAD[source])
-        p, _ = sw.predict(net, tok, rows, device)
+        p = predict_fn(rows)
         scores = [x[head] for x in p]
         labels = [r["value"] for r in rows]
         weak[source] = {"target": WEAK_HEAD[source], "n": len(rows), "positives": sum(labels),
@@ -177,11 +186,11 @@ def evaluate_run(run: Mapping[str, Any], root: Path, data: Mapping[str, Any], de
                         "rules": data["weak_rules"][source], "evidence_class": EVIDENCE["weak"]}
     exposed: Dict[str, Any] = {}
     for corpus in ("dev", "candidates"):
-        p, _ = sw.predict(net, tok, data["exposed"][corpus], device)
+        p = predict_fn(data["exposed"][corpus])
         fired = [metrics.firings(x[:n_det], sw.DETECTOR_LABELS) for x in p]
         exposed[corpus] = compare_exposed(data["exposed"][corpus], fired, data["exposed_rules"][corpus])
     rt = data["exposed"]["redteam_victim_input"]
-    p, _ = sw.predict(net, tok, rt, device)
+    p = predict_fn(rt)
     crisis_i = sw.LABELS.index("crisis_self_harm")
     exposed["redteam_victim_input"] = {
         "cases": len(rt), "evidence_class": EVIDENCE["exposed"],
@@ -190,14 +199,12 @@ def evaluate_run(run: Mapping[str, Any], root: Path, data: Mapping[str, Any], de
         "rules_match_expected": sum(r["crisis_self_harm"] == bool(s["expected_crisis"])
                                     for r, s in zip(data["exposed_rules"]["redteam_victim_input"], rt)
                                     if s["expected_crisis"] is not None)}
-    p, _ = sw.predict(net, tok, data["probes"], device)
+    p = predict_fn(data["probes"])
     probes = [{"id": pr["id"], "language": pr["language"], "indirect_by_author": pr["indirect"],
                "model_crisis_probability": round(x[crisis_i], 4), "model_fires": x[crisis_i] >= metrics.THRESHOLD,
                "model_d5_probability": round(x[sw.LABELS.index(sw.D5_HEAD)], 4),
                "crisis_precheck_fires": pr["rules"]} for pr, x in zip(data["probes"], p)]
-    del net
-    tk.torch().cuda.empty_cache()
-    return {"arm": run["arm"], "seed": run["seed"], "selected_epoch": run["selected_epoch"], "holdout": holdout,
+    return {"holdout": holdout,
             "weak_test": weak, "exposed": exposed, "probes": {"rows": probes, "evidence_class": EVIDENCE["probes"]}}
 
 

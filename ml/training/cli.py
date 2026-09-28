@@ -20,6 +20,7 @@
     python -m ml.training.cli stage-w --phase 1|2 [--smoke N]
     python -m ml.training.cli stage-w-select
     python -m ml.training.cli stage-w-evaluate [--smoke N]
+    python -m ml.training.cli baseline-lr [--smoke N]
 
 Needs ``SAHAY_TRAINING_ROOT`` (private outputs) and ``SAHAY_MODELS_ROOT`` (pinned MuRIL); neither has
 a default. Output is aggregate only: no text, no transcript, no absolute path. Reports and
@@ -115,6 +116,8 @@ def main(argv: Optional[List[str]] = None) -> int:
     sub.add_parser("stage-w-select")
     pe = sub.add_parser("stage-w-evaluate")
     pe.add_argument("--smoke", type=int, default=None, help="evaluate the stage-w-smoke/ runs on N rows per set")
+    pb = sub.add_parser("baseline-lr")
+    pb.add_argument("--smoke", type=int, default=None, help="one epoch on N rows per pool, into baseline-lr-smoke/")
     args = parser.parse_args(argv)
     try:
         with network_blocked() as net:
@@ -172,6 +175,9 @@ def main(argv: Optional[List[str]] = None) -> int:
             elif args.command == "stage-w-evaluate":
                 from . import stage_w_eval
                 payload = stage_w_eval.evaluate(paths.training_root(args.training_root), smoke=args.smoke)
+            elif args.command == "baseline-lr":
+                from . import baseline_lr
+                payload = baseline_lr.run(paths.training_root(args.training_root), smoke=args.smoke)
             elif args.command == "hardening-verify":
                 from . import hardening
                 payload = hardening.verify_freeze(paths.training_root(args.training_root))

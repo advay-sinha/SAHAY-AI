@@ -227,3 +227,45 @@ class TestEvaluationHelpers(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestLogisticBaseline(unittest.TestCase):
+    def setUp(self):
+        from ml.training import baseline_lr as lr
+        self.lr = lr
+
+    def test_features_are_deterministic_and_include_char_trigrams(self):
+        f = self.lr.feature_strings("They threatend us")
+        self.assertIn("w:threatend", f)
+        self.assertIn("b:they_threatend", f)
+        self.assertIn("c:<th", f)
+        self.assertEqual(self.lr.vectorise("They threatend us"), self.lr.vectorise("they THREATEND us"))
+        self.assertEqual(self.lr.vectorise(""), ([], 0.0))
+
+    def test_masked_heads_are_never_updated(self):
+        rows = []
+        for i in range(40):
+            y = [0.0] * len(sw.LABELS)
+            m = [0.0] * len(sw.LABELS)
+            m[0] = 1.0
+            y[0] = float(i % 2)
+            rows.append({"id": f"r{i}", "text": "alpha danger" if i % 2 else "beta calm", "y": y, "m": m})
+        model, info = self.lr.train(rows, {}, "W0", epochs=5, log=lambda *_: None)
+        p_pos, p_neg = model.predict([{"text": "alpha danger"}, {"text": "beta calm"}])
+        self.assertGreater(p_pos[0], 0.5)
+        self.assertLess(p_neg[0], 0.5)
+        self.assertTrue(all(b == 0.0 for b in model.b[1:]))
+        self.assertTrue(all(not any(w) for w in model.w[1:]))
+        self.assertEqual(info["pos_weights"][sw.LABELS[0]], 1.0)
+
+    def test_top_features_come_only_from_the_given_vocabulary(self):
+        model = self.lr.LogReg(len(sw.LABELS))
+        for f in ("w:secret", "w:visible"):
+            model.w[0][self.lr.bucket(f)] = 1.0
+        top = self.lr.top_features(model, {"w:visible"})
+        listed = [x for item in top[sw.LABELS[0]] for x in item["features"]]
+        self.assertEqual(listed, ["w:visible"])
+
+    def test_arms_mirror_stage_w(self):
+        self.assertEqual(set(self.lr.ARMS.values()) <= set(sw.ARMS), True)
+        self.assertEqual(self.lr.HYPER["threshold"], 0.5)

@@ -222,3 +222,26 @@ class TestCommittedBaseline(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestBaselineRows(unittest.TestCase):
+    def test_missing_report_is_not_available(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (row,) = table.baseline_rows(Path(tmp))
+        self.assertEqual(row["status"], "not_available")
+
+    def test_rows_per_arm(self):
+        exposed = {"samples": 57, "model": {"micro_f1": 0.5}, "rules": {"micro_f1": 0.93}}
+        run = {"arm": "LR-W0", "holdout": {"records": 10, "macro": {"f1": 0.4}},
+               "weak_test": {"D5": {"n": 9, "model": {"auroc": None, "recall": 1.0}},
+                             "crisis_self_harm": {"n": 9, "model": {"auroc": 0.8, "recall": 0.5}}},
+               "exposed": {"dev": exposed, "candidates": exposed}}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "baseline-lr" / "reports" / "evaluation.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"runs": [run]}), encoding="utf-8")
+            rows = table.baseline_rows(Path(tmp))
+        self.assertEqual(len(rows), 4)  # holdout, one defined AUROC, dev, candidates
+        self.assertEqual({r["evidence_class"] for r in rows},
+                         {"synthetic_development", "weak_supervision_from_source_label", "exposed_development",
+                          "exposed_candidate"})
