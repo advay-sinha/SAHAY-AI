@@ -202,6 +202,55 @@ coverage can never yield `candidate_for_human_review`. The correction reads the 
 counts of the once-only evaluation. It re-predicts nothing, leaves the original report and the
 frozen holdout byte-identical, and keeps the previous status file as `STATUS.pre-correction.json`.
 
+## Stage W: weak supervision from source labels (plan M14, EXT-129)
+
+Stage W asks whether source labels, used as weak training labels, add anything the fictional
+corpus and the deterministic rules do not. Its output is shadow only. It never changes routing,
+crisis handling, SVI, D5, D4, evidence or anything victim-facing.
+
+- **Weak corpus.** `python -m ml.data.weak_corpus build` reads only the private EXT-119 segment
+  file. Each source label maps to one training target through `label_firewall.map_for_training`,
+  and every row carries the evidence class `weak_supervision_from_source_label` plus its caveat.
+  Train and test are the EXT-119 family-isolated `aux_split` buckets.
+
+  | Target | Source | Train (0 / 1) | Test (0 / 1) |
+  |---|---|---|---|
+  | `crisis_self_harm` | subreddit of origin | 10,000 / 10,000 (first window per post) | 3,000 / 3,000 |
+  | `continuing_threat` | hate-speech label (English rows) | 8,090 / 7,210 | 911 / 741 |
+  | `D5` → `d5_text_distress` | crowd-annotated stress (715-post local copy) | 402 / 458 | 61 / 47 |
+
+- **Keyed by target.** Training code keys weak data by target, never by dataset name. Only
+  `ml/data` knows the sources.
+- **Network.** The Stage A encoder, mean pooling, and 9 logits: the 8 detector categories plus
+  `d5_text_distress`.
+- **Masked focal loss (gamma 2).** A weak row supervises only its own logit. Fictional rows
+  supervise the 8 detector logits, with D5 masked.
+- **Arms.** Each epoch uses the whole fictional train split plus a weak draw of the same size.
+  - **W0:** fictional data only; it reproduces Task 7B configuration C.
+  - **W1:** W0 plus crisis and D5.
+  - **W2:** W1 plus threat.
+- **Selection.** Fictional validation only. The order is macro F1, then minimum recall, then
+  masked loss, then seed, then the simpler arm. Seed 13 is run for every arm, and seeds 42 and
+  97 for the winner. The threshold is fixed at 0.5.
+- **Evaluation** (`stage-w-evaluate`, once, after selection). Every run is scored on:
+  - the Task 7B holdout (synthetic);
+  - the weak test buckets against the rules, with AUROC (weak-supervision evidence);
+  - the exposed dev, candidate and red-team victim inputs against the rules (contaminated);
+  - 10 indirect-wording probes (descriptive).
+
+  The report holds ids and aggregates only.
+
+```text
+python -m ml.data.weak_corpus build
+python -m ml.training.cli stage-w --phase 1 --smoke 64      # one-epoch smoke into stage-w-smoke/
+python -m ml.training.cli stage-w-evaluate --smoke 64
+python -m ml.training.cli stage-w-plan
+python -m ml.training.cli stage-w --phase 1
+python -m ml.training.cli stage-w --phase 2
+python -m ml.training.cli stage-w-select
+python -m ml.training.cli stage-w-evaluate
+```
+
 ## Three evidence classes, reported separately
 
 - **A. External auxiliary evidence:** masked-language validation loss and perplexity, and Stage B

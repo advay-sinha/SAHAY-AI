@@ -16,6 +16,10 @@
     python -m ml.training.cli stage-c7b-evaluate
     python -m ml.training.cli task7b-retention
     python -m ml.training.cli stage-c7b-correct
+    python -m ml.training.cli stage-w-plan
+    python -m ml.training.cli stage-w --phase 1|2 [--smoke N]
+    python -m ml.training.cli stage-w-select
+    python -m ml.training.cli stage-w-evaluate [--smoke N]
 
 Needs ``SAHAY_TRAINING_ROOT`` (private outputs) and ``SAHAY_MODELS_ROOT`` (pinned MuRIL); neither has
 a default. Output is aggregate only: no text, no transcript, no absolute path. Reports and
@@ -104,6 +108,13 @@ def main(argv: Optional[List[str]] = None) -> int:
     sub.add_parser("stage-c7b-evaluate")
     sub.add_parser("task7b-retention")
     sub.add_parser("stage-c7b-correct")
+    sub.add_parser("stage-w-plan")
+    pw = sub.add_parser("stage-w")
+    pw.add_argument("--phase", type=int, choices=(1, 2), required=True)
+    pw.add_argument("--smoke", type=int, default=None, help="one epoch on N rows per pool, into stage-w-smoke/")
+    sub.add_parser("stage-w-select")
+    pe = sub.add_parser("stage-w-evaluate")
+    pe.add_argument("--smoke", type=int, default=None, help="evaluate the stage-w-smoke/ runs on N rows per set")
     args = parser.parse_args(argv)
     try:
         with network_blocked() as net:
@@ -149,6 +160,18 @@ def main(argv: Optional[List[str]] = None) -> int:
                     payload = stage_c7b.correct_holdout_report(root)
                 else:
                     payload = stage_c7b.evaluate(root)
+            elif args.command in ("stage-w-plan", "stage-w", "stage-w-select"):
+                from . import stage_w
+                root = paths.training_root(args.training_root)
+                if args.command == "stage-w-plan":
+                    payload = stage_w.write_plan(root)
+                elif args.command == "stage-w":
+                    payload = stage_w.run_phase(root, args.phase, smoke=args.smoke)
+                else:
+                    payload = stage_w.select(root)
+            elif args.command == "stage-w-evaluate":
+                from . import stage_w_eval
+                payload = stage_w_eval.evaluate(paths.training_root(args.training_root), smoke=args.smoke)
             elif args.command == "hardening-verify":
                 from . import hardening
                 payload = hardening.verify_freeze(paths.training_root(args.training_root))

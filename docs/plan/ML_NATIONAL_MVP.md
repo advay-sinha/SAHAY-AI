@@ -353,7 +353,19 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - No new false positives on dev, candidates or red-team.
     - These are regression results only (`REGRESSION_TARGETS_M14`).
   - Quoted-speech escalations (DEV-EN-011, DEV-HI-012, CAND-EN-012, CAND-HI-009) deliberately still route to a person. Suppressing them would weaken the crisis interrupt (invariant 2), so they wait on the leads' P-DET-2 decision.
-  - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔), the AE-15 row, and the shadow MuRIL safety detector (EXT-129 weak supervision; you run the training).
+  - **Stage W, the shadow MuRIL safety detector (EXT-129 weak supervision): code done 2026-09-28, runs pending** (`ml/data/weak_corpus.py`, `ml/training/stage_w.py`, `stage_w_eval.py`; README "Stage W").
+    - Arms: W0 fictional only; W1 adds weak crisis and D5 (the D5 logit is `d5_text_distress`); W2 adds weak threat.
+    - Selection uses fictional validation only.
+    - Output is shadow only and never feeds SVI, D5 or routing.
+    - Owner runs:
+
+      | Run | What | Status |
+      |---|---|---|
+      | R8a | build the weak corpus, then a smoke run | pending |
+      | R8b | record the plan, then phase 1 (W0, W1, W2 at seed 13) | pending |
+      | R8c | phase 2 (seeds 42 and 97 of the winner), then selection | pending |
+      | R8d | evaluation | pending |
+  - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔), and the AE-15 row.
 
 ### M15 — Shadow model (optional; not recommended before the finale)
 

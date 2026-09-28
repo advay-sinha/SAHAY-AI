@@ -541,6 +541,19 @@ Decision maker:  Project owner, 2026-09-26.
 ```
 
 ```text
+Date:            2026-09-28
+ID:              EXT-129 — implementation note: Stage W weak supervision (no new dependency)
+Scope:           ml/data/weak_corpus.py maps three already-downloaded, already-segmented
+                 sources through label_firewall.map_for_training, each to one training
+                 target with its caveat: Reddit Suicide Detection -> crisis_self_harm,
+                 the hate-speech derivative -> continuing_threat, Dreaddit (715-post
+                 local copy) -> D5. ml/training/stage_w.py trains shadow-only MuRIL
+                 arms W0/W1/W2 on them plus the Task 7B fictional corpus. Nothing is
+                 downloaded or installed; no product component loads the weights.
+Decision maker:  Project owner, 2026-09-28 (Stage W plan approved, including W2).
+```
+
+```text
 Date:            2026-09-27
 ID:              EXT-120 — implementation note (no new dependency)
 Scope:           Backend settings ASR_PROVIDER (mock | local_service; default mock),
