@@ -1,0 +1,303 @@
+%======================================================================
+% AI models: what we built, trained and measured (included from local-research-analysis.tex).
+% Every number here comes from a committed result file or a private run report; sources are
+% listed in the evidence index. Evidence classes are stated beside each result.
+%======================================================================
+\section{AI models: what we built, trained and measured}
+\label{sec:models}
+
+This section is the core of the technical work. It covers every model and model-like component in
+the system: what it is, how it was trained, what it measured, and whether it is allowed to affect a
+victim. One rule runs through all of it. The deterministic pipeline (crisis pre-check, rule-based
+detectors, output validator and SVI engine) is \textbf{authoritative}. Every trained model is
+measured against it and runs in \textbf{shadow} until it beats that pipeline on independent
+evidence --- which does not yet exist, because the locked evaluation set is still empty.
+
+\subsection{Model inventory and roles}
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Every AI component, its role and its current status.}
+\label{tab:modelinv}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.2cm}>{\raggedright\arraybackslash}p{5.6cm}X@{}}
+\toprule
+Component & What it is & Status \\
+\midrule
+Crisis pre-check and detectors & Phrase lexicons with clause-scoped negation, attribution cues and an
+explicit spelling map; English, Hindi, Hinglish & \textbf{Authoritative} \\
+Output validator & 87 phrase rules and licensed-question checks before any sentence is spoken &
+\textbf{Authoritative} \\
+SVI engine & Weighted sum, hard overrides, abstention & \textbf{Authoritative}; weights provisional \\
+Speech-to-text & Whisper Small (CTranslate2) behind Silero VAD, in a loopback-only service & In the
+voice path \\
+D4 voice distress & Rule over pitch, loudness and pauses relative to the caller's own first turns &
+Wired; unvalidated \\
+Speech emotion (SER) & emotion2vec+ large, Whisper-encoder head, WavLM Base+; prosody baseline &
+Shadow; excluded from D4 until its gate \\
+Text affect & MuRIL (domain-adapted), fine-tuned for five affect classes & Shadow \\
+Shadow safety detector & MuRIL with nine heads, fictional supervision plus weak source labels &
+Shadow; \code{rejected\_for\_product\_integration} \\
+Interpretable baseline & Standard-library logistic regression on hashed n-grams & Comparison only \\
+Voice output & Human-recorded fixed scripts; built-in offline Windows voice for validated turns &
+Wired; silent until scripts are approved \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+All training ran on the demo laptop (Ryzen 7 7840HS, RTX 4060 8~GB, 32~GB RAM), offline, with
+network access blocked in code. Weights stay in a private root outside Git and are never loaded by
+the backend, console or victim app.
+
+\subsection{Speech recognition service}
+Speech recognition runs as a separate local process bound to \code{127.0.0.1} and reached through a
+backend adapter (contract PC-11: \code{POST /sessions/\{id\}/audio}). The pipeline decodes the
+upload, finds speech regions with Silero VAD, runs Whisper Small on those regions only, and returns
+the transcript with a confidence summary, audio-quality measures and prosody for D4. Low confidence
+or poor audio makes the assessment abstain. A 16~kHz mono PCM WAV now bypasses the general decoder:
+the samples are identical and decoding drops from about 50~ms to 0.55~ms per clip.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Measured voice-turn latency (70 turns; laptop GPU; synthetic Indian-English speech from
+built-in Windows voices). Evidence: synthetic speech, server-side only.}
+\label{tab:m2}
+\begin{tabular}{@{}lccc@{}}
+\toprule
+Stage & p50 & p95 & Budget \\
+\midrule
+Speech-to-text request & 463\,ms & 572\,ms & 600\,ms \\
+Reply path after the transcript (pre-check, policy, reply) & 9\,ms & 13\,ms & --- \\
+Whole server-side voice turn & 476\,ms & 581\,ms & --- \\
+Offline English voice, whole reply & 31\,ms & 38\,ms & 500\,ms \\
+\midrule
+Server p95 plus the configured 700\,ms end-of-speech wait & \multicolumn{2}{c}{1.28\,s} & 3\,s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Word error rate on real Hindi and English speech (M6) is not yet measured: it needs Common Voice
+Hindi or team recordings. The 0.0 WER on the synthetic benchmark speech is a sanity check, not M6.
+
+\subsection{Speech emotion recognition}
+\label{sec:ser}
+The problem statement asks for emotional indicators in voice. We trained and compared four candidate
+families on the two acted English corpora available to us, RAVDESS (864 usable clips, 24 actors) and
+CREMA-D (6{,}097 usable clips, 91 actors), with actor-disjoint, sex-stratified splits and five affect
+classes (neutral, happy, sad, angry, fearful). The metric is unweighted average recall (UAR, chance
+0.20) with bootstrap 95\% intervals.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Speech-emotion candidates on unseen actors. ``Possibly seen'': emotion2vec+'s pre-training
+is believed to include these corpora, so its lead may be memory rather than skill.}
+\label{tab:ser}
+\setlength{\tabcolsep}{5pt}
+\begin{tabular}{@{}lllll@{}}
+\toprule
+Candidate & Evidence & CREMA-D test (873) & RAVDESS test (141) & Cross-corpus \\
+\midrule
+emotion2vec+ head & possibly seen & 0.784 [0.756, 0.809] & 0.796 [0.721, 0.863] & 0.872 \\
+emotion2vec+ zero-shot & possibly seen & 0.766 & 0.809 & 0.868 \\
+Whisper-encoder head & clean & 0.767 [0.741, 0.794] & 0.784 [0.710, 0.854] & 0.706 \\
+WavLM Base+ fine-tune & clean & 0.758 [0.732, 0.783] & 0.758 [0.681, 0.832] & 0.447 \\
+Prosody logistic, speaker-normalised & clean & 0.580 [0.549, 0.611] & 0.432 [0.359, 0.509] & 0.487 \\
+Prosody logistic, pooled & clean & 0.527 & 0.357 & 0.345 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[sahay, ybar, bar width=9pt, width=\linewidth, height=5.2cm,
+  ymin=0, ymax=1.05, ylabel={UAR (chance 0.20)},
+  symbolic x coords={e2vh,e2vz,whis,wavlm,pros},  xtick=data,
+  xticklabels={emotion2vec+ head, emotion2vec+ zero-shot, Whisper head, WavLM Base+, Prosody (spk-norm)},
+  x tick label style={font=\scriptsize, align=center, text width=2.2cm},
+  enlarge x limits=0.12,
+  nodes near coords={\pgfmathprintnumber[fixed,fixed zerofill,precision=2]{\pgfplotspointmeta}},
+  nodes near coords style={font=\tiny, rotate=90, anchor=west},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=3}]
+\addplot[fill=sahayblue!75, draw=sahayblue] coordinates {(e2vh,0.784) (e2vz,0.766) (whis,0.767) (wavlm,0.758) (pros,0.580)};
+\addplot[fill=sahaygreen!70, draw=sahaygreen] coordinates {(e2vh,0.796) (e2vz,0.809) (whis,0.784) (wavlm,0.758) (pros,0.432)};
+\addplot[fill=sahayorange!70, draw=sahayorange] coordinates {(e2vh,0.872) (e2vz,0.868) (whis,0.706) (wavlm,0.447) (pros,0.487)};
+\legend{CREMA-D test, RAVDESS test, Cross-corpus}
+\end{axis}
+\end{tikzpicture}
+\caption{Speech-emotion UAR. The three neural candidates overlap within their intervals on acted
+English; WavLM does not transfer across corpora; speaker normalisation helps the prosody baseline by
+0.05--0.14, which is the evidence behind D4's in-session baseline.}
+\label{fig:ser}
+\end{figure}
+
+\noindent Findings: the neural candidates cannot be separated on acted English; ``fearful'' is the
+weakest class for every neural model (recall 0.49--0.62), and it is the class that matters most here;
+and nothing is measured on Hindi, telephone audio or real distress. Speech emotion therefore stays out
+of the score. It may contribute at most 30\% of D4, and only after a promotion gate on the team's own
+Hindi and English recordings (UAR $\ge$ 0.45, no class recall below 0.20, a neutral control).
+
+\subsection{D4: voice distress as a within-caller rule}
+D4 is no longer empty. It is a transparent rule: each later voice turn is compared with the same
+caller's first two usable turns on median pitch, pitch variability, loudness and pause ratio, in
+units of that caller's own spread, and only \emph{upward} change counts --- a flatter or quieter voice
+is never read as calm. D4 needs at least three usable voice turns, its confidence is capped at 0.6,
+and poor audio excludes a turn and makes the assessment abstain. A SAFE-SIGNAL prompt asks the officer
+to verify whenever voice distress and text severity differ by more than 40 points; it never changes
+the band. The rule is \textbf{unvalidated}: its weights and scale are design choices, and validating it
+needs team recordings and expert review.
+
+\subsection{Text affect with MuRIL}
+The text model reads five affect classes from one utterance in Hindi, romanised Hinglish or English,
+trained on EmoInHindi (Hindi dialogue) and GoEmotions (English). Our first corpus \textbf{leaked}: 84\%
+of its test sentences appeared verbatim in training because EmoInHindi reuses template lines, and it
+scored about 0.94. We declared those numbers void and rebuilt the corpus sentence-disjoint, grouping
+exact and near duplicates (Jaccard $\ge$ 0.8) into a single split.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Text-affect UAR on the sentence-disjoint test sets, with bootstrap 95\% intervals. Hinglish is
+machine-transliterated from the Hindi test set.}
+\label{tab:textaffect}
+\setlength{\tabcolsep}{3pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.1cm}*{4}{>{\centering\arraybackslash}X}@{}}
+\toprule
+Encoder & Hindi (778) & Hinglish (777) & Hindi user turns (495) & English (2{,}000) \\
+\midrule
+\textbf{MuRIL, domain-adapted} (selected) & 0.745 [0.709, 0.779] & 0.699 [0.661, 0.734] & 0.707 & 0.812 [0.784, 0.839] \\
+MuRIL base & 0.742 [0.706, 0.778] & 0.713 [0.674, 0.751] & 0.703 & 0.815 [0.788, 0.845] \\
+XLM-R base & 0.748 [0.711, 0.782] & 0.705 [0.668, 0.742] & 0.710 & 0.805 [0.774, 0.835] \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent The three encoders overlap on every language, so no encoder is better on this evidence;
+MuRIL was kept by the predeclared rule. ``Sad'' is the weakest class in Hindi (recall 0.59, and 0.44
+on user turns). The model is shadow-only until its licences are confirmed and it passes a gate on
+human-written Hinglish.
+
+\subsection{The shadow safety detector (Stage W)}
+\label{sec:stagew}
+Stage W asks whether labels borrowed from public data help a MuRIL detector catch what the rules miss.
+It has nine logits --- the eight detector categories and a \code{d5\_text\_distress} head --- and a
+masked focal loss, so a borrowed row teaches only its own label. Three arms were fixed before
+training: \textbf{W0} fictional corpus only; \textbf{W1} adds Reddit crisis posts (subreddit of origin)
+and Dreaddit stress; \textbf{W2} also adds a hate-speech label as a proxy for threat. Selection used
+fictional validation only.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Stage W on corpus \code{7b-v1} (seed 13 per arm, plus two more seeds for the winner W2).
+Weak-test AUROC is against the borrowed labels; exposed micro F1 is on SAHAY's published fixtures.}
+\label{tab:stagew}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}*{4}{>{\centering\arraybackslash}X}@{}}
+\toprule
+Run & Holdout macro F1 & Crisis recall hi / Hinglish & AUROC crisis / threat / D5 & Exposed F1 dev / cand \\
+\midrule
+W0 & 0.680 & 0.76 / 0.73 & 0.84 / 0.40 / --- & 0.53 / 0.48 \\
+W1 & 0.751 & 0.97 / 0.92 & 0.99 / 0.36 / 0.80 & 0.51 / 0.58 \\
+W2, seed 13 (selected) & 0.733 & 0.94 / 0.84 & 0.99 / 0.92 / 0.83 & 0.60 / 0.58 \\
+W2, seed 42 & 0.842 & 0.98 / 0.98 & 0.99 / 0.91 / 0.82 & 0.52 / 0.48 \\
+W2, seed 97 & 0.788 & 0.86 / 0.75 & 0.99 / 0.91 / 0.82 & 0.50 / 0.55 \\
+\midrule
+Deterministic rules & --- & --- & recall 0.38 / 0.00 / 0.10 & \textbf{0.93 / 0.88} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[sahay, ybar, bar width=12pt, width=0.86\linewidth, height=5.0cm,
+  ymin=0, ymax=1.1, ylabel={Micro F1 on exposed fixtures},
+  symbolic x coords={dev,cand}, xtick=data, xticklabels={Development (57), Candidate (48)},
+  enlarge x limits=0.45,
+  nodes near coords={\pgfmathprintnumber[fixed,fixed zerofill,precision=2]{\pgfplotspointmeta}},
+  nodes near coords style={font=\tiny},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=4}]
+\addplot[fill=sahaygreen!70, draw=sahaygreen] coordinates {(dev,0.933) (cand,0.881)};
+\addplot[fill=sahayblue!75, draw=sahayblue] coordinates {(dev,0.595) (cand,0.584)};
+\addplot[fill=sahaypurple!60, draw=sahaypurple] coordinates {(dev,0.563) (cand,0.619)};
+\addplot[fill=sahaygray!55, draw=sahaygray] coordinates {(dev,0.477) (cand,0.373)};
+\legend{Rules, MuRIL W2 (v1), MuRIL W0 (v2), Logistic LR-W2}
+\end{axis}
+\end{tikzpicture}
+\caption{On SAHAY's own fixtures the deterministic rules lead every trained model. Exposed-regression
+evidence; none of these fixtures is independent.}
+\label{fig:stagew}
+\end{figure}
+
+\noindent What Stage W shows. Borrowed labels clearly help on text like their sources (crisis AUROC
+0.84 to 0.99) and even lift Hindi and Hinglish crisis recall on the fictional holdout, although every
+borrowed source is English. On SAHAY's fixtures, however, the model stays far below the rules and
+raises 18--25 false positives. It catches five candidate fixture-labels the rules miss, including an
+indirect method-and-plan statement, but on ten indirect-wording probes it fires on six of seven crisis
+probes \emph{and} on all three harmless controls (``I won't be here tomorrow, I'm visiting my
+sister''). It is not usable as a crisis signal. It stays a second opinion, and the crisis pre-check
+remains the only crisis authority.
+
+\subsection{The interpretable baseline and the corpus shortcut}
+A standard-library logistic regression trained on exactly the same data (AE-15) scored 0.48--0.50
+holdout macro F1 against MuRIL's 0.73, and 0.24--0.48 exposed micro F1. It also found a flaw: its
+strongest crisis and coercion features were fragments of the \code{[SEP]} marker that joins turns. In
+corpus \code{7b-v1}, every multi-turn record carried at least one risk label (911 of 911 in train),
+so ``has several turns'' predicted ``risky''. We built \code{7b-v2}, which keeps every v1 record and
+adds one-positive and all-negative multi-turn records, retrained every arm (R10), and cross-evaluated
+both generations of checkpoints on the new holdout.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{The shortcut check: v1 and v2 checkpoints on the \code{7b-v2} holdout, by record kind.
+Evidence: synthetic development.}
+\label{tab:shortcut}
+\setlength{\tabcolsep}{4pt}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}*{4}{>{\centering\arraybackslash}X}@{}}
+\toprule
+Checkpoint & Single-turn F1 & One risky + one harmless turn F1 & False alarms, harmless single & False alarms, harmless multi \\
+\midrule
+v1 W0 & 0.638 & 0.343 & 2.3\% & 2.4\% \\
+v1 W2 (v1 selected) & 0.696 & 0.422 & 3.8\% & 2.4\% \\
+v2 W0 (v2 selected) & 0.696 & 0.691 & 7.8\% & 17.4\% \\
+v2 W2 & 0.743 & 0.790 & 3.8\% & 7.8\% \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\noindent The result corrected our own expectation. MuRIL did \emph{not} learn the crude shortcut ---
+v1 models fire on only 2.4\% of harmless multi-turn records; only the linear model did. The real v1
+weakness was mixed multi-turn conversations (0.34--0.42 macro F1), which v2 training fixes (0.69--0.79)
+at the cost of more false alarms. On SAHAY's fixtures nothing changed materially (v2 W0: 0.56 / 0.62).
+Per-label rates are only partly balanced in \code{7b-v2} (coercion 0.25 against 0.15), which a future
+version can correct.
+
+\subsection{Upgrades to the authoritative rules}
+The rule-based detectors improved during this phase, each change a reviewed-pending draft:
+\begin{itemize}
+  \item \textbf{Anxiety and low mood (D5).} First-person anxiety and low-mood phrasing in three
+        languages, as linguistic indicators, never a diagnosis, with hopelessness wording deliberately
+        left to the crisis lexicon.
+  \item \textbf{Misspelt imminent return.} An explicit spelling map (``wil'', ``tonite'', ``wapis'')
+        and ``come back tonight'' as imminent danger. Dev critical misses went from 1 of 17 to
+        \textbf{0 of 17}.
+  \item \textbf{Conditional coercion.} ``Agar complaint wapas nahi li to\ldots'' is a threat, not a
+        denial. Candidate coercion recall went from 0.40 to \textbf{0.60}.
+\end{itemize}
+No exposed fixture gained a false positive, and the red team stayed at 39 of 39. Both fixed fixtures
+were read before the fix, so they count as regression evidence only.
+
+\subsection{Voice output}
+Fixed scripts (S0, S9, SX, SH) are never synthesised: a recording is served only when the script is
+approved, the recording is of the current approved text, a named reviewer who did not record it
+approved it, and its hash matches. Other assistant turns --- validated or language-approved text ---
+may be spoken once by the built-in offline Windows voice and cached (contract PC-12). Hindi has no
+installed voice on the demo laptop, so Hindi replies are shown as text rather than read in the wrong
+voice. Today nothing is spoken, because no script or question wording is approved yet.
+
+\subsection{Evaluation discipline}
+Every number in this section carries an evidence class --- exposed regression, synthetic development,
+weak supervision, acted corpus, possibly seen in pre-training --- and a missing measurement is shown as
+\emph{pending}, never zero. The evaluation table (150 rows) and the judge-defence pages are generated
+from result files, not typed, and a test refuses clinical or production wording and refuses the word
+``official'' while the locked set is empty. Two published failures are part of the record: the
+text-affect v1 leak and the Stage W out-of-memory abort, which was fixed with gradient checkpointing
+before any result was kept.

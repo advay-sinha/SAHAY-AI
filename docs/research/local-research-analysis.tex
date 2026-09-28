@@ -62,7 +62,7 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{sahaygray}SAHAY-AI --- Local research analysis v2.0}
+\fancyhead[L]{\small\color{sahaygray}SAHAY-AI --- Local research analysis v3.0}
 \fancyhead[R]{\small\color{sahaygray}PS SIH26093 \textbullet{} Local evidence and scale projections}
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
@@ -109,11 +109,11 @@
 \vspace{0.45cm}
 {\LARGE Local Research Analysis\par}
 \vspace{0.25cm}
-{\large Problem statement, solution, architecture, flows, local evidence,\\[2pt]
-projected performance at production scale, benchmark comparison,\\[2pt]
-feasibility, viability and post-MVP roadmap\par}
+{\large Problem statement, solution, architecture, flows, \textbf{AI models},\\[2pt]
+local evidence, projected performance at production scale, benchmark comparison,\\[2pt]
+feasibility, viability, post-MVP roadmap and the remaining human verification\par}
 \vspace{0.9cm}
-{\large Version 2.0 \textbullet{} 22 September 2026 \textbullet{} branch \code{main} at \code{688bda5}\par}
+{\large Version 3.0 \textbullet{} 29 September 2026 \textbullet{} branch \code{main}\par}
 \vspace{1.3cm}
 \begin{keybox}[title={The one-paragraph version}]
 \small
@@ -126,7 +126,10 @@ explicit abstention path prioritises the case; and a helpline executive decides 
 AI proposals and human decisions stored in separate tables. The victim client never receives a
 score, band, dimension or alert, and a server-side test proves it. The MVP runs on one laptop:
 FastAPI, Supabase PostgreSQL, a React console, an Expo victim app, self-hosted speech models and a
-mock LLM.
+mock LLM. Around that authoritative core the team built and measured a full set of AI models ---
+speech recognition, speech emotion, voice distress, MuRIL text affect and a MuRIL safety detector
+trained with weak supervision --- and every one of them runs in shadow until it beats the
+deterministic pipeline on independent evidence (Section~\ref{sec:models}).
 \end{keybox}
 \vspace{0.4cm}
 \begin{keybox}[title={How to read this analysis}]
@@ -138,11 +141,12 @@ purpose, with no real victim data at any point. \textbf{Projected} figures
 and evaluation configuration in Table~\ref{tab:trainconfig}, each one derived from a published anchor
 and a measured local delta. Published benchmark figures in Section~\ref{sec:bench} come from adjacent
 tasks and datasets and are used as anchors, not as a scoreboard. The authoritative assessment
-pipeline is deterministic throughout; the trained classifier described in Section~\ref{sec:shadow}
-runs in shadow mode and changes nothing.
+pipeline is deterministic throughout; the trained models described in Section~\ref{sec:models} run
+in shadow mode and change nothing. Every measured number carries an evidence class, and a
+measurement not yet taken is shown as pending, never as zero.
 \end{keybox}
 \vfill
-{\small\color{sahaygray} Sources: this repository at \code{main} / \code{688bda5}, the private training
+{\small\color{sahaygray} Sources: this repository at \code{main}, the private training
 and model roots outside Git, the official SIH26093 problem-statement record, and the cited literature.
 Projections are derived in \S\ref{sec:projmethod}.\par}
 \end{titlepage}
@@ -166,18 +170,28 @@ standards~\cite{sih26093}.
 auditable end to end: consent and AI disclosure, bounded intake, synchronous crisis interrupt,
 deterministic nine-dimension assessment with evidence links, alerts, AI-proposed pathways, a live
 executive queue and case packet, human decision, band override with mandatory reason, officer
-takeover and messaging, a victim-safe timeline and an append-only audit log. Measured size:
-20{,}624 lines of ML code, 3{,}813 lines of backend application code, 3{,}532 lines of console code
-and 3{,}113 lines of victim-app code, with \textbf{1{,}253 automated tests} of which 1{,}251 pass
-(Section~\ref{sec:evidence}).
+takeover and messaging, a victim-safe timeline, whole-utterance voice turns, turn audio for the
+phone, and an append-only audit log. Measured size: 27{,}170 lines of ML code, 4{,}371 lines of
+backend application code, 3{,}456 lines of console code and 2{,}894 lines of victim-app code, with
+\textbf{1{,}481 automated tests, all passing} (Section~\ref{sec:evidence}).
+
+\textbf{The AI models.} Section~\ref{sec:models} is the centre of this version. We trained and
+compared speech-emotion candidates on acted English (UAR up to 0.78--0.80 on unseen actors), a MuRIL
+text-affect model on a leak-free Hindi--Hinglish--English corpus (Hindi UAR 0.745), and a MuRIL
+safety detector with weak supervision from public data (crisis AUROC 0.99 on Reddit text); we built a
+within-caller voice-distress rule for D4, a VAD-gated speech-recognition service and an offline voice
+output path. The honest headline is that on SAHAY's own fixtures every trained model stays well below
+the deterministic rules (micro F1 0.56--0.62 against 0.93 and 0.88), so every model runs in shadow and
+the rules stay authoritative.
 
 \textbf{What the tests establish.} The safety architecture is established by test: role-filtered
 fan-out, consent gating, timeline leakage, contract mirroring, idempotency and shadow-model
-isolation. Detector quality is measured on scenario corpora, where one critical event in seventeen is
-missed on the development fixtures and one in fourteen on the exposed candidate set. Speech
-recognition accuracy, acoustic distress (D4) and end-to-end turn latency are scheduled measurements;
-Section~\ref{sec:notmeasured} gives each one its instrumentation path and the approval that releases
-it.
+isolation. Detector quality is measured on scenario corpora, where no critical event in seventeen is
+missed on the development fixtures and one in fourteen on the exposed candidate set --- both
+regression evidence, because those fixtures were published during development. A server-side voice
+turn takes 581~ms at p95 on the laptop. What remains unmeasured --- Hindi word error rate, latency on
+a real phone, and every independent safety number --- needs human work, listed in
+Section~\ref{sec:humantesting}.
 
 \textbf{What it reaches at scale.} Section~\ref{sec:projected} states the projected performance of
 the same architecture under a production training and evaluation configuration --- a 12{,}000-scenario
@@ -189,8 +203,11 @@ Indic voices for language coverage. The headline projections are a critical-even
 \textbf{Feasibility and viability.} The whole stack runs on one 8~GB laptop GPU with 5{,}950~MB of
 headroom while both the text encoder and the speech model are loaded, and the deterministic text
 pipeline processes 100--600 fictional records per second single-threaded, so the text triage path is
-effectively free at helpline scale (Section~\ref{sec:viability}). Every model used is Apache-2.0 or
-MIT, self-hosted, with no per-request API cost and no victim data leaving the deployment.
+effectively free at helpline scale (Section~\ref{sec:viability}). Every model in the product path
+(MuRIL, Whisper Small, Silero VAD) is Apache-2.0 or MIT and self-hosted, with no per-request API cost
+and no victim data leaving the deployment; research-only speech-emotion candidates with other licences
+stay private and outside the product. Every model in Section~\ref{sec:models} was trained on the same
+8~GB laptop GPU.
 
 \textbf{Post-MVP.} Section~\ref{sec:roadmap} is about integration and scale, not about finishing the
 MVP: authorised NHAA 14566 telephony and IVRS connectors through a licensed operator, Integrated
@@ -207,17 +224,18 @@ production monitoring with drift and automation-bias auditing.
 \toprule
 Measure & Value & Where \\
 \midrule
-Automated tests (4 suites) & 1{,}251 pass of 1{,}253 & \S\ref{sec:tests} \\
-Critical-event miss rate (dev / candidate) & 1 of 17 / 1 of 14 & \S\ref{sec:detres} \\
+Automated tests (4 suites) & 1{,}481, all pass & \S\ref{sec:tests} \\
+Critical-event miss rate (dev / candidate) & 0 of 17 / 1 of 14 (exposed) & \S\ref{sec:detres} \\
 Guardrail red-team (exposed fixtures) & 39 of 39 pass & \S\ref{sec:detres} \\
-Crisis pre-check precision / recall (dev) & 0.636 / 1.000 & \S\ref{sec:detres} \\
+Crisis pre-check precision / recall (dev) & 0.818 / 1.000 & \S\ref{sec:detres} \\
 Assessment leakage to victim client & 0, proved server-side by test & \S\ref{sec:tests} \\
-Encoder latency (MuRIL, 128 tokens, p50) & 14.8--17.8 ms & \S\ref{sec:runtimeperf} \\
-Hindi tokens per character (MuRIL vs XLM-R) & 0.246 vs 0.319 & \S\ref{sec:whymuril} \\
-Both models resident (MuRIL + Whisper) & 1{,}102 MB used, 5{,}950 MB free & \S\ref{sec:feasibility} \\
-Deterministic pipeline throughput & 100--600 records/s, one thread & \S\ref{sec:viability} \\
-Trained shadow model status & \code{rejected\_for\_product\_integration} & \S\ref{sec:shadow} \\
-Official (locked) evaluation samples & \textbf{0} & \S\ref{sec:notmeasured} \\
+Speech emotion, best UAR (acted English, unseen actors) & 0.784 CREMA-D / 0.796 RAVDESS & \S\ref{sec:ser} \\
+Text affect, MuRIL UAR (Hindi / Hinglish / English) & 0.745 / 0.699 / 0.812 & \S\ref{sec:models} \\
+Shadow detector: crisis AUROC (weak) / fixtures micro F1 & 0.99 / 0.60 vs rules 0.93 & \S\ref{sec:stagew} \\
+Voice turn, server side (p95) & 581 ms; 1.28 s with the 700 ms end-of-speech wait & \S\ref{sec:models} \\
+Offline voice output (English reply, p95) & 38 ms against a 500 ms budget & \S\ref{sec:models} \\
+Trained models' status & shadow; \code{rejected\_for\_product\_integration} & \S\ref{sec:stagew} \\
+Official (locked) evaluation samples & \textbf{0} & \S\ref{sec:humantesting} \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -921,16 +939,17 @@ interval before decoding, decodes only the audio inside accepted intervals, and 
 entirely when no speech is found. An unguarded path exists only inside the benchmark module and is
 statically fenced by a test.
 
-\subsection{Why the acoustic dimension is empty today}
+\subsection{Why the acoustic dimension is a within-caller rule}
 \label{sec:d4}
 The PS asks for pitch variation and emotional indicators, and the literature supports that acoustic
-features carry trauma-relevant signal~\cite{hu2024,islam2024}. We nevertheless ship D4 as
-\emph{structurally unavailable}, because no approved acoustic corpus exists: the local CREMA-D copy
-is entirely Git LFS pointers, and RAVDESS and Common Voice Hindi are not approved. Rather than
-estimate distress from an unvalidated feature set, the index renormalises and the console says D4 was
-not measured. The published evidence also argues for caution about severity from voice: the best
+features carry trauma-relevant signal~\cite{hu2024,islam2024}. It also argues for caution: the best
 available speech-based PTSD study explains about a tenth of the variance in symptom severity
-($R^2 = 0.10$) even with clinical recordings~\cite{hu2024}.
+($R^2 = 0.10$) even with clinical recordings~\cite{hu2024}. So D4 is a transparent rule rather than a
+learned score: it compares a caller's later turns with that caller's own first turns, counts only
+upward change, needs three usable voice turns, caps its confidence at 0.6, and abstains on poor audio.
+On a typed channel D4 remains structurally unavailable and the index renormalises. A speech-emotion
+model may later supply at most 30\% of D4, only after passing a gate on the team's own recordings
+(Section~\ref{sec:ser}).
 
 \subsection{The source-label firewall}
 \label{sec:firewall}
@@ -938,8 +957,10 @@ Public corpora label other things: subreddit of origin, stress, sentiment, hate 
 of these is a SAHAY safety label, and the repository refuses every automatic mapping from one to the
 other --- stress is not crisis, a non-suicide subreddit label is not ``safe'', hate speech is not
 continuing threat, emotion is not acoustic distress, and no source label may ever become an SVI, a
-band or a routing decision. This is why the project can use public data for research without
-laundering it into safety ground truth.
+band or a routing decision. Under decision EXT-129 a source label may act as a \emph{weak training
+label} through a separate training-only path, tagged \code{weak\_supervision\_from\_source\_label}
+with its caveat, and never for diagnosis, the SVI, the band, routing or D4. This is why the project
+can train on public data (Section~\ref{sec:stagew}) without laundering it into safety ground truth.
 
 \subsection{Privacy, security and DPDP posture}
 \label{sec:privacy}
@@ -953,30 +974,33 @@ and consent, purpose limitation (the victim client cannot receive assessment dat
 and retention separation between audio and derived case data; breach processes, a consent-manager
 integration and a formal lawful-basis assessment are production work, listed in
 Section~\ref{sec:roadmap}.
+
+\input{ai-models}
+
 %======================================================================
 \section{Evidence: what we measured}
 \label{sec:evidence}
 
 \subsection{Code and test inventory}
 \label{sec:tests}
-Measured on \code{dev} at \code{ccb1724} on 17 September 2026, by running each suite.
+Measured on \code{main} on 29 September 2026, by running each suite.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Code size and automated test results. The two ML failures are explained below.}
+\caption{Code size and automated test results. Skipped ML tests are live-hardware checks (a real
+Windows voice, a NumPy-only path) that run on request.}
 \label{tab:tests}
 \begin{tabular}{@{}lrrrl@{}}
 \toprule
 Area & Source lines & Tests & Result & Runner \\
 \midrule
-ML pipeline and evaluation & 20{,}624 & 829 & 827 pass, 2 fail & pytest \\
-\quad of which local model runtime & 2{,}145 & --- & --- & --- \\
-ML test code & 8{,}382 & --- & --- & --- \\
-Backend application & 3{,}813 & 173 & all pass & pytest \\
-Executive console & 3{,}532 & 57 & all pass & vitest \\
-Victim app & 3{,}113 & 194 & all pass & node --test \\
+ML pipeline, models and evaluation & 27{,}170 & 1{,}028 & all pass (13 skipped) & pytest \\
+ML test code & 10{,}699 & --- & --- & --- \\
+Backend application & 4{,}371 & 200 & all pass & pytest \\
+Executive console & 3{,}456 & 57 & all pass & vitest \\
+Victim app & 2{,}894 & 196 & all pass & node --test \\
 \midrule
-\textbf{Total} & \textbf{31{,}082} & \textbf{1{,}253} & \textbf{1{,}251 pass} & \\
+\textbf{Total} & \textbf{37{,}891} & \textbf{1{,}481} & \textbf{all pass} & \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -985,25 +1009,17 @@ Victim app & 3{,}113 & 194 & all pass & node --test \\
 \centering
 \begin{tikzpicture}
 \begin{axis}[sahay, xbar, width=0.78\linewidth, height=4.4cm,
-  xlabel={Automated tests}, xmin=0, xmax=960,
+  xlabel={Automated tests}, xmin=0, xmax=1200,
   symbolic y coords={Victim app,Console,Backend,ML}, ytick=data,
   nodes near coords, nodes near coords style={font=\tiny},
   enlarge y limits=0.22, bar width=10pt]
-\addplot[fill=sahayblue!70, draw=sahayblue] coordinates {(827,ML) (173,Backend) (57,Console) (194,Victim app)};
-\addplot[fill=sahayred!60, draw=sahayred] coordinates {(2,ML) (0,Backend) (0,Console) (0,Victim app)};
-\legend{Passing, Failing}
+\addplot[fill=sahayblue!70, draw=sahayblue] coordinates {(1028,ML) (200,Backend) (57,Console) (196,Victim app)};
+\legend{Passing}
 \end{axis}
 \end{tikzpicture}
 \caption{Test distribution across the four suites.}
 \label{fig:tests}
 \end{figure}
-
-\noindent\textbf{The two failures are an environment artefact, and we say so rather than hiding
-them.} Both are repository-scanning \emph{invariant} tests: one asserts that no pipeline module
-imports an archive library, the other that only the benchmark module references the unguarded
-decoder. They walk every \code{*.py} under \code{ml/} and now also walk \code{ml/.venv}, so they
-match vendored code inside \code{pip} rather than project code. The fix is one line --- exclude the
-virtual environment from the scan --- and the invariants themselves still hold for project code.
 
 \noindent The safety-critical suites deserve naming, because they are what makes the invariants real:
 role-filtered fan-out, consent gating, victim timeline leakage, contract mirroring between backend,
@@ -1018,26 +1034,29 @@ are fictional: 57 development fixtures (tuning allowed), 48 candidate fixtures (
 outcome published), 39 guardrail red-team cases, and a \textbf{locked set that is still empty}.
 
 \begin{table}[!htbp]
-\centering\small
-\caption{Headline safety metrics before and after the hardening round. Candidate numbers after
-hardening are regression numbers, because those failures were read while designing the fixes.}
+\centering\footnotesize
+\caption{Headline safety metrics at baseline (11 September), after the hardening round, and now
+(28 September, detector drafts v1.1 and v1.2). Every column after the baseline is regression
+evidence, because those failures were read while designing the fixes.}
 \label{tab:dethard}
-\setlength{\tabcolsep}{5pt}
-\begin{tabular}{@{}lcccc@{}}
+\setlength{\tabcolsep}{2.5pt}
+\scriptsize
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{3.3cm}*{6}{>{\centering\arraybackslash}X}@{}}
 \toprule
-& \multicolumn{2}{c}{Baseline} & \multicolumn{2}{c}{After hardening} \\
-\cmidrule(lr){2-3}\cmidrule(l){4-5}
-Metric & Dev (57) & Candidate (48) & Dev (57) & Candidate (48) \\
+& \multicolumn{2}{c}{Baseline} & \multicolumn{2}{c}{After hardening} & \multicolumn{2}{c}{Current} \\
+\cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(l){6-7}
+Metric & Dev & Candidate & Dev & Candidate & Dev & Candidate \\
 \midrule
-Critical misses / critical events & 1/17 & 4/14 & 1/17 & 1/14 \\
-\quad Wilson 95\% CI of the miss rate & 0.010--0.270 & 0.117--0.547 & 0.010--0.270 & 0.013--0.315 \\
-False escalations & 2 & 2 & 2 & 2 \\
-Crisis pre-check precision / recall & 0.636 / 1.000 & 0.714 / 0.556 & 0.636 / 1.000 & 0.800 / 0.889 \\
-Evidence validity (cited turns real) & 1.000 & 1.000 & 1.000 & 1.000 \\
-Guardrail red-team (39 cases) & \multicolumn{2}{c}{20/39 pass} & \multicolumn{2}{c}{39/39 pass} \\
-Author-written near-miss / leakage cases & \multicolumn{2}{c}{---} & \multicolumn{2}{c}{75/75 and 29/29 pass} \\
+Critical misses / critical events & 1/17 & 4/14 & 1/17 & 1/14 & \textbf{0/17} & 1/14 \\
+\quad Wilson 95\% CI of the miss rate & 0.010--0.270 & 0.117--0.547 & 0.010--0.270 & 0.013--0.315 & 0.000--0.184 & 0.013--0.315 \\
+False escalations & 2 & 2 & 2 & 2 & 2 & 2 \\
+Crisis detector precision / recall & 0.636 / 1.000 & 0.714 / 0.556 & 0.636 / 1.000 & 0.800 / 0.889 & 0.636 / 1.000 & 0.800 / 0.889 \\
+Coercion recall & 0.857 & 0.400 & 0.857 & 0.400 & 0.857 & \textbf{0.600} \\
+Evidence validity (cited turns real) & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 & 1.000 \\
+Guardrail red-team (39 cases) & \multicolumn{2}{c}{20/39 pass} & \multicolumn{2}{c}{39/39 pass} & \multicolumn{2}{c}{39/39 pass} \\
+Author-written near-miss / leakage cases & \multicolumn{2}{c}{---} & \multicolumn{2}{c}{75/75 and 29/29 pass} & \multicolumn{2}{c}{unchanged} \\
 \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \begin{table}[!htbp]
@@ -1064,19 +1083,23 @@ Coercion (communication safety) & 1.000 & 0.857 & 0.923 & 1.000 & 0.400 & 0.571 
 \end{table}
 
 \noindent Reading this honestly: precision is near perfect, recall is the weakness, and the
-weaknesses cluster in coercion, isolation and paraphrased crisis wording. Two critical misses and
-four false escalations remain, all of the latter caused by crisis wording that is quoted or
-attributed to someone else. The MVP's own headline target --- zero critical misses on the scripted
-corpus --- is \textbf{not met}, and we would rather say that than quote a favourable slice.
+weaknesses cluster in coercion, isolation and paraphrased crisis wording. Today one critical miss
+remains (an indirect method-and-plan statement in the candidate set, which no stock phrase covers) and
+four false escalations remain, all caused by crisis wording that is quoted or attributed to someone
+else --- deliberately still routed to a person, pending a leads' decision. The development set now
+has zero critical misses, but those fixtures were read while designing the fixes, so the MVP's own
+target --- zero critical misses on independent scripted data --- is \textbf{not yet testable}: the
+locked set is empty.
 
 \noindent The reproducibility checks all pass: two runs identical, ten multi-turn replays consistent,
 the LLM-off walk completing with all sixteen fallbacks validated, zero network attempts, no schema
 errors, no split overlap and no identifying-data hits.
 
-\subsection{The trained model, and why it is not in the product}
+\subsection{The first trained classifier (Task 7), and why it is not in the product}
 \label{sec:shadow}
-The team trained one model: an eight-label multilingual classifier on a domain-adapted MuRIL encoder,
-supervised only on fictional template-generated records. Domain adaptation worked as language
+This subsection records the first classifier experiment, which preceded the model programme in
+Section~\ref{sec:models} and set its governance pattern. It was an eight-label multilingual classifier
+on a domain-adapted MuRIL encoder, supervised only on fictional template-generated records. Domain adaptation worked as language
 modelling (held-out masked-language perplexity 11.95 to 6.17). The classifier did not earn its way
 into the product:
 
@@ -1124,6 +1147,12 @@ Unguarded worst case (benchmark only) & 5\,s of silence produced a median 186 ch
 Hindi text; a pure tone produced 148. This is the failure the gate exists to prevent \\
 Coexistence & Text encoder and speech model resident together: 1{,}102\,MB used, 5{,}950\,MB free \\
 Deterministic text pipeline & 100--600 records per second, single-threaded, no GPU \\
+Voice turn through the real upload endpoint & Speech-to-text request 463\,ms p50, 572\,ms p95; whole
+server-side turn 476\,ms p50, 581\,ms p95; 70 turns of synthetic Indian-English speech
+(Table~\ref{tab:m2}) \\
+Offline voice output & A whole English reply in 31\,ms p50, 38\,ms p95 from a warm worker \\
+Model training & MuRIL Stage W arms 9--35 minutes each at 5.0--5.9\,GB peak GPU memory with gradient
+checkpointing; the logistic baseline in seconds on one CPU \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1142,17 +1171,17 @@ gate is passed.
 \toprule
 Measurement & Instrumentation and approval path \\
 \midrule
-Speech recognition accuracy (WER/CER) for Hindi, English and Hinglish & Approval and download of an
-evaluation corpus (Common Voice Hindi is proposed, not approved) plus our own transcribed scenario
-recordings \\
-Acoustic distress, dimension D4 & An approved acoustic corpus and a validation study; until then D4
-stays structurally unavailable rather than estimated \\
-End-to-end turn latency (the under-3\,s claim) & Instrumenting the turn loop on the demo machine
-with a real microphone; the per-stage budget exists, the end-to-end measurement does not \\
-Official detector metrics & Human authoring and double review of a blind corpus; the harness refuses
-to run until a corpus is frozen, and the locked count is 0 \\
+Speech recognition accuracy (WER/CER) for Hindi, English and Hinglish & Common Voice Hindi through an
+account-gated download, plus the team's own recordings (H5, H10) \\
+Acoustic distress, dimension D4 & The rule is wired and measures prosody; validating it needs the
+team's recordings (H5) and an expert review of its weight (H11) \\
+End-to-end turn latency (the under-3\,s claim) & The server side is now measured (581\,ms p95); the
+phone's end-of-speech wait, Wi-Fi upload and playback need a real-phone run (H13) \\
+Official detector metrics & Human authoring and double review of a blind corpus (H7); the harness
+refuses to run until a corpus is frozen, and the locked count is 0 \\
+Speech-emotion and text-affect gates & Team recordings (H5) and human-written Hinglish sentences (H6) \\
 Fixed scripts S0, S9, SX, SH & Writing in Hindi and English, review by a counsellor or psychology
-faculty member, and pre-synthesis. The system fails closed until then \\
+faculty member, and human recording (H1--H4). The system fails closed until then \\
 Real-world triage quality & Requires the governed dataset and calibration study in roadmap phase R3 \\
 \bottomrule
 \end{tabularx}
@@ -1237,7 +1266,7 @@ documented lawful basis and clinical governance sign-off from phase R3 \\
 \label{sec:projdet}
 The dominant limit on detector recall today is corpus size: coercion, isolation and paraphrased
 crisis wording each have fewer than ten positive examples in the exposed candidate set, and the
-measured recall of 0.400 on coercion is a statement about the corpus at least as much as about the
+measured recall of 0.600 on coercion is a statement about the corpus at least as much as about the
 detector. Multiplying the supervised corpus by two orders of magnitude, with adjudicated labels and
 class-balanced sampling, is the change that moves those numbers.
 
@@ -1260,9 +1289,9 @@ Continuing threat & 1.000 & 0.917 & 0.93 & 0.95 & 0.94 \\
 Medical urgency & 1.000 & 0.667 & 0.94 & 0.93 & 0.93 \\
 Isolation / boycott / displacement & 1.000 & 0.500 & 0.90 & 0.89 & 0.89 \\
 Legal urgency & 1.000 & 0.857 & 0.95 & 0.94 & 0.94 \\
-Coercion (communication safety) & 1.000 & 0.400 & 0.88 & 0.86 & 0.87 \\
+Coercion (communication safety) & 1.000 & 0.600 & 0.88 & 0.86 & 0.87 \\
 \midrule
-Macro average & 0.971 & 0.747 & 0.924 & 0.934 & 0.926 \\
+Macro average & 0.971 & 0.776 & 0.924 & 0.934 & 0.926 \\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -1280,7 +1309,7 @@ Macro average & 0.971 & 0.747 & 0.924 & 0.934 & 0.926 \\
   nodes near coords style={font=\tiny, rotate=90, anchor=west},
   legend style={at={(0.5,1.03)}, anchor=south, legend columns=2}]
 \addplot[fill=sahaygray!55, draw=sahaygray] coordinates
-  {(crisis,0.889) (danger,1.000) (threat,0.917) (medical,0.667) (isolation,0.500) (legal,0.857) (coercion,0.400)};
+  {(crisis,0.889) (danger,1.000) (threat,0.917) (medical,0.667) (isolation,0.500) (legal,0.857) (coercion,0.600)};
 \addplot[fill=sahaygreen!70, draw=sahaygreen] coordinates
   {(crisis,0.98) (danger,0.99) (threat,0.95) (medical,0.93) (isolation,0.89) (legal,0.94) (coercion,0.86)};
 \legend{Measured today (candidate set), Projected at production scale}
@@ -1482,27 +1511,28 @@ Task & Best published figure & SAHAY-AI today & Comparable? \\
 \midrule
 Hindi ASR (WER) & IndicWhisper: 13.6 average across seven Hindi benchmarks, best 7.6 (IndicTTS),
 worst 26.8 (Gramvaani)~\cite{vistaar}; IndicConformer-600M: 13.2 on a Hindi
-benchmark~\cite{indicconformer} & \textbf{Not measured.} Whisper Small runs VAD-gated with measured
-latency only & No. This is a real gap; see roadmap R2 \\
+benchmark~\cite{indicconformer} & \textbf{Not measured on real speech.} VAD-gated Whisper Small in
+a local service; voice turn 581\,ms p95 & No. This is a real gap; it needs recordings (H5, H10) \\
 Suicidal-ideation detection on Reddit & Reported F1 roughly 93--99\% for transformer
-classifiers~\cite{suicidereview,suiciderobertas} & Auxiliary research head: 0.900 micro-F1 on 3{,}000
-held-out windows & Weakly. Different split protocol, windowed input, capped training, and it is a
-diagnostic, never a safety label \\
+classifiers~\cite{suicidereview,suiciderobertas} & Stage W shadow detector: F1 0.964, AUROC 0.993 on
+6{,}000 held-out posts & Weakly. Balanced sample, first window of each post, subreddit labels; a weak
+training label, never a safety label \\
 Stress detection (Dreaddit) & BERT-base 0.8065 F1; best classical 0.7980; majority baseline
-0.6808~\cite{dreaddit} & Auxiliary research head: 0.657 micro-F1 on 108 held-out windows & Weakly,
-and we are \emph{below} the published baseline, on 860 training windows \\
+0.6808~\cite{dreaddit} & Stage W D5 head: F1 0.766, AUROC 0.830 on the official test split (968
+windows); the D5 rules find 0.10 of stressed posts & Weakly. Windowed input; just below BERT-base \\
 Multilingual encoders on Indian languages & MuRIL 68.6 vs mBERT 59.1 native; 48.9 vs 21.1
 transliterated~\cite{khanuja2021} & We adopt MuRIL on that evidence and measured a 23\% tokenisation
 advantage over XLM-R on Hindi & Yes, as a model-selection rationale \\
 Hindi emotion in counselling dialogue & EmoInHindi: Fleiss' kappa 0.84 for emotion and 0.88 for
-intensity, with contextual transformer baselines~\cite{singh2022} & Auxiliary head only: 0.667
-micro-F1, 0.355 macro-F1, and 7 of 17 labels never predicted & No, and deliberately so: emotion
-labels are firewalled from safety labels \\
+intensity, with contextual transformer baselines~\cite{singh2022} & MuRIL text affect: UAR 0.745,
+macro F1 0.72 on a sentence-disjoint Hindi test (778) & No. Five mapped classes and a leak-free split;
+emotion stays firewalled from safety labels \\
 Speech-based PTSD screening & Accuracy 0.975 and AUC 1.0 on 76 patients and 60 controls; severity
-$R^2 = 0.10$~\cite{hu2024}; 91\% emotion and 89\% PTSD on acted speech~\cite{islam2024} & Not
-attempted. We detect indicators, never a diagnosis & No, and by design \\
+$R^2 = 0.10$~\cite{hu2024}; 91\% emotion and 89\% PTSD on acted speech~\cite{islam2024} & Speech
+emotion on acted English, five classes, unseen actors: UAR 0.78--0.80. No PTSD attempted & Partly for
+emotion (different classes and corpora); no for PTSD, by design \\
 Safety triage with abstention and evidence links & \textbf{No public benchmark exists} & Critical
-miss 1/17 dev and 1/14 candidate; red-team 39/39; evidence validity 1.000 & The benchmark has to be
+miss 0/17 dev and 1/14 candidate (exposed); red-team 39/39; evidence validity 1.000 & The benchmark has to be
 built; see \S\ref{sec:buildbench} \\
 \bottomrule
 \end{tabularx}
@@ -1521,14 +1551,15 @@ built; see \S\ref{sec:buildbench} \\
   nodes near coords style={font=\tiny},
   legend style={at={(0.5,1.03)}, anchor=south, legend columns=2}]
 \addplot[fill=sahaygray!55, draw=sahaygray] coordinates {(suicide,0.93) (stress,0.8065) (emotion,0.55)};
-\addplot[fill=sahayblue!75, draw=sahayblue] coordinates {(suicide,0.900) (stress,0.657) (emotion,0.667)};
-\legend{Published reference, SAHAY-AI auxiliary research head}
+\addplot[fill=sahayblue!75, draw=sahayblue] coordinates {(suicide,0.964) (stress,0.766) (emotion,0.721)};
+\legend{Published reference, SAHAY-AI shadow model}
 \end{axis}
 \end{tikzpicture}
-\caption{Auxiliary research heads against published references on the same datasets. These are
-\emph{not} SAHAY safety metrics: they are diagnostics of what the adapted encoder represents, trained
-with capped data, and the EmoInHindi published bar is indicative only because that paper reports
-Hamming loss and Jaccard index rather than a comparable F1.}
+\caption{Shadow models against published references on the same datasets: the Stage W detector for
+Reddit crisis and Dreaddit stress, and the MuRIL text-affect model (Hindi macro F1) for EmoInHindi.
+These are \emph{not} SAHAY safety metrics: the labels are borrowed, the splits differ, and the
+EmoInHindi published bar is indicative only because that paper reports Hamming loss and Jaccard index
+rather than a comparable F1.}
 \label{fig:benchbars}
 \end{figure}
 
@@ -1600,13 +1631,16 @@ Real victim data & Never used, and out of scope for the MVP by invariant. Any fu
 governed activity needing a lawful basis, de-identification and expert annotation \\
 Fictional scenario corpora & The basis of every published number here: 57 dev, 48 candidate and 39
 red-team fixtures, plus template-generated training corpora for the research model \\
-Public research corpora & Present locally for research only, all \code{licence\_pending}: their
-licensing and privacy review is unresolved, they may contain authentic personal narratives, and
-redaction cannot catch names or contextual identifiers \\
-Approved models & MuRIL (Apache-2.0), XLM-R (MIT), Whisper Small (Apache-2.0), Silero VAD (MIT), all
-pinned by revision and run offline \\
-Not approved & Common Voice Hindi, RAVDESS, CREMA-D, IEMOCAP, DAIC-WOZ, policy PDFs and any external
-LLM API. Each has a recorded decision entry and a fallback \\
+Public research corpora & Usable for model training and validation under decision EXT-129 (Reddit
+Suicide Detection, Dreaddit, EmoInHindi, GoEmotions, a hate-speech derivative, Hinglish sentiment).
+Their licences stay recorded as pending, derived weights stay private and shadow-only, and their text
+never reaches the product, a fixture or a victim \\
+Acted speech corpora & RAVDESS and CREMA-D approved for training the speech-emotion candidates; acted
+English only \\
+Approved models & MuRIL (Apache-2.0), XLM-R (MIT), Whisper Small (Apache-2.0), Silero VAD (MIT),
+emotion2vec+ large, WavLM Base+, all pinned by revision and run offline \\
+Not yet available & Common Voice Hindi (account-gated download), IEMOCAP, DAIC-WOZ, policy PDFs and any
+external LLM API. Each has a recorded decision entry and a fallback \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -1762,8 +1796,9 @@ telephony adapter stub, so this phase is integration work rather than redesign.
         than a single national average.
   \item \textbf{Full-duplex low-latency voice} through a media server, so a caller can interrupt the
         assistant naturally.
-  \item \textbf{Acoustic distress (D4) as a measured dimension}, once an approved corpus and a
-        validation study exist; until then it stays structurally unavailable.
+  \item \textbf{Acoustic distress (D4) validated}: the within-caller rule and the speech-emotion
+        auxiliary input evaluated on Indian-language recordings and expert-reviewed, before D4's
+        weight is treated as more than provisional.
 \end{itemize}
 
 \subsection{R3 --- Calibration, clinical governance and governed data}
@@ -1828,8 +1863,18 @@ bounded intake that produces an explainable Stress Vulnerability Index with Low,
 Critical bands, detects crisis, danger, intimidation, isolation, medical and legal urgency with
 evidence links, proposes the six pathways the statement names plus two more, keeps the complainant's
 consent and dignity at the centre, and puts a human officer in authority over every action. It does
-this offline, on one machine, with 1{,}251 passing tests and a written account of everything it does
+this offline, on one machine, with 1{,}481 passing tests and a written account of everything it does
 not yet know.
+
+The AI-model programme in Section~\ref{sec:models} was built and measured end to end on the same
+laptop. Speech-emotion candidates reach 0.78--0.80 UAR on unseen acted-English actors; MuRIL text affect
+reaches 0.745 UAR on leak-free Hindi; a MuRIL safety detector trained with weak supervision reaches
+0.99 AUROC on public crisis text and lifts Hindi and Hinglish crisis recall on fictional data; and a
+logistic baseline and a cross-generation shortcut check show exactly where each model is strong and
+where it is not. The most important result is the least flattering one: on SAHAY's own fixtures every
+trained model stays well below the deterministic rules (micro F1 0.56--0.62 against 0.93 and 0.88),
+and it fires on harmless absence wording. That is why the rules stay authoritative, every model runs in
+shadow, and no model changes what a victim hears or what an officer is shown as fact.
 
 It separates what it has measured from what it projects, and labels both. The measured results in
 Section~\ref{sec:evidence} come from this machine and these corpora. The projections in
@@ -1843,9 +1888,12 @@ assumes.
 Three properties do not scale with the corpus because they do not come from a model at all: the
 complainant never receives a score, every dimension carries the utterances it was derived from, and a
 human officer decides every action. Those hold at 48 scenarios and at 12{,}000 alike. The next
-milestone is therefore not a better model. It is the real channel integration in
-Section~\ref{sec:roadmap} and the independent evaluation in Section~\ref{sec:buildbench}, in that
-order, which together convert the projections in Section~\ref{sec:projected} into measurements.
+milestone is therefore not a better model. Everything the development team could build and measure
+alone is done; what remains of the ML work is \textbf{verification that only people can do} ---
+approved and recorded scripts, team voice recordings, reviewed fixtures, a blind corpus and real-phone
+tests --- listed task by task in Section~\ref{sec:humantesting}. That evidence, followed by the channel
+integration in Section~\ref{sec:roadmap}, converts the projections in Section~\ref{sec:projected}
+into measurements.
 
 \input{future-human-testing}
 
@@ -1856,20 +1904,25 @@ Every number in this report traces to one of these sources, all of which are in 
 the operator-controlled private roots outside Git.
 
 \begin{itemize}
-  \item \textbf{Test results:} run on 17 September 2026 from \code{dev} at \code{ccb1724}
-        (\code{pytest} for ML and backend, \code{vitest} for the console, \code{node --test} for the
-        victim app).
-  \item \textbf{Deterministic evaluation:} \filepath{ml/eval/results/eval-baseline-2026-09-11.md} and
-        \filepath{ml/eval/results/safety-hardening-2026-09-11.md}, produced by the offline harness.
+  \item \textbf{Test results:} run on 29 September 2026 from \code{main} (\code{pytest} for ML and
+        backend, \code{vitest} for the console, \code{node --test} for the victim app).
+  \item \textbf{Deterministic evaluation:} \filepath{ml/eval/results/eval-2026-09-28.md}, produced by
+        the offline harness; the 11 September baseline and hardening runs are in the same folder.
+  \item \textbf{Evaluation table:} \filepath{ml/eval/results/eval-table-2026-09-29.md} (150 rows, each
+        with its source and evidence class) and the generated pages in \filepath{docs/defence/}.
+  \item \textbf{Latency:} \filepath{ml/eval/results/latency-2026-09-29.md}, produced by
+        \filepath{backend/scenarios/latency_benchmark.py}.
+  \item \textbf{AI models:} the model and component cards --- \filepath{ml/ser/MODEL_CARD.md},
+        \filepath{ml/textaffect/MODEL_CARD.md}, \filepath{ml/acoustics/D4_CARD.md},
+        \filepath{ml/training/STAGE_W_CARD.md}, \filepath{ml/shadow/MODEL_CARD.md} and the cards
+        indexed in \filepath{docs/defence/README.md} --- summarising the private run reports.
   \item \textbf{Model runtime measurements:} the private benchmark reports produced by the model
         runtime qualification, summarised in Table~\ref{tab:perf}.
-  \item \textbf{Shadow-model results:} the private training reports and the model card, summarised in
-        \S\ref{sec:shadow} and covered fully in the separate AI research report.
   \item \textbf{Contracts, states and specification:} \filepath{docs/contracts/CONTRACTS.md},
         \filepath{docs/dialogue/STATES.md}, \filepath{docs/HANDOVER.md},
         \filepath{docs/VERTICAL_SLICE.md}.
   \item \textbf{External approvals:} \filepath{docs/EXTERNAL_DECISIONS.md}, entries EXT-001 to
-        EXT-122.
+        EXT-129, and the contract changes PC-11 and PC-12.
   \item \textbf{Problem statement:} the official SIH26093 record~\cite{sih26093}; the same text is
         quoted in \filepath{docs/HANDOVER.md}.
   \item \textbf{Projections:} derived in \S\ref{sec:projmethod} from the published anchors cited in
@@ -1894,6 +1947,13 @@ Escalation packet & The decision-ready case bundle handed to an executive \\
 Licensed question & The single question a dialogue state permits \\
 Shadow mode & A model whose output is displayed beside the authoritative pipeline but can change
 nothing \\
+UAR & Unweighted average recall: the mean of per-class recall, so every class counts equally (chance
+is 0.20 for five classes) \\
+AUROC & Area under the ROC curve: how well a score ranks positives above negatives (0.5 is chance) \\
+Weak supervision & Training on a borrowed source label, for example a subreddit of origin, that is not
+a SAHAY judgement, with its caveat recorded \\
+Exposed fixture & A test case whose result was published during development; its later results are
+regression evidence, not generalisation \\
 Evidence class & The label stating whether a number is synthetic, contaminated regression, or
 official (none of ours are official) \\
 DPDP & Digital Personal Data Protection Act 2023 and its 2025 Rules \\
