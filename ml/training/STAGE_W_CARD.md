@@ -102,11 +102,43 @@ The linear model's strongest features for crisis and coercion were fragments of 
 
 "Has several turns" therefore predicts "has a risk label" in both training and holdout.
 
-- **Why it happens.** The multi-label records are built by combining two cores, so none is all-negative.
-- **Consequence.** Every fictional-holdout number above, MuRIL and logistic alike, is partly inflated by this shortcut.
-- **What the exposed fixtures do.** They don't share the pattern, which is one reason the models fall so far there.
+The multi-label records are built by combining two cores, so none is all-negative.
 
-A future corpus version must include all-negative multi-turn records. `7b-v1` is frozen and stays as it is.
+## Corpus 7b-v2 and what the shortcut actually cost (R10, 2026-09-29)
+
+`7b-v2` keeps every `7b-v1` record and adds one-positive and all-negative two-turn records. In training data, multi-turn records now carry a risk label 0.62 of the time, against 0.62 for single-turn.
+
+**Per-label rates are only partly balanced:**
+
+| Label | v1, multi vs single | v2, multi vs single |
+|---|---|---|
+| Crisis | 0.51 vs 0.25 | 0.29 vs 0.25 |
+| Coercion | 0.50 vs 0.15 | 0.25 vs 0.15 |
+| Legal | 0.38 vs 0.13 | 0.21 vs 0.13 |
+
+That's why the logistic baseline still ranks `[SEP]` first even on v2.
+
+**Retrained on v2:**
+- Arms W0, W1 and W2 were retrained with seeds 13, 42 and 97, the last two for the winner.
+- The predeclared validation rule selected **W0 seed 13** (validation macro F1 0.658). W0's other seeds reached 0.547 and 0.493, so seed variance is large.
+
+**Cross-check** (`python -m ml.training.cli shortcut-check`): both generations of checkpoints, scored on the v2 holdout by record kind. Evidence class: synthetic development.
+
+| Checkpoint | Single-turn macro F1 | Two-positive multi-turn F1 | **One-positive multi-turn F1** | False alarms on all-negative single-turn | **False alarms on all-negative multi-turn** |
+|---|---|---|---|---|---|
+| v1 W0 s13 | 0.638 | 0.737 | 0.343 | 2.3% | 2.4% |
+| v1 W2 s13 (v1 selected) | 0.696 | 0.787 | 0.422 | 3.8% | 2.4% |
+| v2 W0 s13 (v2 selected) | 0.696 | 0.758 | 0.691 | 7.8% | 17.4% |
+| v2 W2 s13 | 0.743 | 0.785 | **0.790** | 3.8% | 7.8% |
+
+What this shows (it corrects the earlier expectation):
+- **MuRIL did not learn the crude shortcut.** v1 checkpoints raise false alarms on only 2.4% of harmless multi-turn records. The linear baseline did lean on `[SEP]`; MuRIL did not.
+- **The real v1 gap was mixed multi-turn records.** On "one risky turn plus one harmless turn", v1 checkpoints reach only 0.34–0.42 macro F1, against 0.69–0.79 after v2 training.
+- **v2 training costs some false alarms**, more for W0 than W2 (17.4% against 7.8% on harmless multi-turn records).
+- **On SAHAY's exposed fixtures nothing changed materially.** Micro F1 for the v2 selected W0 is 0.56 (dev) and 0.62 (candidates), against 0.60 and 0.58 for the v1 selected W2. Rules: 0.93 and 0.88.
+- **The logistic baseline** on v2 scores 0.44 (LR-W0) and 0.48 (LR-W2) holdout macro F1, and 0.20–0.49 exposed micro F1.
+
+Verdict: unchanged. The shadow detector stays a second opinion only. A future `7b-v3` could match per-label rates, not only the overall rate. `7b-v1` and `7b-v2` both stay frozen.
 
 **Untrained D5 head in W0 arms.** W0 never trains `d5_text_distress`. Its output sits near 0.5, so at the fixed ≥ 0.5 threshold it "fires" on everything. Its D5 recall (0.81 for MuRIL W0, 1.0 for LR-W0) is meaningless and is left out of the table.
 

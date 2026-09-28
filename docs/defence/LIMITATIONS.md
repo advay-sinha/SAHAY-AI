@@ -8,9 +8,11 @@ This page states what the evidence does **not** support. Every number referred t
   - The locked set has 0 samples; its crisis and danger fixtures need two human reviewers each.
   - The blind corpus has not been written; it must be written by people who did not build the system.
   - Every safety number today comes from **exposed** fixtures, published during development. It shows regression behaviour, not generalisation.
-- **The fictional training corpus had a shortcut.** In `7b-v1`, every multi-turn record carried a risk label.
-  - Fictional-holdout scores for the MuRIL and logistic models are partly inflated by it.
-  - `7b-v2` removes it. The retraining that measures the effect is pending (R10).
+- **The fictional training corpus had a shortcut.** In `7b-v1`, every multi-turn record carried a risk label. Measured on `7b-v2` (R10):
+  - The logistic baseline relied on it: `[SEP]` was its top feature.
+  - MuRIL did not: only 2.4% false alarms on harmless multi-turn records.
+  - The v1 models were weak on mixed multi-turn records (0.34–0.42 macro F1). v2 training fixes that (0.69–0.79), at the cost of more false alarms.
+  - Per-label rates remain only partly balanced in `v2`.
 - **Borrowed-label results are weak-supervision evidence.** The labels are:
   - which subreddit a post came from;
   - a hate-speech label;

@@ -135,6 +135,18 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 | SHD | Shadow detector micro F1 vs deterministic rules (W2 seed 13) | dev | 0.595 | — | 57 | exposed_development | measured | rules micro F1 0.9333; caught by the model only 1; model false positives 25 |
 | SHD | Shadow detector micro F1 vs deterministic rules (W2 seed 13) | candidates | 0.584 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809; caught by the model only 5; model false positives 18 |
 | SHD | Shadow detector fires on indirect-wording probes (W2 seed 13) | 10 probes | 0.857 | — | 7 | descriptive_probe | measured | non-crisis controls fired 3 of 3; the crisis pre-check fired on 0 of 7 |
+| SHD | Shadow detector macro F1 (W0 seed 13, corpus 7b-v2), multi-turn records | synthetic holdout | 0.721 | — | 440 | synthetic_development | measured | share of records with a risk label 0.6205 |
+| SHD | Shadow detector macro F1 (W0 seed 13, corpus 7b-v2), single-turn records | synthetic holdout | 0.696 | — | 1008 | synthetic_development | measured | share of records with a risk label 0.6042 |
+| SHD | Shadow detector macro F1, fictional holdout (W0 seed 13, corpus 7b-v2) | synthetic holdout | 0.710 | — | 1448 | synthetic_development | measured | labels without positive support excluded: immediate_danger, medical_urgency, isolation_boycott_displacement |
+| SHD | Shadow detector crisis recall, fictional holdout (W0 seed 13, corpus 7b-v2) | en | 0.991 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector crisis recall, fictional holdout (W0 seed 13, corpus 7b-v2) | hi | 0.941 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector crisis recall, fictional holdout (W0 seed 13, corpus 7b-v2) | hinglish | 0.756 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector recall vs source label: D5 (W0 seed 13, corpus 7b-v2) | weak test bucket | 0.865 | [0.833, 0.892] | 505 | weak_supervision_from_source_label | measured | AUROC 0.5617; precision 0.5355; deterministic rules recall 0.099, precision 0.8065 |
+| SHD | Shadow detector recall vs source label: continuing_threat (W0 seed 13, corpus 7b-v2) | weak test bucket | 0.111 | [0.090, 0.135] | 741 | weak_supervision_from_source_label | measured | AUROC 0.4241; precision 0.4362; deterministic rules recall 0.0027, precision 0.3333 |
+| SHD | Shadow detector recall vs source label: crisis_self_harm (W0 seed 13, corpus 7b-v2) | weak test bucket | 0.941 | [0.932, 0.949] | 3000 | weak_supervision_from_source_label | measured | AUROC 0.8292; precision 0.6476; deterministic rules recall 0.3757, precision 0.9716 |
+| SHD | Shadow detector micro F1 vs deterministic rules (W0 seed 13, corpus 7b-v2) | dev | 0.562 | — | 57 | exposed_development | measured | rules micro F1 0.9333; caught by the model only 2; model false positives 32 |
+| SHD | Shadow detector micro F1 vs deterministic rules (W0 seed 13, corpus 7b-v2) | candidates | 0.619 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809; caught by the model only 6; model false positives 22 |
+| SHD | Shadow detector fires on indirect-wording probes (W0 seed 13, corpus 7b-v2) | 10 probes | 0.857 | — | 7 | descriptive_probe | measured | non-crisis controls fired 1 of 3; the crisis pre-check fired on 0 of 7 |
 
 ## Interpretable baseline, AE-15 (standard-library logistic regression; same data and evaluator)
 
@@ -145,12 +157,27 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 | AE15 | Logistic baseline AUROC vs source label: crisis_self_harm (LR-W0) | weak test bucket | 0.615 | — | 6000 | weak_supervision_from_source_label | measured | recall 0.0543 |
 | AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W0) | dev | 0.244 | — | 57 | exposed_development | measured | rules micro F1 0.9333 |
 | AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W0) | candidates | 0.290 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809 |
-| AE15 | Logistic baseline macro F1, fictional holdout (LR-W2) | synthetic holdout | 0.497 | — | 1190 | synthetic_development | measured |  |
-| AE15 | Logistic baseline AUROC vs source label: D5 (LR-W2) | weak test bucket | 0.762 | — | 968 | weak_supervision_from_source_label | measured | recall 0.7149 |
-| AE15 | Logistic baseline AUROC vs source label: continuing_threat (LR-W2) | weak test bucket | 0.801 | — | 1652 | weak_supervision_from_source_label | measured | recall 0.9865 |
-| AE15 | Logistic baseline AUROC vs source label: crisis_self_harm (LR-W2) | weak test bucket | 0.935 | — | 6000 | weak_supervision_from_source_label | measured | recall 0.9313 |
-| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2) | dev | 0.477 | — | 57 | exposed_development | measured | rules micro F1 0.9333 |
-| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2) | candidates | 0.373 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809 |
+| AE15 | Logistic baseline macro F1, fictional holdout (LR-W2, corpus candidates) | synthetic holdout | 0.497 | — | 1190 | synthetic_development | measured |  |
+| AE15 | Logistic baseline AUROC vs source label: D5 (LR-W2, corpus candidates) | weak test bucket | 0.762 | — | 968 | weak_supervision_from_source_label | measured | recall 0.7149 |
+| AE15 | Logistic baseline AUROC vs source label: continuing_threat (LR-W2, corpus candidates) | weak test bucket | 0.801 | — | 1652 | weak_supervision_from_source_label | measured | recall 0.9865 |
+| AE15 | Logistic baseline AUROC vs source label: crisis_self_harm (LR-W2, corpus candidates) | weak test bucket | 0.935 | — | 6000 | weak_supervision_from_source_label | measured | recall 0.9313 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2, corpus candidates) | dev | 0.477 | — | 57 | exposed_development | measured | rules micro F1 0.9333 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2, corpus candidates) | candidates | 0.373 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809 |
+| AE15 | Logistic baseline macro F1 (LR-W0, corpus 7b-v2), multi-turn records | synthetic holdout | 0.419 | — | 440 | synthetic_development | measured | share of records with a risk label 0.6205 |
+| AE15 | Logistic baseline macro F1 (LR-W0, corpus 7b-v2), single-turn records | synthetic holdout | 0.453 | — | 1008 | synthetic_development | measured | share of records with a risk label 0.6042 |
+| AE15 | Logistic baseline macro F1, fictional holdout (LR-W0, corpus 7b-v2) | synthetic holdout | 0.440 | — | 1448 | synthetic_development | measured |  |
+| AE15 | Logistic baseline AUROC vs source label: continuing_threat (LR-W0, corpus 7b-v2) | weak test bucket | 0.530 | — | 1652 | weak_supervision_from_source_label | measured | recall 0.0 |
+| AE15 | Logistic baseline AUROC vs source label: crisis_self_harm (LR-W0, corpus 7b-v2) | weak test bucket | 0.630 | — | 6000 | weak_supervision_from_source_label | measured | recall 0.081 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W0, corpus 7b-v2) | dev | 0.203 | — | 57 | exposed_development | measured | rules micro F1 0.9333 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W0, corpus 7b-v2) | candidates | 0.286 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809 |
+| AE15 | Logistic baseline macro F1 (LR-W2, corpus candidates), multi-turn records | synthetic holdout | 0.467 | — | 440 | synthetic_development | measured | share of records with a risk label 0.6205 |
+| AE15 | Logistic baseline macro F1 (LR-W2, corpus candidates), single-turn records | synthetic holdout | 0.491 | — | 1008 | synthetic_development | measured | share of records with a risk label 0.6042 |
+| AE15 | Logistic baseline macro F1, fictional holdout (LR-W2, corpus candidates) | synthetic holdout | 0.484 | — | 1448 | synthetic_development | measured |  |
+| AE15 | Logistic baseline AUROC vs source label: D5 (LR-W2, corpus candidates) | weak test bucket | 0.763 | — | 968 | weak_supervision_from_source_label | measured | recall 0.8515 |
+| AE15 | Logistic baseline AUROC vs source label: continuing_threat (LR-W2, corpus candidates) | weak test bucket | 0.808 | — | 1652 | weak_supervision_from_source_label | measured | recall 0.9663 |
+| AE15 | Logistic baseline AUROC vs source label: crisis_self_harm (LR-W2, corpus candidates) | weak test bucket | 0.938 | — | 6000 | weak_supervision_from_source_label | measured | recall 0.9327 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2, corpus candidates) | dev | 0.486 | — | 57 | exposed_development | measured | rules micro F1 0.9333 |
+| AE15 | Logistic baseline micro F1 vs deterministic rules (LR-W2, corpus candidates) | candidates | 0.378 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809 |
 
 ## Not yet measured or enforced by tests (HANDOVER M2–M4, M6, M8, M9; D4)
 
@@ -173,6 +200,7 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 
 ## Sources
 
+- `SAHAY_TRAINING_ROOT/baseline-lr-7b-v2/reports/evaluation.json`
 - `SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/baseline-both-s13/report.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/baseline-crema-s13/report.json`
@@ -184,6 +212,7 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 - `SAHAY_TRAINING_ROOT/ser/runs/wavlm-crema-s13/report.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/whisper-head-both-s13/report.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/whisper-head-crema-s13/report.json`
+- `SAHAY_TRAINING_ROOT/stage-w-7b-v2/reports/evaluation.json`
 - `SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json`
 - `SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json`
 - `SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json`

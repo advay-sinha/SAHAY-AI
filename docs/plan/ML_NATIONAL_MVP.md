@@ -418,7 +418,13 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - Benchmark: `backend/scenarios/latency_benchmark.py` sends fictional English utterances, spoken by the built-in Windows Indian-English voices (`scripts/make-benchmark-audio.ps1`), through the real upload endpoint against a disposable SQLite database.
     - Mock-ASR check: reply path p50 12 ms, p95 22 ms.
     - Not measured: VAD endpointing (the phone), LAN upload (the phone), TTS (M13) and Hindi (no voice installed; H5).
-  - **Corpus `7b-v2`: code done 2026-09-29; the owner runs it (R10).**
+  - **R10 ✅ (2026-09-29): Stage W and the baseline retrained on `7b-v2`.** Details are in STAGE_W_CARD, section "Corpus 7b-v2", and the table's `corpus 7b-v2` rows.
+    - Selection picked v2 W0 seed 13.
+    - `shortcut-check`: v1 MuRIL did **not** learn the crude shortcut (2.4% false alarms on harmless multi-turn records); only the logistic baseline did.
+    - The real v1 gap was mixed multi-turn records: 0.34–0.42 macro F1, rising to 0.69–0.79 after v2. The cost is more false alarms (v2 W0 17.4% on harmless multi-turn records).
+    - Exposed fixtures are essentially unchanged: 0.56 / 0.62 micro F1, against rules 0.93 / 0.88.
+    - Per-label rates are still only partly balanced; a `7b-v3` would be optional.
+  - **Corpus `7b-v2`: code done 2026-09-29.**
     - Balanced multi-turn records remove the shortcut: multi-turn records carry a risk label 0.62 of the time against 0.62 for single-turn (1.00 in v1).
     - `7b-v1` is unchanged; its freeze still verifies.
     - A trial build kept 11,739 records, with no contamination block.

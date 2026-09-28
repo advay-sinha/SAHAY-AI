@@ -21,6 +21,7 @@
     python -m ml.training.cli stage-w-select
     python -m ml.training.cli stage-w-evaluate [--smoke N]
     python -m ml.training.cli baseline-lr [--smoke N]
+    python -m ml.training.cli shortcut-check
 
 Needs ``SAHAY_TRAINING_ROOT`` (private outputs) and ``SAHAY_MODELS_ROOT`` (pinned MuRIL); neither has
 a default. Output is aggregate only: no text, no transcript, no absolute path. Reports and
@@ -122,6 +123,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     pe = sub.add_parser("stage-w-evaluate")
     pe.add_argument("--smoke", type=int, default=None, help="evaluate the stage-w-smoke/ runs on N rows per set")
     pe.add_argument("--corpus", default="7b-v1", help="fictional corpus version")
+    sub.add_parser("shortcut-check")
     pb = sub.add_parser("baseline-lr")
     pb.add_argument("--smoke", type=int, default=None, help="one epoch on N rows per pool, into baseline-lr-smoke/")
     pb.add_argument("--corpus", default="7b-v1", help="fictional corpus version")
@@ -185,6 +187,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                 from . import stage_w, stage_w_eval
                 stage_w.configure(args.corpus)
                 payload = stage_w_eval.evaluate(paths.training_root(args.training_root), smoke=args.smoke)
+            elif args.command == "shortcut-check":
+                from . import shortcut_check
+                payload = shortcut_check.run(paths.training_root(args.training_root))
             elif args.command == "baseline-lr":
                 from . import baseline_lr, stage_w
                 stage_w.configure(args.corpus)

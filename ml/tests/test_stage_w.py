@@ -333,3 +333,21 @@ class TestConfigure(unittest.TestCase):
         out = swe.by_turns(rows, [hit, [0.0] * len(sw.LABELS)])
         self.assertEqual(out["single_turn"]["records"], 1)
         self.assertEqual(out["multi_turn"]["any_positive_rate"], 0.0)
+
+
+class TestShortcutCheck(unittest.TestCase):
+    def test_kinds_and_false_alarm_rate(self):
+        from ml.training import shortcut_check as sc
+        self.assertEqual(sc.record_kind({"family": "combo2:a+b", "lineage": {"kind": "all_negative"}}),
+                         "balanced_all_negative")
+        self.assertEqual(sc.record_kind({"family": "combo:a+b", "lineage": {}}), "combo_two_positive")
+        self.assertEqual(sc.record_kind({"family": "cr01", "lineage": {}}), "single_turn")
+        none = {c: False for c in DETECTOR_CATEGORIES}
+        some = {c: c == "legal_urgency" for c in DETECTOR_CATEGORIES}
+        rows = [{"gold": none}, {"gold": none}, {"gold": some}]
+        kinds = ["balanced_all_negative", "balanced_all_negative", "balanced_one_positive"]
+        fired = [some, none, some]
+        out = sc.score(rows, kinds, fired)
+        self.assertEqual(out["balanced_all_negative"]["false_alarm_rate_on_all_negative"], 0.5)
+        self.assertIsNone(out["balanced_one_positive"]["false_alarm_rate_on_all_negative"])
+        self.assertEqual(out["balanced_one_positive"]["micro_f1"], 1.0)
