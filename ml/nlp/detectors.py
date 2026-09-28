@@ -16,12 +16,16 @@ import re
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
 from .lexicons import (
+    CONDITION_MARKERS,
+    CONDITIONAL_NEGATION_EXEMPT,
+    CONSEQUENCE_MARKERS,
     DIMENSION_CEILINGS,
     LEXICONS,
     NEGATION_SENSITIVE,
     NEGATION_WINDOW,
     NEGATIONS_AFTER,
     NEGATIONS_BEFORE,
+    SPELLING_VARIANTS,
     TIER_CEILINGS,
     TIER_SCORES,
 )
@@ -61,6 +65,51 @@ _PATTERNS: Dict[str, List[Tuple["re.Pattern[str]", int, str]]] = {
 _CLAUSE_BREAK = re.compile(r"[,.;!?।]|\bbut\b|\blekin\b|\bpar\b|लेकिन|पर ")
 
 
+def _marker_pattern(markers: Iterable[str]) -> "re.Pattern[str]":
+    ascii_words = [re.escape(m) for m in markers if m.isascii()]
+    # Devanagari markers are whole words between spaces or punctuation ("तो", never "तोड़").
+    other = [r"(?<![^\s,;!?।])" + re.escape(m) + r"(?![^\s,.;!?।])" for m in markers if not m.isascii()]
+    parts = ([r"(?<![a-z])(?:" + "|".join(ascii_words) + r")(?![a-z])"] if ascii_words else []) + other
+    return re.compile("|".join(parts))
+
+
+_CONDITION = _marker_pattern(CONDITION_MARKERS)
+_CONSEQUENCE = _marker_pattern(CONSEQUENCE_MARKERS)
+_SPELLING = re.compile(r"(?<![a-z0-9])(" + "|".join(sorted(map(re.escape, SPELLING_VARIANTS), key=len, reverse=True))
+                       + r")(?![a-z0-9])")
+
+
+def normalise_spelling(folded: str) -> str:
+    """Replace listed whole-word spelling variants with the lexicon spelling (P-DET-6)."""
+    return _SPELLING.sub(lambda m: SPELLING_VARIANTS[m.group(1)], folded)
+
+
+def _clause_around(text: str, start: int, end: int) -> Tuple[str, str]:
+    """The same-clause text before and after a match (no window limit)."""
+    before = text[:start]
+    breaks = list(_CLAUSE_BREAK.finditer(before))
+    if breaks:
+        before = before[breaks[-1].end():]
+    after = text[end:]
+    first_break = _CLAUSE_BREAK.search(after)
+    if first_break:
+        after = after[:first_break.start()]
+    return before, after
+
+
+def _conditional(text: str, start: int, end: int) -> bool:
+    """A condition marker before the match, or a negation followed by a consequence marker
+    after it, in the same clause: "if you don't withdraw ...", "... wapas nahi li to ..."."""
+    before, after = _clause_around(text, start, end)
+    if _CONDITION.search(before):
+        return True
+    for neg in NEGATIONS_AFTER:
+        i = after.find(neg)
+        if i >= 0 and _CONSEQUENCE.search(after[i + len(neg):]):
+            return True
+    return False
+
+
 def _negated(text: str, start: int, end: int) -> bool:
     """A negation only counts inside the same clause as the matched term, so
     "they didn't stop, they threatened us" is still a threat."""
@@ -79,12 +128,13 @@ def _negated(text: str, start: int, end: int) -> bool:
 
 def match_turn(dimension: str, text: str) -> Optional[Tuple[int, List[str]]]:
     """Return (highest tier, matched terms) for one turn, or None."""
-    folded = text.casefold()
+    folded = normalise_spelling(text.casefold())
     best = 0
     terms: List[str] = []
     for pattern, tier, term in _PATTERNS.get(dimension, []):
         for m in pattern.finditer(folded):
-            if dimension in NEGATION_SENSITIVE and _negated(folded, m.start(), m.end()):
+            if (dimension in NEGATION_SENSITIVE and _negated(folded, m.start(), m.end())
+                    and not (dimension in CONDITIONAL_NEGATION_EXEMPT and _conditional(folded, m.start(), m.end()))):
                 continue
             terms.append(term)
             best = max(best, tier)

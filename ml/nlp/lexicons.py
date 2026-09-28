@@ -22,8 +22,9 @@ reported as unavailable rather than guessed.
 from typing import Dict, List, Tuple
 
 #: Lexicon version. "draft" = written and tested, NOT yet reviewed by a human (see
-#: ml/eval/reviews/d5-anxiety-low-mood-review.md). Bump on every change.
-LEXICON_VERSION = "detectors-v1.1-draft"
+#: ml/eval/reviews/d5-anxiety-low-mood-review.md and ml/eval/reviews/p-det-3-6-review.md).
+#: Bump on every change.
+LEXICON_VERSION = "detectors-v1.2-draft"
 
 TIER_SCORES = {3: 85.0, 2: 65.0, 1: 45.0}
 
@@ -48,6 +49,10 @@ LEXICONS: Dict[str, Lexicon] = {
         ("ghar ke bahar khade", 3), ("darwaze pe", 3), ("abhi aa rahe", 3),
         ("aaj raat aayenge", 3), ("lathi le kar", 3),
         ("घर के बाहर खड़े", 3), ("दरवाज़े पर", 3), ("अभी आ रहे", 3), ("आज रात आएंगे", 3),
+        # v1.2 (draft, P-DET-6): a return TONIGHT is as imminent as "coming tonight" and
+        # "aaj raat aayenge" above, so it sits in the same tier and reaches the override.
+        ("come back tonight", 3), ("coming back tonight", 3), ("aaj raat wapas aayenge", 3),
+        ("aaj raat phir aayenge", 3), ("आज रात वापस आएंगे", 3), ("आज रात फिर आएंगे", 3),
         ("will come back", 2), ("come back and", 2), ("kill us", 2), ("finish us", 2),
         ("burn our house", 2), ("wapas aayenge", 2), ("maar denge", 2),
         ("jaan se maar", 2), ("ghar jala", 2),
@@ -141,6 +146,29 @@ NEGATION_SENSITIVE = frozenset({"D1", "D3", "D5", "D7", "D9"})
 NEGATIONS_BEFORE = ("no one", "nobody", "not", "never", "didn't", "did not", "no ", "n't ")
 NEGATIONS_AFTER = ("nahi", "nahin", "nahī", "नहीं", "नही")
 NEGATION_WINDOW = 18  # characters
+
+#: v1.2 (draft, P-DET-3): dimensions where a negation inside a CONDITIONAL clause does not
+#: cancel the hit. "If you don't withdraw the complaint ..." and "complaint wapas nahi li to
+#: ..." are coercion, not denials of it. D3 only: in D1 a conditional return ("if they don't
+#: come back tonight") is not a claim of danger, so D1 keeps ordinary negation.
+CONDITIONAL_NEGATION_EXEMPT = frozenset({"D3"})
+#: Condition markers before a negation, and consequence markers after it, in the same clause.
+CONDITION_MARKERS = ("if", "unless", "agar", "agr", "अगर")
+CONSEQUENCE_MARKERS = ("to", "toh", "warna", "varna", "तो", "वरना")
+
+#: v1.2 (draft, P-DET-6): an explicit, bounded spelling map applied to whole ASCII words
+#: before detector matching. No stemming, no fuzzy matching: every variant is listed and
+#: reviewed. Evidence and matched terms stay the canonical lexicon terms.
+SPELLING_VARIANTS: Dict[str, str] = {
+    # English chat spellings of words inside D1 and D3 terms
+    "wil": "will", "tonite": "tonight", "tonit": "tonight", "2nite": "tonight", "2night": "tonight",
+    "tonyt": "tonight", "comin": "coming", "threatend": "threatened", "thretened": "threatened",
+    "threatned": "threatened", "threatning": "threatening", "thretening": "threatening",
+    # Hinglish spellings of words inside D1 and D3 terms
+    "wapis": "wapas", "vapas": "wapas", "vaapas": "wapas", "ayenge": "aayenge", "aaenge": "aayenge",
+    "aayege": "aayenge", "ayege": "aayenge", "dhamkee": "dhamki", "dhamaki": "dhamki",
+    "shikayt": "shikayat", "shikaayat": "shikayat",
+}
 
 #: People / roles for structured extraction. Plain role words only.
 PERSON_TERMS: Tuple[str, ...] = (

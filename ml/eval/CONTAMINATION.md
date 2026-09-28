@@ -38,7 +38,7 @@ Nothing was deleted or relabelled.
 | CAND-HI-003 | critical miss: Hindi self-harm phrase | **Yes** (Hindi parity for existing "hurt/harm myself") |
 | CAND-HI-009 | quoted-speech false escalation | No. It stays conservatively routed. |
 | CAND-HG-003 | critical miss: misspelt transliteration ("atmhatya") | **Yes** (transliteration variant) |
-| CAND-HG-004 | coercion false negative: a conditional read as negation | No. Proposal only. |
+| CAND-HG-004 | coercion false negative: a conditional read as negation | **Yes, M14** (2026-09-28, P-DET-3 draft) |
 | CAND-HG-006 | isolation false negative: regional vocabulary | No |
 | CAND-HG-012 | legal false negative | No |
 | CAND-HG-014 | coercion false negative: chat abbreviations | No |
@@ -51,14 +51,19 @@ Dev is a tuning split and never counts as holdout evidence. These are listed so 
 |---|---|
 | DEV-EN-011 | quoted-speech false escalation (stays routed) |
 | DEV-EN-012 | threat/coercion false negatives; routed by design |
-| DEV-EN-022 | critical miss: misspelt imminent danger. Not fixed; see the hardening review. |
+| DEV-EN-022 | critical miss: misspelt imminent danger. **Regression target, M14** (2026-09-28, P-DET-6 draft); now routed Critical. |
 | DEV-EN-023 | isolation false negative |
 | DEV-HI-011 | threat false negative: regional |
 | DEV-HI-012 | quoted-speech false escalation (stays routed) |
-| DEV-HG-010 | threat false negative: misspelling |
+| DEV-HG-010 | threat false negative: misspelling. Passes since M14 as a side effect of the spelling map (regression only). |
 | DEV-HG-013 | roleplay crisis words; routed by design |
 
 DEV-EN-003 (coercion evidence over-citation) is also a hardening regression target.
+
+**M14 detector drafts (2026-09-28).** `REGRESSION_TARGETS_M14` in `contamination.py` records DEV-EN-022 and CAND-HG-004. Both failures were read before the rules were written, so a pass on them is regression performance only. The new sentences in `ml/tests/test_detectors_m14.py` were written by the same author alongside the rules. They are development evidence, not holdout evidence. Before and after on the exposed corpora:
+- routing changed on no fixture except DEV-EN-022;
+- detector outcomes changed only on DEV-EN-022, DEV-HG-010 and CAND-HG-004;
+- no new false positive appeared on dev, candidates or red-team.
 
 ## Red-team fixtures with published failures (19) — all of them regression targets
 

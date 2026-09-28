@@ -183,7 +183,8 @@ def exposed_ids(index: Optional[Mapping[str, Any]] = None) -> Set[str]:
     """Every id that cannot be independent evidence: the exposed corpora plus
     every fixture named as a published failure or a regression target."""
     known = set(ct.CANDIDATE_KNOWN_FAILURES) | set(ct.DEV_KNOWN_FAILURES) \
-        | set(ct.REDTEAM_KNOWN_FAILURES) | set(ct.REGRESSION_TARGETS_HARDENING)
+        | set(ct.REDTEAM_KNOWN_FAILURES) | set(ct.REGRESSION_TARGETS_HARDENING) \
+        | set(ct.REGRESSION_TARGETS_M14)
     if index is not None:
         known |= set(index["ids"])
     return known

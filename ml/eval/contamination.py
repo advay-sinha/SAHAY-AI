@@ -78,6 +78,11 @@ REGRESSION_TARGETS_HARDENING: FrozenSet[str] = frozenset(REDTEAM_KNOWN_FAILURES)
     "DEV-EN-003",                                 # coercion evidence precision
 })
 
+#: Fixtures used as REGRESSION TARGETS by the 2026-09-28 M14 detector drafts (P-DET-3
+#: conditional clauses, P-DET-6 misspelt imminent return). Passing them proves only that the
+#: regression is fixed. DEV-HG-010 changed as a side effect; it was a known failure already.
+REGRESSION_TARGETS_M14: FrozenSet[str] = frozenset({"DEV-EN-022", "CAND-HG-004"})
+
 #: Every candidate and red-team outcome was published, pass or fail. No sample
 #: of candidate corpus 2026.09.11-1 or red-team corpus 2026.09.11-1 may count
 #: as independent evidence for a change designed on or after 2026-09-11.
@@ -140,7 +145,8 @@ def classify(sample_id: str) -> Dict[str, object]:
         classes.append("locked_independent")
     else:
         raise ContaminationError(f"unknown sample id family {sample_id!r}")
-    if sample_id in REGRESSION_TARGETS_HARDENING or sample_id in CANDIDATE_KNOWN_FAILURES \
+    if sample_id in REGRESSION_TARGETS_HARDENING or sample_id in REGRESSION_TARGETS_M14 \
+            or sample_id in CANDIDATE_KNOWN_FAILURES \
             or sample_id in REDTEAM_KNOWN_FAILURES or sample_id in DEV_KNOWN_FAILURES:
         classes.append("regression_only")
         viewed = True

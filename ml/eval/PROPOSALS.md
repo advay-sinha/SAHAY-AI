@@ -92,7 +92,10 @@ The SVI is rounded to 2 dp before `band_for`, so a raw 29.995 is shown as 30.00 
 - ML-only change, but it affects alert evidence, so Backend review is needed.
 - **Status (safety hardening):**
   - Evidence precision is **implemented, pending review**. The coercion alert now cites only turns whose own D3 match is a coercion term. The firing condition is unchanged. DEV-EN-003 now cites `t2` only.
-  - Conditional clauses: **not changed**. This would alter detector meaning, so it stays a proposal.
+  - Conditional clauses: **implemented as a draft (M14, 2026-09-28), pending review** (`reviews/p-det-3-6-review.md`).
+    - D3 only. A negation stops cancelling a hit when the same clause has a condition marker before the match ("if", "unless", "agar", "अगर"), or when the negation is followed by a consequence marker ("to", "toh", "warna", "तो", "वरना").
+    - CAND-HG-004 passes as a regression.
+    - D1 keeps ordinary negation: "if they don't come back tonight" is not a claim of danger.
 
 ## P-DET-4 — Ambiguous indirect language *(leads' safety decision; no rule added)*
 
@@ -124,7 +127,13 @@ It is not implemented, because no reviewed fixture set demonstrates an acceptabl
 - spelling normalisation in the *detectors* ("wil", "tonite");
 - a new D1 tier-3 phrase, "come back tonight".
 
-That second part changes D1 meaning and can force a Critical override. Proposed for the AI/ML and Safety plus Backend leads; not implemented here.
+That second part changes D1 meaning and can force a Critical override. Proposed for the AI/ML and Safety plus Backend leads.
+
+**Status (M14, 2026-09-28): implemented as a draft, pending two reviews** (`reviews/p-det-3-6-review.md`). It adds two things:
+- an explicit whole-word spelling map (`SPELLING_VARIANTS`, 23 entries, no fuzzy matching);
+- six tier-3 D1 phrases for a return *tonight* in English, Hinglish and Hindi. They sit in the same tier as the existing "coming tonight" and "aaj raat aayenge".
+
+DEV-EN-022 passes as a regression.
 
 ## P-BND-1 — Structural boundary so the response generator never sees internal scores *(Backend, AI/ML and Safety; contract change)*
 
