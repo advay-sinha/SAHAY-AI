@@ -1,0 +1,101 @@
+{
+ "asr": "local_service",
+ "benchmark": "m2-turn-latency-1.0",
+ "budget_ms": {
+  "asr_final": 600,
+  "dialogue_policy": 10,
+  "llm_phrasing": 800,
+  "output_validator": 20,
+  "safety_precheck": 50,
+  "total": 3000,
+  "tts_first_chunk": 500,
+  "vad_endpoint": 700
+ },
+ "evidence_class": "synthetic speech (Windows Indian-English voices) on this laptop; fictional text; not phone, not network, not Hindi, not human speech",
+ "machine_note": "Ryzen 7 7840HS, RTX 4060 8 GB; speech process on GPU if its environment has CUDA",
+ "not_measured": {
+  "lan_upload": "phone to laptop over Wi-Fi: needs the phone",
+  "tts_first_chunk": "waits for M13 (fixed-script audio); 0 ms for pre-recorded turns",
+  "vad_endpoint": "on the phone: 700 ms of trailing silence (configured, not measured here)"
+ },
+ "rounds": 3,
+ "server_path_p95_plus_configured_endpoint_ms": 1281.0,
+ "stages_ms": {
+  "asr_request": {
+   "max": 585.8,
+   "mean": 469.2,
+   "n": 70,
+   "p50": 463.3,
+   "p95": 572.1
+  },
+  "asr_service_asr": {
+   "max": 458.0,
+   "mean": 351.1,
+   "n": 70,
+   "p50": 348.0,
+   "p95": 445.0
+  },
+  "asr_service_decode": {
+   "max": 108.0,
+   "mean": 80.6,
+   "n": 70,
+   "p50": 79.0,
+   "p95": 94.0
+  },
+  "asr_service_total": {
+   "max": 583.0,
+   "mean": 464.4,
+   "n": 70,
+   "p50": 459.0,
+   "p95": 556.0
+  },
+  "client_observed_request": {
+   "max": 640.0,
+   "mean": 519.1,
+   "n": 70,
+   "p50": 508.0,
+   "p95": 620.8
+  },
+  "dialogue_policy": {
+   "max": 0.1,
+   "mean": 0.0,
+   "n": 34,
+   "p50": 0.0,
+   "p95": 0.1
+  },
+  "reply_path": {
+   "max": 17.5,
+   "mean": 8.6,
+   "n": 70,
+   "p50": 8.6,
+   "p95": 13.1
+  },
+  "request_total": {
+   "max": 595.4,
+   "mean": 482.6,
+   "n": 70,
+   "p50": 475.7,
+   "p95": 581.0
+  },
+  "safety_precheck": {
+   "max": 0.1,
+   "mean": 0.0,
+   "n": 70,
+   "p50": 0.0,
+   "p95": 0.1
+  }
+ },
+ "statuses": {
+  "accepted": 72
+ },
+ "synthetic_speech_wer": 0.0,
+ "utterances_per_voice": {
+  "Microsoft Heera": 12,
+  "Microsoft Ravi": 12
+ },
+ "voices": [
+  "Microsoft Heera",
+  "Microsoft Ravi"
+ ],
+ "warmup_excluded": 2
+}

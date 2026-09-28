@@ -76,6 +76,40 @@ Each epoch uses the whole fictional train split plus a weak draw of equal size, 
   - It reads absence or sadness as crisis. It is not usable as a crisis signal; the crisis pre-check stays the only crisis authority.
 - **Red-team victim inputs:** the model agrees with the expected crisis outcome on 8 of 8. The rules also agree on 8 of 8.
 
+## Interpretable baseline (AE-15, 2026-09-29)
+
+A standard-library logistic regression (`ml/training/baseline_lr.py`) was trained on the same data and scored by the same evaluator:
+
+| Run | Fictional holdout macro F1 | Weak-test AUROC: crisis / threat / D5 | Exposed micro F1, dev / candidates |
+|---|---|---|---|
+| LR-W0 | 0.477 | 0.615 / 0.530 / (not trained) | 0.244 / 0.290 |
+| LR-W2 | 0.497 | 0.935 / 0.801 / 0.762 | 0.477 / 0.373 |
+| MuRIL W2 (selected) | 0.733 | 0.993 / 0.920 / 0.830 | 0.595 / 0.584 |
+| Deterministic rules | — | — | 0.933 / 0.881 |
+
+- **MuRIL beats the linear model everywhere**, by 0.24 macro F1 on the holdout and 0.12–0.21 micro F1 on the exposed fixtures.
+- **Both models are far below the rules** on SAHAY fixtures.
+- **The borrowed labels help the linear model too.** Its crisis AUROC rises from 0.61 to 0.94.
+
+## Corpus shortcut found by the baseline
+
+The linear model's strongest features for crisis and coercion were fragments of `[SEP]`, the marker that joins turns in a multi-turn record. The Task 7B corpus explains why:
+
+| Split | Multi-turn records with at least one risk label | Crisis rate, multi-turn vs single-turn | Coercion rate, multi-turn vs single-turn |
+|---|---|---|---|
+| Train | **911 of 911** | 0.51 vs 0.25 | 0.50 vs 0.15 |
+| Holdout | **182 of 182** | 0.54 vs 0.20 | 0.49 vs 0.13 |
+
+"Has several turns" therefore predicts "has a risk label" in both training and holdout.
+
+- **Why it happens.** The multi-label records are built by combining two cores, so none is all-negative.
+- **Consequence.** Every fictional-holdout number above, MuRIL and logistic alike, is partly inflated by this shortcut.
+- **What the exposed fixtures do.** They don't share the pattern, which is one reason the models fall so far there.
+
+A future corpus version must include all-negative multi-turn records. `7b-v1` is frozen and stays as it is.
+
+**Untrained D5 head in W0 arms.** W0 never trains `d5_text_distress`. Its output sits near 0.5, so at the fixed ≥ 0.5 threshold it "fires" on everything. Its D5 recall (0.81 for MuRIL W0, 1.0 for LR-W0) is meaningless and is left out of the table.
+
 ## What this supports
 
 A shadow second opinion shown next to the deterministic result in the local ML demonstration. It is worth considering later for P-DET-4 (a `possible_indirect_risk` flag that routes to a person, never to Critical) once a reviewed locked set can measure its false-positive rate.

@@ -385,12 +385,22 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - Cause: long weak windows pad batches to 128 tokens and pushed the 8 GB card into shared system memory. The smoke test had already shown a 7.2 GB peak.
     - Fix: gradient checkpointing, which saves memory without changing the maths. Measured smoke peaks are now W0 4.6 GB, W1 5.9 GB and W2 5.0 GB.
     - Consequence: the plan hash changed, so attempt 1 is kept aside as `stage-w-attempt1-aborted/` and every arm is retrained from scratch.
-  - **AE-15 interpretable baseline: code done 2026-09-29, run pending (R9a)** (`ml/training/baseline_lr.py`).
+  - **AE-15 interpretable baseline: ✅ R9a run 2026-09-29** (`ml/training/baseline_lr.py`). LR-W2 holdout macro F1 0.50 against MuRIL 0.73. On the exposed fixtures it scores 0.48 / 0.37 micro F1, against MuRIL 0.60 / 0.58 and the rules 0.93 / 0.88. **Finding:** every multi-turn Task 7B record has a risk label, so `[SEP]` is a shortcut that inflates all fictional-holdout scores (see STAGE_W_CARD). The next corpus version needs all-negative multi-turn records.
     - The model: a standard-library logistic regression on hashed word and character-trigram features.
     - Arms LR-W0 and LR-W2 use the same data, masks, threshold and evaluator as Stage W.
     - The report lists each head's top features, restricted to the fictional vocabulary.
     - The table gets AE15 rows. XGBoost is not added, because it would be a new package.
-  - **M2 turn latency: instrumented 2026-09-29, benchmark run pending (R9b).**
+  - **M2 turn latency: ✅ R9b run 2026-09-29** (`ml/eval/results/latency-2026-09-29.md`; 70 turns, synthetic Indian-English speech on the laptop).
+
+    | Measure | p50 | p95 |
+    |---|---|---|
+    | Server voice turn | 476 ms | 581 ms |
+    | Speech-to-text request (budget 600 ms) | 463 ms | 572 ms |
+    | Reply path after the transcript | 9 ms | 13 ms |
+
+    - With the configured 700 ms end-of-speech wait added, the p95 is **1.28 s**, against a 3 s budget. Wi-Fi upload and TTS are excluded.
+    - Speech-to-text is the bottleneck and sits close to its 600 ms budget. About 80 ms of it is audio decoding.
+    - Synthetic-speech WER was 0.0, a sanity check only; it is not M6.
     - Recording: `plan_turn` and the audio endpoint store per-stage timings in `latency_metrics`. These are server-side only; tests prove no timing reaches a client.
     - Benchmark: `backend/scenarios/latency_benchmark.py` sends fictional English utterances, spoken by the built-in Windows Indian-English voices (`scripts/make-benchmark-audio.ps1`), through the real upload endpoint against a disposable SQLite database.
     - Mock-ASR check: reply path p50 12 ms, p95 22 ms.

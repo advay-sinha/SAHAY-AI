@@ -202,6 +202,31 @@ def eval_rows(report: Mapping[str, Any], source: str) -> List[Dict[str, Any]]:
     return rows
 
 
+def latency_rows(report: Mapping[str, Any], source: str) -> List[Dict[str, Any]]:
+    """M2 from backend/scenarios/latency_benchmark.py: server-side stages only, labelled as such."""
+    ev = "synthetic_speech_server_side"
+    stages = report.get("stages_ms", {})
+    out: List[Dict[str, Any]] = []
+    for stage, label in (("request_total", "Server voice turn: audio received to reply text ready"),
+                         ("asr_request", "Speech-to-text request (budget 600 ms)"),
+                         ("reply_path", "Reply path after the transcript (pre-check, policy, reply)")):
+        s = stages.get(stage) or {}
+        if not s.get("n"):
+            continue
+        for q in ("p50", "p95"):
+            out.append(row("M2", f"{label}, {q}", scope=f"{report.get('asr')} ASR, laptop", status="measured",
+                           evidence_class=ev, source=source, value=s[q], n=s["n"], note="milliseconds"))
+    est = report.get("server_path_p95_plus_configured_endpoint_ms")
+    if est is not None:
+        out.append(row("M2", "Server p95 plus the configured 700 ms end-of-speech wait", scope="budget 3000 ms",
+                       status="measured", evidence_class=ev, source=source, value=est,
+                       note="milliseconds; excludes Wi-Fi upload and TTS"))
+    out.append(row("M2", "Turn latency on a phone (victim stops to assistant starts)", scope="phone, Wi-Fi, Hindi",
+                   status="pending", evidence_class="none", source=source,
+                   note="needs the phone, LAN upload, TTS (M13) and Hindi recordings (H5)"))
+    return out
+
+
 def static_rows() -> List[Dict[str, Any]]:
     """Metrics with no measurement yet, and those enforced by tests rather than measured."""
     handover = "docs/HANDOVER.md"
@@ -366,6 +391,8 @@ def baseline_rows(root: Path) -> List[Dict[str, Any]]:
         for target, w in sorted(run["weak_test"].items()):
             if w["model"].get("auroc") is None:
                 continue
+            if target == "D5" and run.get("stage_w_arm") == "W0":
+                continue  # W0 never trains the D5 head: it sits at 0.5 and "fires" on everything
             out.append(row("AE15", f"Logistic baseline AUROC vs source label: {target} ({arm})",
                            scope="weak test bucket", status="measured",
                            evidence_class="weak_supervision_from_source_label", source=source,
@@ -400,7 +427,8 @@ def private_rows(training_root: Optional[str], resamples: int, seed: int) -> Lis
 # --------------------------------------------------------------------------- assembly and rendering
 
 def build(eval_report: Optional[Mapping[str, Any]], eval_source: str, training_root: Optional[str],
-          resamples: int = DEFAULT_RESAMPLES, seed: int = DEFAULT_SEED) -> Dict[str, Any]:
+          resamples: int = DEFAULT_RESAMPLES, seed: int = DEFAULT_SEED,
+          latency_report: Optional[Mapping[str, Any]] = None, latency_source: str = "") -> Dict[str, Any]:
     rows: List[Dict[str, Any]] = []
     if eval_report is not None:
         rows += eval_rows(eval_report, eval_source)
@@ -409,7 +437,10 @@ def build(eval_report: Optional[Mapping[str, Any]], eval_source: str, training_r
                           ("M7", "Detector precision and recall")):
             rows.append(row(mid, name, scope="all", status="pending", evidence_class="none", source="ml.eval.run_eval",
                             note="no evaluation JSON supplied"))
-    rows += static_rows() + private_rows(training_root, resamples, seed)
+    static = static_rows()
+    if latency_report is not None:
+        static = [r for r in static if r["metric_id"] != "M2"] + latency_rows(latency_report, latency_source)
+    rows += static + private_rows(training_root, resamples, seed)
     locked = (eval_report or {}).get("official_locked_metrics", {}) or {}
     table = {
         "table_version": TABLE_VERSION,
@@ -509,6 +540,7 @@ def main(argv: Optional[List[str]] = None) -> int:
     parser.add_argument("--training-root", default=os.environ.get("SAHAY_TRAINING_ROOT"),
                         help="private training root (default: SAHAY_TRAINING_ROOT)")
     parser.add_argument("--out", default=str(Path(__file__).resolve().parents[2] / "runtime" / "eval"))
+    parser.add_argument("--latency-json", default=None, help="JSON written by backend/scenarios/latency_benchmark.py")
     parser.add_argument("--tag", default="eval-table")
     parser.add_argument("--resamples", type=int, default=DEFAULT_RESAMPLES)
     parser.add_argument("--seed", type=int, default=DEFAULT_SEED)
@@ -520,7 +552,11 @@ def main(argv: Optional[List[str]] = None) -> int:
         path = Path(args.eval_json)
         report = json.loads(path.read_text(encoding="utf-8"))
         source = path.name
-    table = build(report, source, args.training_root, args.resamples, args.seed)
+    latency, latency_source = None, ""
+    if args.latency_json:
+        lpath = Path(args.latency_json)
+        latency, latency_source = json.loads(lpath.read_text(encoding="utf-8")), lpath.name
+    table = build(report, source, args.training_root, args.resamples, args.seed, latency, latency_source)
     markdown = render_markdown(table)
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)

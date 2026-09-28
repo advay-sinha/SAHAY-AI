@@ -245,3 +245,26 @@ class TestBaselineRows(unittest.TestCase):
         self.assertEqual({r["evidence_class"] for r in rows},
                          {"synthetic_development", "weak_supervision_from_source_label", "exposed_development",
                           "exposed_candidate"})
+
+
+class TestLatencyRows(unittest.TestCase):
+    REPORT = {"asr": "local_service", "server_path_p95_plus_configured_endpoint_ms": 1281.0,
+              "stages_ms": {"request_total": {"n": 70, "p50": 475.7, "p95": 581.0},
+                            "asr_request": {"n": 70, "p50": 463.3, "p95": 572.1},
+                            "reply_path": {"n": 0}}}
+
+    def test_measured_server_rows_and_a_pending_phone_row(self):
+        rows = table.latency_rows(self.REPORT, "latency.json")
+        measured = [r for r in rows if r["status"] == "measured"]
+        self.assertEqual(len(measured), 5)  # 2 stages x p50/p95 + the budget line; reply_path has n = 0
+        self.assertTrue(all(r["evidence_class"] == "synthetic_speech_server_side" for r in measured))
+        pending = [r for r in rows if r["status"] == "pending"]
+        self.assertEqual(len(pending), 1)
+        self.assertIsNone(pending[0]["value"])
+
+    def test_build_replaces_the_static_m2_row(self):
+        built = table.build(None, "none", None, latency_report=self.REPORT, latency_source="latency.json")
+        m2 = [r for r in built["rows"] if r["metric_id"] == "M2"]
+        self.assertTrue(any(r["status"] == "measured" for r in m2))
+        self.assertFalse(any("not instrumented" in r["note"] for r in m2))
+        table.check_wording(table.render_markdown(built), 0)

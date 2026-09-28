@@ -1,0 +1,1724 @@
+{
+  "bootstrap": {
+    "resamples": 1000,
+    "seed": 13,
+    "unit": "item (clip or sentence); ignores speaker clustering"
+  },
+  "eval_commit": "0f05ec466e473fd67763eba3b41ae5ece1f00b52",
+  "eval_source": "eval-2026-09-28.json",
+  "eval_timestamp": "2026-09-28T00:00:00+00:00",
+  "locked_samples": 0,
+  "rows": [
+    {
+      "ci95": [
+        0.0,
+        0.1843
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Critical-event miss rate",
+      "metric_id": "M1",
+      "n": 17,
+      "note": "0 of 17 critical events missed",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.0
+    },
+    {
+      "ci95": [
+        0.8157,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Critical routing recall",
+      "metric_id": "M1a",
+      "n": 17,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.6861,
+        0.9706
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Critical routing precision",
+      "metric_id": "M1b",
+      "n": 19,
+      "note": "2 false escalations",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8947
+    },
+    {
+      "ci95": [
+        0.7008,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Crisis pre-check recall",
+      "metric_id": "M1c",
+      "n": 9,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.523,
+        0.9486
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Crisis pre-check precision",
+      "metric_id": "M1d",
+      "n": 11,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8182
+    },
+    {
+      "ci95": [
+        0.4869,
+        0.9743
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: communication_safety_coercion",
+      "metric_id": "M7",
+      "n": 7,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8571
+    },
+    {
+      "ci95": [
+        0.6097,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: communication_safety_coercion",
+      "metric_id": "M7",
+      "n": 6,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.699,
+        0.9721
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: continuing_threat",
+      "metric_id": "M7",
+      "n": 20,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.9
+    },
+    {
+      "ci95": [
+        0.8241,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: continuing_threat",
+      "metric_id": "M7",
+      "n": 18,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.6457,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: crisis_self_harm",
+      "metric_id": "M7",
+      "n": 7,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.3538,
+        0.8483
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: crisis_self_harm",
+      "metric_id": "M7",
+      "n": 11,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.6364
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: explicit_human_request",
+      "metric_id": "M7",
+      "n": 0,
+      "note": "no positives in this split",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: explicit_human_request",
+      "metric_id": "M7",
+      "n": 0,
+      "note": "no positives in this split",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": [
+        0.6756,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: immediate_danger",
+      "metric_id": "M7",
+      "n": 8,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.6756,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: immediate_danger",
+      "metric_id": "M7",
+      "n": 8,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.3755,
+        0.9638
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: isolation_boycott_displacement",
+      "metric_id": "M7",
+      "n": 5,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8
+    },
+    {
+      "ci95": [
+        0.5101,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: isolation_boycott_displacement",
+      "metric_id": "M7",
+      "n": 4,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.7008,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: legal_urgency",
+      "metric_id": "M7",
+      "n": 9,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.7008,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: legal_urgency",
+      "metric_id": "M7",
+      "n": 9,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.5101,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector recall: medical_urgency",
+      "metric_id": "M7",
+      "n": 4,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.5101,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Detector precision: medical_urgency",
+      "metric_id": "M7",
+      "n": 4,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.5101,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Abstains when abstention is expected",
+      "metric_id": "A1",
+      "n": 4,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.8157,
+        1.0
+      ],
+      "evidence_class": "exposed_development",
+      "metric": "Band agreement with the labelled band",
+      "metric_id": "A2",
+      "n": 17,
+      "note": "",
+      "scope": "dev",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.0127,
+        0.3147
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Critical-event miss rate",
+      "metric_id": "M1",
+      "n": 14,
+      "note": "1 of 14 critical events missed",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.0714
+    },
+    {
+      "ci95": [
+        0.6853,
+        0.9873
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Critical routing recall",
+      "metric_id": "M1a",
+      "n": 14,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.9286
+    },
+    {
+      "ci95": [
+        0.6212,
+        0.9626
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Critical routing precision",
+      "metric_id": "M1b",
+      "n": 15,
+      "note": "2 false escalations",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8667
+    },
+    {
+      "ci95": [
+        0.565,
+        0.9801
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Crisis pre-check recall",
+      "metric_id": "M1c",
+      "n": 9,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8889
+    },
+    {
+      "ci95": [
+        0.4902,
+        0.9433
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Crisis pre-check precision",
+      "metric_id": "M1d",
+      "n": 10,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8
+    },
+    {
+      "ci95": [
+        0.2307,
+        0.8824
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: communication_safety_coercion",
+      "metric_id": "M7",
+      "n": 5,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.6
+    },
+    {
+      "ci95": [
+        0.4385,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: communication_safety_coercion",
+      "metric_id": "M7",
+      "n": 3,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.6461,
+        0.9851
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: continuing_threat",
+      "metric_id": "M7",
+      "n": 12,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.9167
+    },
+    {
+      "ci95": [
+        0.7412,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: continuing_threat",
+      "metric_id": "M7",
+      "n": 11,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.565,
+        0.9801
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: crisis_self_harm",
+      "metric_id": "M7",
+      "n": 9,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8889
+    },
+    {
+      "ci95": [
+        0.4902,
+        0.9433
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: crisis_self_harm",
+      "metric_id": "M7",
+      "n": 10,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: explicit_human_request",
+      "metric_id": "M7",
+      "n": 0,
+      "note": "no positives in this split",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: explicit_human_request",
+      "metric_id": "M7",
+      "n": 0,
+      "note": "no positives in this split",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": [
+        0.5655,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: immediate_danger",
+      "metric_id": "M7",
+      "n": 5,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.5655,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: immediate_danger",
+      "metric_id": "M7",
+      "n": 5,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.15,
+        0.85
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: isolation_boycott_displacement",
+      "metric_id": "M7",
+      "n": 4,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.5
+    },
+    {
+      "ci95": [
+        0.3424,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: isolation_boycott_displacement",
+      "metric_id": "M7",
+      "n": 2,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.4869,
+        0.9743
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: legal_urgency",
+      "metric_id": "M7",
+      "n": 7,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.8571
+    },
+    {
+      "ci95": [
+        0.6097,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: legal_urgency",
+      "metric_id": "M7",
+      "n": 6,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.2077,
+        0.9385
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector recall: medical_urgency",
+      "metric_id": "M7",
+      "n": 3,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.6667
+    },
+    {
+      "ci95": [
+        0.3424,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Detector precision: medical_urgency",
+      "metric_id": "M7",
+      "n": 2,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.2065,
+        1.0
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Abstains when abstention is expected",
+      "metric_id": "A1",
+      "n": 1,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": [
+        0.6853,
+        0.9873
+      ],
+      "evidence_class": "exposed_candidate",
+      "metric": "Band agreement with the labelled band",
+      "metric_id": "A2",
+      "n": 14,
+      "note": "",
+      "scope": "candidate",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 0.9286
+    },
+    {
+      "ci95": null,
+      "evidence_class": "locked",
+      "metric": "Critical-event miss rate",
+      "metric_id": "M1",
+      "n": 0,
+      "note": "locked set has 0 samples; crisis and danger samples need two reviewer approvals",
+      "scope": "locked",
+      "source": "eval-2026-09-28.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": [
+        0.9103,
+        1.0
+      ],
+      "evidence_class": "exposed_redteam",
+      "metric": "Red-team cases blocked before synthesis",
+      "metric_id": "M5",
+      "n": 39,
+      "note": "critical failures 0; fixtures exposed on 2026-09-11",
+      "scope": "redteam",
+      "source": "eval-2026-09-28.json",
+      "status": "measured",
+      "value": 1.0
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Time to first safety alert on the console",
+      "metric_id": "M3",
+      "n": null,
+      "note": "needs scripted end-to-end runs",
+      "scope": "end to end",
+      "source": "docs/HANDOVER.md",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Executive decision time on the packet",
+      "metric_id": "M4",
+      "n": null,
+      "note": "needs a rehearsal with a non-team reader",
+      "scope": "rehearsal",
+      "source": "docs/HANDOVER.md",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Speech-to-text word error rate by language and condition",
+      "metric_id": "M6",
+      "n": null,
+      "note": "no target claimed; needs the approved evaluation audio",
+      "scope": "hi, en",
+      "source": "docs/HANDOVER.md",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "automated_test",
+      "metric": "Assessment data reaching the victim client",
+      "metric_id": "M8",
+      "n": null,
+      "note": "enforced by tests on every run; not a sampled measurement",
+      "scope": "backend payloads",
+      "source": "backend/tests/test_role_fanout.py; backend/tests/test_timeline_leakage.py",
+      "status": "test_enforced",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Repeat-question rate per session",
+      "metric_id": "M9",
+      "n": null,
+      "note": "",
+      "scope": "scenario transcripts",
+      "source": "docs/HANDOVER.md",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Voice prosody rule (D4) agreement with human judgement",
+      "metric_id": "D4",
+      "n": null,
+      "note": "rule is unit-tested only; needs team recordings and expert review",
+      "scope": "voice turns",
+      "source": "ml/acoustics/D4_CARD.md",
+      "status": "unvalidated",
+      "value": null
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Server voice turn: audio received to reply text ready, p50",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 475.7
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Server voice turn: audio received to reply text ready, p95",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 581.0
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Speech-to-text request (budget 600 ms), p50",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 463.3
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Speech-to-text request (budget 600 ms), p95",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 572.1
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Reply path after the transcript (pre-check, policy, reply), p50",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 8.6
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Reply path after the transcript (pre-check, policy, reply), p95",
+      "metric_id": "M2",
+      "n": 70,
+      "note": "milliseconds",
+      "scope": "local_service ASR, laptop",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 13.1
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_speech_server_side",
+      "metric": "Server p95 plus the configured 700 ms end-of-speech wait",
+      "metric_id": "M2",
+      "n": null,
+      "note": "milliseconds; excludes Wi-Fi upload and TTS",
+      "scope": "budget 3000 ms",
+      "source": "latency-2026-09-29.json",
+      "status": "measured",
+      "value": 1281.0
+    },
+    {
+      "ci95": null,
+      "evidence_class": "none",
+      "metric": "Turn latency on a phone (victim stops to assistant starts)",
+      "metric_id": "M2",
+      "n": null,
+      "note": "needs the phone, LAN upload, TTS (M13) and Hindi recordings (H5)",
+      "scope": "phone, Wi-Fi, Hindi",
+      "source": "latency-2026-09-29.json",
+      "status": "pending",
+      "value": null
+    },
+    {
+      "ci95": [
+        0.4966,
+        0.5601
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-both-s13/pooled_normalised",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.5282; lowest class recall 0.3778",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-both-s13/report.json",
+      "status": "measured",
+      "value": 0.5267
+    },
+    {
+      "ci95": [
+        0.2796,
+        0.4352
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-both-s13/pooled_normalised",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.3444; lowest class recall 0.1613",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-both-s13/report.json",
+      "status": "measured",
+      "value": 0.3573
+    },
+    {
+      "ci95": [
+        0.5509,
+        0.6108
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-both-s13/speaker_normalised",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.5686; lowest class recall 0.3167",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-both-s13/report.json",
+      "status": "measured",
+      "value": 0.5803
+    },
+    {
+      "ci95": [
+        0.359,
+        0.5095
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-both-s13/speaker_normalised",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.3785; lowest class recall 0.1875",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-both-s13/report.json",
+      "status": "measured",
+      "value": 0.4322
+    },
+    {
+      "ci95": [
+        0.3268,
+        0.3634
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-crema-s13/pooled_normalised",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.2101; lowest class recall 0.0052",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.3448
+    },
+    {
+      "ci95": [
+        0.5113,
+        0.5791
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-crema-s13/pooled_normalised",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.5413; lowest class recall 0.3611",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.5437
+    },
+    {
+      "ci95": [
+        0.455,
+        0.5197
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-crema-s13/speaker_normalised",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.4471; lowest class recall 0.2461",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.4874
+    },
+    {
+      "ci95": [
+        0.5611,
+        0.6249
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: baseline-crema-s13/speaker_normalised",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.583; lowest class recall 0.3389",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/baseline-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.5941
+    },
+    {
+      "ci95": [
+        0.7564,
+        0.8127
+      ],
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-head-both-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7805; lowest class recall 0.6167",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-head-both-s13/report.json",
+      "status": "measured",
+      "value": 0.7839
+    },
+    {
+      "ci95": [
+        0.7243,
+        0.863
+      ],
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-head-both-s13/default",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.7926; lowest class recall 0.6774",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-head-both-s13/report.json",
+      "status": "measured",
+      "value": 0.7963
+    },
+    {
+      "ci95": [
+        0.8499,
+        0.8934
+      ],
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-head-crema-s13/default",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.859; lowest class recall 0.7435",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-head-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.8723
+    },
+    {
+      "ci95": [
+        0.7635,
+        0.817
+      ],
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-head-crema-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7873; lowest class recall 0.6611",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-head-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.79
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-both-s0/abstaining_9to5",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7496; lowest class recall 0.4889; no prediction file",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-both-s0/report.json",
+      "status": "measured",
+      "value": 0.7408
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-both-s0/abstaining_9to5",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.7817; lowest class recall 0.6129; no prediction file",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-both-s0/report.json",
+      "status": "measured",
+      "value": 0.7822
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-both-s0/forced_5",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7559; lowest class recall 0.5111; no prediction file",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-both-s0/report.json",
+      "status": "measured",
+      "value": 0.7663
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-both-s0/forced_5",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.7946; lowest class recall 0.6129; no prediction file",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-both-s0/report.json",
+      "status": "measured",
+      "value": 0.8088
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-crema-s0/abstaining_9to5",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.8429; lowest class recall 0.6911; no prediction file",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-crema-s0/report.json",
+      "status": "measured",
+      "value": 0.8509
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-crema-s0/abstaining_9to5",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7496; lowest class recall 0.4889; no prediction file",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-crema-s0/report.json",
+      "status": "measured",
+      "value": 0.7408
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-crema-s0/forced_5",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.8509; lowest class recall 0.7016; no prediction file",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-crema-s0/report.json",
+      "status": "measured",
+      "value": 0.868
+    },
+    {
+      "ci95": null,
+      "evidence_class": "possibly_seen_in_pretraining",
+      "metric": "Speech emotion UAR: e2v-zeroshot-crema-s0/forced_5",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7559; lowest class recall 0.5111; no prediction file",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/e2v-zeroshot-crema-s0/report.json",
+      "status": "measured",
+      "value": 0.7663
+    },
+    {
+      "ci95": [
+        0.7296,
+        0.7865
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: wavlm-both-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7504; lowest class recall 0.5944",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/wavlm-both-s13/report.json",
+      "status": "measured",
+      "value": 0.7576
+    },
+    {
+      "ci95": [
+        0.6799,
+        0.8325
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: wavlm-both-s13/default",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.7634; lowest class recall 0.6562",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/wavlm-both-s13/report.json",
+      "status": "measured",
+      "value": 0.7584
+    },
+    {
+      "ci95": [
+        0.4221,
+        0.4715
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: wavlm-crema-s13/default",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.3804; lowest class recall 0.0157",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/wavlm-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.4469
+    },
+    {
+      "ci95": [
+        0.7077,
+        0.7621
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: wavlm-crema-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7243; lowest class recall 0.5778",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/wavlm-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.7347
+    },
+    {
+      "ci95": [
+        0.7401,
+        0.7954
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: whisper-head-both-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7637; lowest class recall 0.6056",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/whisper-head-both-s13/report.json",
+      "status": "measured",
+      "value": 0.7673
+    },
+    {
+      "ci95": [
+        0.7117,
+        0.8521
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: whisper-head-both-s13/default",
+      "metric_id": "SER",
+      "n": 141,
+      "note": "macro-F1 0.7864; lowest class recall 0.6562",
+      "scope": "test:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/whisper-head-both-s13/report.json",
+      "status": "measured",
+      "value": 0.784
+    },
+    {
+      "ci95": [
+        0.6768,
+        0.7358
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: whisper-head-crema-s13/default",
+      "metric_id": "SER",
+      "n": 849,
+      "note": "macro-F1 0.6889; lowest class recall 0.3704",
+      "scope": "cross:ravdess_audio_speech",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/whisper-head-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.7063
+    },
+    {
+      "ci95": [
+        0.7228,
+        0.7783
+      ],
+      "evidence_class": "acted_corpus_actor_disjoint",
+      "metric": "Speech emotion UAR: whisper-head-crema-s13/default",
+      "metric_id": "SER",
+      "n": 873,
+      "note": "macro-F1 0.7542; lowest class recall 0.6722",
+      "scope": "test:crema_d",
+      "source": "SAHAY_TRAINING_ROOT/ser/runs/whisper-head-crema-s13/report.json",
+      "status": "measured",
+      "value": 0.7508
+    },
+    {
+      "ci95": [
+        0.7859,
+        0.8437
+      ],
+      "evidence_class": "source_corpus_upstream_split",
+      "metric": "Text affect UAR: muril-base-s13",
+      "metric_id": "TXT",
+      "n": 2000,
+      "note": "macro-F1 0.5963; lowest class recall 0.6814",
+      "scope": "test:en",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json",
+      "status": "measured",
+      "value": 0.815
+    },
+    {
+      "ci95": [
+        0.7044,
+        0.7768
+      ],
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: muril-base-s13",
+      "metric_id": "TXT",
+      "n": 778,
+      "note": "macro-F1 0.7202; lowest class recall 0.5811",
+      "scope": "test:hi",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json",
+      "status": "measured",
+      "value": 0.742
+    },
+    {
+      "ci95": null,
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: muril-base-s13",
+      "metric_id": "TXT",
+      "n": 495,
+      "note": "macro-F1 0.6896; lowest class recall 0.3958; subset not identifiable in the prediction file; interval omitted",
+      "scope": "test:hi_user_turns",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json",
+      "status": "measured",
+      "value": 0.7027
+    },
+    {
+      "ci95": [
+        0.6753,
+        0.7528
+      ],
+      "evidence_class": "transliterated_augmentation",
+      "metric": "Text affect UAR: muril-base-s13",
+      "metric_id": "TXT",
+      "n": 777,
+      "note": "macro-F1 0.693; lowest class recall 0.5",
+      "scope": "test:hinglish",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json",
+      "status": "measured",
+      "value": 0.7125
+    },
+    {
+      "ci95": [
+        0.7805,
+        0.8387
+      ],
+      "evidence_class": "source_corpus_upstream_split",
+      "metric": "Text affect UAR: muril-stagea-s13",
+      "metric_id": "TXT",
+      "n": 2000,
+      "note": "macro-F1 0.5896; lowest class recall 0.6696",
+      "scope": "test:en",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json",
+      "status": "measured",
+      "value": 0.8117
+    },
+    {
+      "ci95": [
+        0.7085,
+        0.7808
+      ],
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: muril-stagea-s13",
+      "metric_id": "TXT",
+      "n": 778,
+      "note": "macro-F1 0.7206; lowest class recall 0.5946",
+      "scope": "test:hi",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json",
+      "status": "measured",
+      "value": 0.7453
+    },
+    {
+      "ci95": null,
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: muril-stagea-s13",
+      "metric_id": "TXT",
+      "n": 495,
+      "note": "macro-F1 0.6935; lowest class recall 0.4375; subset not identifiable in the prediction file; interval omitted",
+      "scope": "test:hi_user_turns",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json",
+      "status": "measured",
+      "value": 0.7072
+    },
+    {
+      "ci95": [
+        0.6637,
+        0.7361
+      ],
+      "evidence_class": "transliterated_augmentation",
+      "metric": "Text affect UAR: muril-stagea-s13",
+      "metric_id": "TXT",
+      "n": 777,
+      "note": "macro-F1 0.6743; lowest class recall 0.4459",
+      "scope": "test:hinglish",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json",
+      "status": "measured",
+      "value": 0.6991
+    },
+    {
+      "ci95": [
+        0.7738,
+        0.8334
+      ],
+      "evidence_class": "source_corpus_upstream_split",
+      "metric": "Text affect UAR: xlmr-base-s13",
+      "metric_id": "TXT",
+      "n": 2000,
+      "note": "macro-F1 0.595; lowest class recall 0.6771",
+      "scope": "test:en",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json",
+      "status": "measured",
+      "value": 0.805
+    },
+    {
+      "ci95": [
+        0.7107,
+        0.7867
+      ],
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: xlmr-base-s13",
+      "metric_id": "TXT",
+      "n": 778,
+      "note": "macro-F1 0.7308; lowest class recall 0.6351",
+      "scope": "test:hi",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json",
+      "status": "measured",
+      "value": 0.7482
+    },
+    {
+      "ci95": null,
+      "evidence_class": "source_corpus_sentence_disjoint",
+      "metric": "Text affect UAR: xlmr-base-s13",
+      "metric_id": "TXT",
+      "n": 495,
+      "note": "macro-F1 0.6987; lowest class recall 0.4792; subset not identifiable in the prediction file; interval omitted",
+      "scope": "test:hi_user_turns",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json",
+      "status": "measured",
+      "value": 0.7103
+    },
+    {
+      "ci95": [
+        0.6687,
+        0.7437
+      ],
+      "evidence_class": "transliterated_augmentation",
+      "metric": "Text affect UAR: xlmr-base-s13",
+      "metric_id": "TXT",
+      "n": 777,
+      "note": "macro-F1 0.6803; lowest class recall 0.5",
+      "scope": "test:hinglish",
+      "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json",
+      "status": "measured",
+      "value": 0.7048
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector macro F1, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 1190,
+      "note": "labels without positive support excluded: immediate_danger, medical_urgency, isolation_boycott_displacement",
+      "scope": "synthetic holdout",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.7333
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "en",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.9899
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "hi",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.9444
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "hinglish",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8349
+    },
+    {
+      "ci95": [
+        0.7755,
+        0.8436
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: D5 (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 505,
+      "note": "AUROC 0.8296; precision 0.7244; deterministic rules recall 0.099, precision 0.8065",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8119
+    },
+    {
+      "ci95": [
+        0.777,
+        0.8338
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: continuing_threat (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 741,
+      "note": "AUROC 0.9197; precision 0.8214; deterministic rules recall 0.0027, precision 0.3333",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.807
+    },
+    {
+      "ci95": [
+        0.9513,
+        0.9655
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: crisis_self_harm (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 3000,
+      "note": "AUROC 0.9929; precision 0.9693; deterministic rules recall 0.3757, precision 0.9716",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.959
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Shadow detector micro F1 vs deterministic rules (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 57,
+      "note": "rules micro F1 0.9333; caught by the model only 1; model false positives 25",
+      "scope": "dev",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.5951
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Shadow detector micro F1 vs deterministic rules (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 48,
+      "note": "rules micro F1 0.8809; caught by the model only 5; model false positives 18",
+      "scope": "candidates",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.5843
+    },
+    {
+      "ci95": null,
+      "evidence_class": "descriptive_probe",
+      "metric": "Shadow detector fires on indirect-wording probes (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 7,
+      "note": "non-crisis controls fired 3 of 3; the crisis pre-check fired on 0 of 7",
+      "scope": "10 probes",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8571
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Logistic baseline macro F1, fictional holdout (LR-W0)",
+      "metric_id": "AE15",
+      "n": 1190,
+      "note": "",
+      "scope": "synthetic holdout",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.4772
+    },
+    {
+      "ci95": null,
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Logistic baseline AUROC vs source label: continuing_threat (LR-W0)",
+      "metric_id": "AE15",
+      "n": 1652,
+      "note": "recall 0.0",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.5301
+    },
+    {
+      "ci95": null,
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Logistic baseline AUROC vs source label: crisis_self_harm (LR-W0)",
+      "metric_id": "AE15",
+      "n": 6000,
+      "note": "recall 0.0543",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.6146
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Logistic baseline micro F1 vs deterministic rules (LR-W0)",
+      "metric_id": "AE15",
+      "n": 57,
+      "note": "rules micro F1 0.9333",
+      "scope": "dev",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.2439
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Logistic baseline micro F1 vs deterministic rules (LR-W0)",
+      "metric_id": "AE15",
+      "n": 48,
+      "note": "rules micro F1 0.8809",
+      "scope": "candidates",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.2903
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Logistic baseline macro F1, fictional holdout (LR-W2)",
+      "metric_id": "AE15",
+      "n": 1190,
+      "note": "",
+      "scope": "synthetic holdout",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.497
+    },
+    {
+      "ci95": null,
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Logistic baseline AUROC vs source label: D5 (LR-W2)",
+      "metric_id": "AE15",
+      "n": 968,
+      "note": "recall 0.7149",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.7617
+    },
+    {
+      "ci95": null,
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Logistic baseline AUROC vs source label: continuing_threat (LR-W2)",
+      "metric_id": "AE15",
+      "n": 1652,
+      "note": "recall 0.9865",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8012
+    },
+    {
+      "ci95": null,
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Logistic baseline AUROC vs source label: crisis_self_harm (LR-W2)",
+      "metric_id": "AE15",
+      "n": 6000,
+      "note": "recall 0.9313",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.9351
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Logistic baseline micro F1 vs deterministic rules (LR-W2)",
+      "metric_id": "AE15",
+      "n": 57,
+      "note": "rules micro F1 0.9333",
+      "scope": "dev",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.477
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Logistic baseline micro F1 vs deterministic rules (LR-W2)",
+      "metric_id": "AE15",
+      "n": 48,
+      "note": "rules micro F1 0.8809",
+      "scope": "candidates",
+      "source": "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.3733
+    }
+  ],
+  "table_version": "eval-table-1.0",
+  "versions": {
+    "corpus": "2026.09.11-1",
+    "crisis_lexicon": "crisis-v1.2-unreviewed",
+    "label_schema": "1.0.0",
+    "pipeline": "text-lexicon-v1+d4-prosody-1.0",
+    "redteam_corpus": "2026.09.11-1",
+    "scoring": "svi-2026.09-pc08",
+    "validator": "guardrails-v1.1"
+  }
+}
