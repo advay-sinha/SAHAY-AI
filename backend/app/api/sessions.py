@@ -9,18 +9,21 @@ they are handled in app/ws/session.py through the same services used here.
 Voice turns arrive as a whole-utterance upload (PC-11) and join the same path.
 """
 
+import asyncio
 import time
+from pathlib import Path
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Query, Request, status
+from fastapi import APIRouter, Depends, Query, Request, Response, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..adapters.asr import ASRRejected, ASRUnavailable, get_provider as get_asr
+from ..adapters.tts import SynthesisUnavailable, get_provider as get_tts
 from ..core.auth import Principal, ensure_session_access, require_any
 from ..core.config import get_settings
 from ..core.db import get_session
 from ..core.enums import AUDIO_CHANNELS, AUDIO_MAX_BYTES, AUDIO_MEDIA_TYPES
-from ..core.errors import (BadRequest, Conflict, Forbidden, PayloadTooLarge, ServiceUnavailable,
+from ..core.errors import (BadRequest, Conflict, Forbidden, NotFound, PayloadTooLarge, ServiceUnavailable,
                            UnsupportedMediaType)
 from ..core.security import create_token
 from ..schemas.contracts import (AudioUploadResponse, CreateSessionRequest, CreateSessionResponse,
@@ -134,6 +137,59 @@ async def upload_audio(
     await db.commit()
     publish(session_id, case.id, out)
     return AudioUploadResponse(turn_id=turn_id, status="accepted")
+
+
+FIXED_SCRIPT_STATES = ("S0", "S9", "SX", "SH")
+WAV_HEADERS = {"Cache-Control": "no-store"}
+
+
+@router.get("/{session_id}/turns/{turn_id}/audio", response_class=Response,
+            responses={200: {"content": {"audio/wav": {}}}, 404: {"description": "no approved audio"}})
+async def turn_audio(
+    session_id: str,
+    turn_id: str,
+    principal: Principal = Depends(require_any),
+    db: AsyncSession = Depends(get_session),
+) -> Response:
+    """Audio for one assistant turn (PC-12). 404 whenever no approved audio exists; the client
+    then shows the text it already has.
+
+    Fixed scripts (S0, S9, SX, SH) come only from approved human recordings (``ml.tts.presynth``)
+    and are never synthesised. Other assistant turns exist only for validated or language-approved
+    text, and are spoken with the configured offline voice once, then cached.
+    """
+    from ml.tts import presynth
+
+    from ..models import Turn
+
+    ensure_session_access(principal, session_id)
+    if principal.role != ROLE_VICTIM:
+        raise Forbidden("only the session's own victim token may fetch turn audio")
+    turn = await db.get(Turn, turn_id)
+    if turn is None or turn.session_id != session_id or turn.speaker != "assistant" or not turn.text:
+        raise NotFound("no audio for this turn")
+    settings = get_settings()
+    if turn.state in FIXED_SCRIPT_STATES:
+        path = presynth.servable(turn.state, turn.lang, Path(settings.FIXED_AUDIO_ROOT))
+        if path is None:
+            raise NotFound("no approved recording for this script")
+        return Response(content=path.read_bytes(), media_type="audio/wav", headers=WAV_HEADERS)
+
+    cache = Path(settings.AUDIO_STORAGE_PATH) / "tts" / f"{turn.id}.wav"
+    if cache.is_file():
+        return Response(content=cache.read_bytes(), media_type="audio/wav", headers=WAV_HEADERS)
+    started = time.perf_counter()
+    try:
+        audio = await asyncio.to_thread(get_tts(settings).synthesize, turn.text, turn.lang)
+    except SynthesisUnavailable:
+        audio = b""
+    if not audio:
+        raise NotFound("no voice available for this turn")
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_bytes(audio)
+    latency.record(db, session_id, turn.id, {"tts_synthesis": round(1000 * (time.perf_counter() - started), 3)})
+    await db.commit()
+    return Response(content=audio, media_type="audio/wav", headers=WAV_HEADERS)
 
 
 @router.post("/{session_id}/end", response_model=EndSessionResponse)

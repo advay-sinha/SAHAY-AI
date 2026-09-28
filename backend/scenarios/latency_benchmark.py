@@ -44,8 +44,18 @@ BUDGET_MS = {"vad_endpoint": 700, "asr_final": 600, "safety_precheck": 50, "dial
 NOT_MEASURED = {
     "vad_endpoint": "on the phone: 700 ms of trailing silence (configured, not measured here)",
     "lan_upload": "phone to laptop over Wi-Fi: needs the phone",
-    "tts_first_chunk": "waits for M13 (fixed-script audio); 0 ms for pre-recorded turns",
+    "tts_on_the_phone": "download and playback start on the phone: needs the phone",
 }
+#: Fictional reply-style sentences for timing the offline voice (no assistant turn is spoken yet:
+#: intent text still awaits language review). Measured with --tts windows_voice.
+TTS_SENTENCES = (
+    "Thank you for telling me. You can stop at any time.",
+    "Can you tell me when this happened?",
+    "Are you somewhere safe right now?",
+    "Is anyone hurt and in need of a doctor?",
+    "Have you been able to speak to the police about this?",
+    "I am sharing this with a person who can help.",
+)
 
 
 def prepare(db_path: Path, asr: str, service_url: str) -> None:
@@ -90,7 +100,7 @@ def wer(reference: str, hypothesis: str) -> float:
     return d[len(hyp)] / max(1, len(ref))
 
 
-def run(rounds: int, asr: str) -> Dict[str, Any]:
+def run(rounds: int, asr: str, tts: str = "none") -> Dict[str, Any]:
     from fastapi.testclient import TestClient
     from sqlalchemy import select
 
@@ -153,11 +163,19 @@ def run(rounds: int, asr: str) -> Dict[str, Any]:
             stages.setdefault(stage, []).append(ms)
     transcripts = {tid: text for tid, _, _, text in turns}
     word_errors = [wer(ref, transcripts[tid]) for tid, ref in references.items() if tid in transcripts]         if asr != "mock" else []
+    if tts == "windows_voice":
+        from ml.tts.synthesize import WindowsVoiceSynthesizer, timed
+        synth = WindowsVoiceSynthesizer()
+        try:
+            timed(synth, "Warm-up sentence.", "en")  # starts the worker; excluded like the ASR warm-up
+            stages["tts_synthesis"] = [timed(synth, text, "en")[1] for _ in range(rounds) for text in TTS_SENTENCES]
+        finally:
+            synth.close()
     summary = {stage: summarise(v) for stage, v in sorted(stages.items())}
     summary["client_observed_request"] = summarise(client_ms)
     server_ms = summary.get("request_total", {}).get("p95")
     return {
-        "benchmark": "m2-turn-latency-1.0", "asr": asr, "rounds": rounds, "voices": sorted(voices),
+        "benchmark": "m2-turn-latency-1.1", "asr": asr, "tts": tts, "rounds": rounds, "voices": sorted(voices),
         "utterances_per_voice": {v: len(i) for v, i in voices.items()}, "warmup_excluded": len(warmup_turns),
         "statuses": statuses, "stages_ms": summary, "budget_ms": BUDGET_MS, "not_measured": NOT_MEASURED,
         "server_path_p95_plus_configured_endpoint_ms": (round(server_ms + BUDGET_MS["vad_endpoint"], 1)
@@ -176,13 +194,17 @@ def render(report: Dict[str, Any]) -> str:
              "| Stage | n | p50 ms | p95 ms | max ms | Budget ms |", "|---|---|---|---|---|---|"]
     budget_of = {"safety_precheck": "safety_precheck", "dialogue_policy": "dialogue_policy",
                  "llm_phrasing": "llm_phrasing", "output_validator": "output_validator",
-                 "asr_service_asr": "asr_final", "asr_request": "asr_final"}
+                 "asr_service_asr": "asr_final", "asr_request": "asr_final", "tts_synthesis": "tts_first_chunk"}
     for stage, s in report["stages_ms"].items():
         if not s.get("n"):
             continue
         b = BUDGET_MS.get(budget_of.get(stage, ""), "")
         lines.append(f"| {stage} | {s['n']} | {s['p50']} | {s['p95']} | {s['max']} | {b} |")
     lines += ["", "Not measured here:", ""] + [f"- **{k}**: {v}" for k, v in report["not_measured"].items()]
+    tts = report["stages_ms"].get("tts_synthesis", {})
+    if tts.get("n"):
+        lines += ["", f"Offline voice (whole file = first chunk), English: p95 **{tts['p95']} ms** (budget 500 ms). "
+                  "Hindi has no installed voice: those turns stay text-only."]
     lines += ["", f"Server path p95 + configured 700 ms endpoint: "
               f"**{report['server_path_p95_plus_configured_endpoint_ms']} ms** (budget 3000 ms, before TTS and LAN).",
               "", f"Synthetic-speech WER (sanity only, not M6): {report['synthetic_speech_wer']}", ""]
@@ -194,6 +216,8 @@ def main() -> int:
     parser.add_argument("--rounds", type=int, default=2)
     parser.add_argument("--asr", choices=("local_service", "mock"), default="local_service")
     parser.add_argument("--service-url", default="http://127.0.0.1:8765")
+    parser.add_argument("--tts", choices=("none", "windows_voice"), default="windows_voice",
+                        help="also time the offline Windows voice on fictional reply sentences (English)")
     parser.add_argument("--db", default=str(RUNTIME_DB / "latency.db"))
     parser.add_argument("--tag", default=time.strftime("%Y-%m-%d"))
     args = parser.parse_args()
@@ -201,7 +225,7 @@ def main() -> int:
         raise SystemExit("run scripts\\make-benchmark-audio.ps1 first")
     prepare(Path(args.db).resolve(), args.asr, args.service_url)
     sys.path.insert(0, str(REPO))
-    report = run(args.rounds, args.asr)
+    report = run(args.rounds, args.asr, args.tts)
     OUT_DIR.mkdir(parents=True, exist_ok=True)
     stem = OUT_DIR / f"latency-{args.tag}-{args.asr}"
     stem.with_suffix(".json").write_text(json.dumps(report, indent=1, sort_keys=True) + "\n", encoding="utf-8")

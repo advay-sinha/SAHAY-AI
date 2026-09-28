@@ -297,5 +297,27 @@ class TestAudioUploadMirror(unittest.TestCase):
         self.assertEqual(AudioUploadResponse.model_config.get("extra"), "forbid")
 
 
+class TestTurnAudioMirror(unittest.TestCase):
+    """PC-12: the route, CONTRACTS.md and the mobile request builder agree."""
+
+    PATH = "/sessions/{session_id}/turns/{turn_id}/audio"
+
+    def test_route_exists_as_get_only(self):
+        from backend.app.api.sessions import router
+
+        methods = {m for r in router.routes if getattr(r, "path", "").endswith("/turns/{turn_id}/audio")
+                   for m in r.methods}
+        self.assertEqual(methods, {"GET"})
+
+    def test_contract_and_mobile_agree(self):
+        doc = read(CONTRACTS_MD)
+        self.assertIn("GET  /sessions/{id}/turns/{turn_id}/audio", doc)
+        self.assertIn("PC-12", doc)
+        mobile_js = read(REPO_ROOT / "mobile" / "src" / "net" / "restClient.js")
+        self.assertIn("/turns/${encodeURIComponent(turnId)}/audio", mobile_js)
+        mobile_dts = read(REPO_ROOT / "mobile" / "src" / "net" / "restClient.d.ts")
+        self.assertIn("buildTurnAudioSource", mobile_dts)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -114,7 +114,8 @@ test("slice modules never log and never build URLs from navigation parameters", 
 test("the token is sent only in the Authorization header", () => {
   const client = stripComments(read("src", "net", "restClient.js"));
   assert.match(client, /Authorization: `Bearer \$\{sessionToken\}`/);
-  assert.equal((client.match(/sessionToken/g) ?? []).length, 4);
+  // 4 in fetchTimeline, 4 in buildTurnAudioSource (PC-12); both put it in the Authorization header only.
+  assert.equal((client.match(/sessionToken/g) ?? []).length, 8);
   assert.doesNotMatch(client, /\?token|token=|encodeURIComponent\(sessionToken\)/);
 
   const store = stripComments(read("src", "session", "sessionStore.js"));

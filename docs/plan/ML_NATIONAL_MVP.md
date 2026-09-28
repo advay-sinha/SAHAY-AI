@@ -323,6 +323,19 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
 - Fill `ml/tts/presynth.py` assets under `runtime/audio/` (outside Git).
 - If first-chunk TTS takes more than 500 ms, fall back to showing the text.
 - **Exit:** every approved fixed script plays audio, and generated turns reach synthesis only after `validate()`.
+- **Status (2026-09-29): code done; waits on humans.** Contract PC-12 approved and frozen.
+  - **Fixed scripts:** `ml/tts/presynth.py` is a manifest registry. A recording is served only when:
+    - the script is APPROVED;
+    - the recording is of the current approved text;
+    - a named reviewer who did not record it approved it;
+    - its hash matches.
+
+    Commands: `register`, `approve` and `status`.
+  - **Generated turns:** `ml/tts/synthesize.py` wraps the built-in Windows voices (EXT-103) in one warm worker. English uses en-IN Heera or Ravi. **Hindi has no installed voice**, so Hindi turns stay text-only.
+  - **Backend:** `TTS_PROVIDER` (default `none`), `FIXED_AUDIO_ROOT`, and `GET /sessions/{id}/turns/{turn_id}/audio`. Fixed scripts come only from approved recordings; other turns are synthesised once and cached. The `tts_synthesis` latency is recorded.
+  - **Mobile:** `buildTurnAudioSource` (token in the header only) and the `expo-audio` player. It still needs wiring into the live chat screen once the socket lands.
+  - **Measured:** the offline English voice synthesises a whole reply in p50 31 ms and p95 38 ms (budget 500 ms).
+  - **Still human:** writing and approving the fixed scripts, recording them (H-tasks), and a real-phone check.
 
 ### M14 — Detection quality and the evaluation table (headline numbers)
 

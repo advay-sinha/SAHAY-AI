@@ -117,6 +117,11 @@ class Settings(BaseSettings):
     ASR_PROVIDER: Literal["mock", "local_service"] = "mock"
     ASR_SERVICE_URL: str = "http://127.0.0.1:8765"
     ASR_TIMEOUT_SECONDS: float = Field(default=30.0, gt=0, le=120)
+    # Voice output (EXT-103, PC-12). "none" returns no audio (the client shows the text);
+    # "windows_voice" speaks validated turns with a built-in offline Windows voice. Fixed scripts
+    # (S0, S9, SX, SH) are only ever played from approved human recordings in FIXED_AUDIO_ROOT.
+    TTS_PROVIDER: Literal["none", "windows_voice"] = "none"
+    FIXED_AUDIO_ROOT: str = "./runtime/audio/fixed"
     ASSESSMENT_RUNNER: Literal["local", "external"] = "local"
     # "local" is the deterministic keyword index; "external" is reserved for a
     # future vector store. Mirrors the local/external naming ASSESSMENT_RUNNER uses.
@@ -148,7 +153,7 @@ class Settings(BaseSettings):
             raise ValueError("ASR_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
         return value.rstrip("/")
 
-    @field_validator("AUDIO_STORAGE_PATH")
+    @field_validator("AUDIO_STORAGE_PATH", "FIXED_AUDIO_ROOT")
     @classmethod
     def _anchor_audio_path(cls, value: str) -> str:
         return _anchor(value) if value else value

@@ -25,6 +25,7 @@ STAGES = (
     "output_validator",
     "reply_path",           # submit_turn: victim turn received -> reply text ready
     "request_total",        # audio endpoint: request body received -> response ready
+    "tts_synthesis",        # PC-12: first synthesis of an assistant turn (the whole file is the first chunk)
 )
 ASR_SERVICE_KEYS = {"decode": "asr_service_decode", "asr": "asr_service_asr", "total": "asr_service_total"}
 

@@ -93,3 +93,16 @@ export interface AudioUploadResponse {
   turn_id: string | null;
   status: AudioUploadStatus;
 }
+
+/** PC-12: where the player fetches one assistant turn's audio. null when any input is malformed. */
+export interface TurnAudioSource {
+  uri: string;
+  headers: { Accept: "audio/wav"; Authorization: string };
+}
+
+export function buildTurnAudioSource(options: {
+  baseUrl: string;
+  sessionId: string;
+  turnId: string;
+  sessionToken: string;
+}): TurnAudioSource | null;

@@ -89,6 +89,7 @@ In `dimension.update`, a dimension that is unavailable (for example D4 on a type
 POST /auth/login                          {username, password} → {token, role, display_name}
 POST /sessions                            {channel, consent, lang} → CreateSessionResponse (below)
 POST /sessions/{id}/audio?lang=hi|en      whole-utterance voice turn (PC-11) → AudioUploadResponse (below)
+GET  /sessions/{id}/turns/{turn_id}/audio assistant-turn audio (PC-12) → audio/wav, or 404 (below)
 POST /sessions/{id}/end                   → {case_id, reference_no}
 GET  /queue                               → band-ranked case summaries, codes only
 GET  /cases/{id}                          full escalation packet
@@ -187,6 +188,27 @@ POST /sessions/{id}/audio?lang=hi|en        victim session token for that sessio
 - The response **never** contains a transcript confidence, audio quality, emotion, score or band (`extra="forbid"`).
 - Console only: the ASR confidence is stored on the turn (`turns.asr_confidence`), and the audio measurements in `turns.asr_quality`. Both are reported in the assessment `uncertainty` block. Poor audio or low ASR confidence sets the `poor_audio` quality flag, so the assessment abstains (`needs_human`, invariant 6).
 - No new event, and no new victim-visible field.
+
+### Assistant-turn audio — PC-12 (lead decision 2026-09-29)
+
+```
+GET /sessions/{id}/turns/{turn_id}/audio    victim session token for that session only
+  200 →     audio/wav (16 kHz mono), header Cache-Control: no-store
+  404 →     no approved audio for this turn: not an assistant turn of this session, a fixed
+            script without an approved recording, or no voice for this language.
+            The client keeps showing the text it already received. Error body follows §9.
+  403 →     any token other than the session's own victim token
+```
+
+- `assistant.turn` is unchanged. `audio: "prerecorded"` means the client may fetch the whole file from this endpoint by `turn_id`.
+- **Fixed scripts** (S0, S9, SX, SH) are served only from an approved human recording (EXT-103):
+  - the recording is of the currently approved text;
+  - a named reviewer who did not record it approved it;
+  - its hash still matches.
+
+  They are never synthesised.
+- **Other assistant turns** exist only for text that passed `guardrails.validate` or is language-approved fallback text. They may be spoken once by the configured offline voice (`TTS_PROVIDER`: `none` by default), then cached.
+- No new event, field or enum. The response carries audio only: no text, score, band or emotion.
 
 ## 6. Database tables
 

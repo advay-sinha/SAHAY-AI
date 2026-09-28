@@ -237,3 +237,39 @@ Internal, not part of the contract: the backend reaches speech recognition throu
 | Backend | Confirmed 2026-09-27, relayed by the project owner |
 | Executive Web | Confirmed 2026-09-27, relayed by the project owner |
 | Mobile/Victim Experience | Confirmed 2026-09-27, relayed by the project owner |
+
+## PC-12 — `GET /sessions/{id}/turns/{turn_id}/audio` — **APPROVED AND FROZEN (2026-09-29)**
+
+Plan step M13, decision EXT-103. Applied to `CONTRACTS.md` §4.
+
+```
+CONTRACT CHANGE PROPOSAL
+Contract:     GET /sessions/{id}/turns/{turn_id}/audio   (CONTRACTS §4 REST)
+Current:      none. assistant.turn carries audio:"prerecorded"|"streaming", but no frozen
+              interface says where the client obtains that audio.
+Proposed:
+  GET /sessions/{id}/turns/{turn_id}/audio    victim session token for that session only
+    200 → audio/wav (16 kHz mono), Cache-Control: no-store
+    404 → no approved audio: not an assistant turn of this session, a fixed script without an
+          approved human recording, or no voice for the language. The client keeps the text.
+    403 → any other token
+  semantics   fixed scripts (S0/S9/SX/SH) come only from approved human recordings (hash-checked,
+              reviewer is not the recorder, recording of the current approved text), never TTS.
+              Other assistant turns are validated or language-approved text; they may be spoken
+              once by the configured offline voice and cached.
+Reason:       Voice output (M13). Without it the approved audio sources of EXT-103 cannot reach
+              the phone.
+Breaks:       Nothing; additive. Backend: new route, TTS adapter (TTS_PROVIDER, default none),
+              FIXED_AUDIO_ROOT. Mobile: optional consumer (request builder and player).
+              Frontend: none. ML: ml.tts.presynth registry and ml.tts.synthesize voice wrapper.
+Migration:    None. Synthesis timing uses the existing latency_metrics table.
+Alternative:  The phone shows text only; fixed-script audio would have to be bundled in the app.
+```
+
+| Lead (D-11) | Confirmation |
+|---|---|
+| AI/ML and Safety | Project owner, 2026-09-29 |
+| Backend | Confirmed 2026-09-29, relayed by the project owner |
+| Executive Web | Confirmed 2026-09-29, relayed by the project owner |
+| Mobile/Victim Experience | Confirmed 2026-09-29, relayed by the project owner |
+

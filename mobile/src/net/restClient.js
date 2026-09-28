@@ -1,6 +1,7 @@
 /**
- * REST calls the victim app is allowed to make: POST /sessions and
- * GET /cases/{case_id}/timeline (CONTRACTS.md section 4). Nothing else.
+ * REST calls the victim app is allowed to make: POST /sessions,
+ * GET /cases/{case_id}/timeline and GET /sessions/{id}/turns/{turn_id}/audio
+ * (CONTRACTS.md section 4, PC-12). Nothing else.
  *
  * Every result is a small tagged object. No result ever carries a response
  * body from a failed call, the session token, or exception text, so nothing
@@ -230,10 +231,27 @@ async function fetchTimeline({
   }
 }
 
+/**
+ * PC-12: the request for one assistant turn's audio, for the audio player to fetch.
+ * Returns null for anything malformed, so nothing is fetched. A 404 from the server means
+ * "no approved audio"; the caller keeps showing the text. The token travels only in the
+ * Authorization header, never in the URL.
+ */
+function buildTurnAudioSource({ baseUrl, sessionId, turnId, sessionToken }) {
+  if (typeof baseUrl !== "string" || baseUrl.length === 0) return null;
+  if (!isIdentifier(sessionId) || !isIdentifier(turnId)) return null;
+  if (typeof sessionToken !== "string" || !TOKEN.test(sessionToken)) return null;
+  return {
+    uri: `${baseUrl}/sessions/${encodeURIComponent(sessionId)}/turns/${encodeURIComponent(turnId)}/audio`,
+    headers: { Accept: "audio/wav", Authorization: `Bearer ${sessionToken}` },
+  };
+}
+
 module.exports = {
   DEFAULT_TIMEOUT_MS,
   SESSION_RESPONSE_KEYS,
   buildCreateSessionRequest,
+  buildTurnAudioSource,
   createSession,
   fetchTimeline,
   validateCreateSessionResponse,
