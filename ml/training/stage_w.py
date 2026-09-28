@@ -67,7 +67,10 @@ SCHEDULE = {"phase1": {"seeds": [13], "arms": ["W0", "W1", "W2"]}, "phase2": {"s
 HYPER = {"max_len": sm.MAX_LEN, "micro_batch": 16, "grad_accumulation": 2, "epochs_max": 20, "patience": 3,
          "encoder_lr": 3e-5, "head_lr": 1e-3, "weight_decay": 0.01, "warmup_fraction": 0.06, "grad_clip": 1.0,
          "loss": "masked focal", "gamma": 2.0, "threshold": metrics.THRESHOLD,
-         "weak_budget": "equal to the fictional train size per epoch; equal shares, capped at pool size"}
+         "weak_budget": "equal to the fictional train size per epoch; equal shares, capped at pool size",
+         # Memory only; the maths is unchanged. Added after attempt 1 (2026-09-28) was stopped by the
+         # Windows commit limit: long weak windows pushed W1 past the 8 GB card into shared memory.
+         "gradient_checkpointing": True}
 SELECTION_RULE = ["higher validation macro F1 over the 8 detector labels", "higher minimum per-label validation recall",
                   "lower validation loss (masked plain BCE)", "lower numeric seed", "simpler arm (W0 < W1 < W2)"]
 IDENTITY = ("experimental weak-supervision shadow output: development-only, uncalibrated, trained partly on source "
@@ -286,6 +289,8 @@ def train_run(root: Path, arm: str, seed: int, train: Sequence[Mapping[str, Any]
     device = tk.device()
     tok = tk.load_tokenizer(enc_dir)
     net = sm.build_network(sm.load_encoder(enc_dir), len(LABELS)).to(device)
+    if HYPER["gradient_checkpointing"]:
+        net.encoder.gradient_checkpointing_enable(gradient_checkpointing_kwargs={"use_reentrant": False})
     opt = t.optim.AdamW([{"params": net.encoder.parameters(), "lr": HYPER["encoder_lr"]},
                          {"params": list(net.head.parameters()), "lr": HYPER["head_lr"]}],
                         weight_decay=HYPER["weight_decay"], fused=device == "cuda")
@@ -327,10 +332,12 @@ def train_run(root: Path, arm: str, seed: int, train: Sequence[Mapping[str, Any]
                         "validation_loss": round(val_loss, 5), "macro_f1": v["macro"]["f1"],
                         "min_label_recall": v["min_label_recall"],
                         "crisis_recall": v["per_label"]["crisis_self_harm"]["recall"],
-                        "epoch_seconds": round(time.perf_counter() - started, 1)})
+                        "epoch_seconds": round(time.perf_counter() - started, 1),
+                        "peak_reserved_mb": (round(t.cuda.max_memory_reserved() / 2**20) if device == "cuda" else None)})
         log(f"  {arm} seed {seed} epoch {epoch}: rows {len(order)} loss {history[-1]['train_loss']} val loss "
             f"{history[-1]['validation_loss']} macro F1 {v['macro']['f1']} min R {v['min_label_recall']} "
-            f"crisis R {history[-1]['crisis_recall']} ({history[-1]['epoch_seconds']} s)")
+            f"crisis R {history[-1]['crisis_recall']} ({history[-1]['epoch_seconds']} s, "
+            f"peak {history[-1]['peak_reserved_mb']} MB)")
         if best is None or selection_key(candidate) < selection_key(best):
             best, stale = candidate, 0
             best_state = {part: {k: x.detach().to("cpu", copy=True) for k, x in mod.state_dict().items()}

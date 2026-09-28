@@ -361,10 +361,15 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
 
       | Run | What | Status |
       |---|---|---|
-      | R8a | build the weak corpus, then a smoke run | pending |
-      | R8b | record the plan, then phase 1 (W0, W1, W2 at seed 13) | pending |
+      | R8a | build the weak corpus, then a smoke run | ✅ 2026-09-28: official Dreaddit archive used (3,842 train and 968 test windows) |
+      | R8b | record the plan, then phase 1 (W0, W1, W2 at seed 13) | attempt 1 aborted, rerun pending |
       | R8c | phase 2 (seeds 42 and 97 of the winner), then selection | pending |
       | R8d | evaluation | pending |
+  - **R8b attempt 1 (2026-09-28) was aborted.**
+    - What happened: W0 finished, then W1 was stopped by the Windows commit limit. At 14:12 a low-virtual-memory event recorded python.exe at 10.9 GB committed.
+    - Cause: long weak windows pad batches to 128 tokens and pushed the 8 GB card into shared system memory. The smoke test had already shown a 7.2 GB peak.
+    - Fix: gradient checkpointing, which saves memory without changing the maths. Measured smoke peaks are now W0 4.6 GB, W1 5.9 GB and W2 5.0 GB.
+    - Consequence: the plan hash changed, so attempt 1 is kept aside as `stage-w-attempt1-aborted/` and every arm is retrained from scratch.
   - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔), and the AE-15 row.
 
 ### M15 — Shadow model (optional; not recommended before the finale)
