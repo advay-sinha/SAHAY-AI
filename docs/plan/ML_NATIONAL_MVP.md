@@ -385,7 +385,17 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - Cause: long weak windows pad batches to 128 tokens and pushed the 8 GB card into shared system memory. The smoke test had already shown a 7.2 GB peak.
     - Fix: gradient checkpointing, which saves memory without changing the maths. Measured smoke peaks are now W0 4.6 GB, W1 5.9 GB and W2 5.0 GB.
     - Consequence: the plan hash changed, so attempt 1 is kept aside as `stage-w-attempt1-aborted/` and every arm is retrained from scratch.
-  - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔), and the AE-15 row.
+  - **AE-15 interpretable baseline: code done 2026-09-29, run pending (R9a)** (`ml/training/baseline_lr.py`).
+    - The model: a standard-library logistic regression on hashed word and character-trigram features.
+    - Arms LR-W0 and LR-W2 use the same data, masks, threshold and evaluator as Stage W.
+    - The report lists each head's top features, restricted to the fictional vocabulary.
+    - The table gets AE15 rows. XGBoost is not added, because it would be a new package.
+  - **M2 turn latency: instrumented 2026-09-29, benchmark run pending (R9b).**
+    - Recording: `plan_turn` and the audio endpoint store per-stage timings in `latency_metrics`. These are server-side only; tests prove no timing reaches a client.
+    - Benchmark: `backend/scenarios/latency_benchmark.py` sends fictional English utterances, spoken by the built-in Windows Indian-English voices (`scripts/make-benchmark-audio.ps1`), through the real upload endpoint against a disposable SQLite database.
+    - Mock-ASR check: reply path p50 12 ms, p95 22 ms.
+    - Not measured: VAD endpointing (the phone), LAN upload (the phone), TTS (M13) and Hindi (no voice installed; H5).
+  - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔).
 
 ### M15 — Shadow model (optional; not recommended before the finale)
 

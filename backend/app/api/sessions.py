@@ -9,6 +9,7 @@ they are handled in app/ws/session.py through the same services used here.
 Voice turns arrive as a whole-utterance upload (PC-11) and join the same path.
 """
 
+import time
 from typing import Optional
 
 from fastapi import APIRouter, Depends, Query, Request, status
@@ -24,7 +25,7 @@ from ..core.errors import (BadRequest, Conflict, Forbidden, PayloadTooLarge, Ser
 from ..core.security import create_token
 from ..schemas.contracts import (AudioUploadResponse, CreateSessionRequest, CreateSessionResponse,
                                  EndSessionResponse)
-from ..services import audit, intake
+from ..services import audit, intake, latency
 from ..services.consent import CONSENT_GRANTED, session_capabilities
 from ..services.events import publish
 from ..ws.events import ROLE_VICTIM
@@ -94,13 +95,16 @@ async def upload_audio(
         raise BadRequest("lang must be hi or en")
 
     audio = await request.body()
+    received = time.perf_counter()
     if not audio:
         raise BadRequest("the request carried no audio")
     if len(audio) > AUDIO_MAX_BYTES:
         raise PayloadTooLarge("audio is larger than 5 MB")
 
     try:
+        t_asr = time.perf_counter()
         result = await get_asr(get_settings()).transcribe(audio, media, lang)
+        asr_request_ms = round(1000 * (time.perf_counter() - t_asr), 3)
     except ASRRejected as exc:
         if exc.status == 413:
             raise PayloadTooLarge("audio is longer than 60 seconds or larger than 5 MB") from None
@@ -123,10 +127,12 @@ async def upload_audio(
     await audit.record(db, "asr.accepted", case_id=case.id, detail={
         "asr_confidence": result.get("asr_confidence"), "poor_audio": result.get("poor_audio"),
         "low_asr_confidence": result.get("low_asr_confidence"), "timings_ms": result.get("timings_ms")})
-    await db.commit()
-    publish(session_id, case.id, out)
     turn_id = next((p["turn_id"] for kind, p in out.events
                     if kind == "transcript.line" and p.get("speaker") == "victim"), None)
+    latency.record(db, session_id, turn_id, {"asr_request": asr_request_ms,
+                                             "request_total": round(1000 * (time.perf_counter() - received), 3)})
+    await db.commit()
+    publish(session_id, case.id, out)
     return AudioUploadResponse(turn_id=turn_id, status="accepted")
 
 

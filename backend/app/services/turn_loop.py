@@ -15,6 +15,7 @@ This module imports the pure ml modules and nothing heavier, so the reply path
 carries no ML dependency.
 """
 
+import time
 from typing import Any, Dict, Mapping, Optional
 
 from ml.dialogue import next as dialogue_next
@@ -57,14 +58,22 @@ def plan_turn(
     assistant said and why it said it.
     """
     flags = dict(safety_flags or {})
+    # Per-stage wall time in ms (M2). Internal: intake stores it in latency_metrics; it is never sent
+    # to a client. The dict is shared with ``result``, so every early return carries what was measured.
+    timings: Dict[str, float] = {}
+    t0 = time.perf_counter()
 
     # 1. Crisis pre-check. Synchronous, before dialogue policy, always.
     precheck = crisis_check(utterance)
     if precheck["crisis"]:
         flags["crisis"] = True
+    t1 = time.perf_counter()
+    timings["safety_precheck"] = round(1000 * (t1 - t0), 3)
 
     # 2. Deterministic policy picks the state and the single licensed intent.
     decision = dialogue_next(state, slots, utterance, flags)
+    t2 = time.perf_counter()
+    timings["dialogue_policy"] = round(1000 * (t2 - t1), 3)
 
     result: Dict[str, Any] = {
         "next_state": decision["next_state"],
@@ -77,6 +86,7 @@ def plan_turn(
         "was_fallback": True,
         "guardrail_reason": "",
         "text": None,
+        "timings_ms": timings,
     }
 
     # A crisis forces Critical priority and immediate human takeover, and
@@ -107,8 +117,11 @@ def plan_turn(
     # 4. LLM phrasing is optional. With LLM_PROVIDER=mock this returns None and
     #    the fallback is used, which is the default demo path.
     candidate = None
+    t3 = time.perf_counter()
     if llm is not None and decision["rephrasable"]:
         candidate = llm.phrase(decision["intent"], decision["licensed_question"], decision["lang"])
+    t4 = time.perf_counter()
+    timings["llm_phrasing"] = round(1000 * (t4 - t3), 3)
 
     if candidate is None:
         result["text"] = fallback
@@ -118,6 +131,7 @@ def plan_turn(
     # 5. Validate every generated sentence before synthesis. On failure use the
     #    pre-written fallback, never a repaired version of the model's sentence.
     verdict = validate(candidate, decision["intent"], decision["lang"])
+    timings["output_validator"] = round(1000 * (time.perf_counter() - t4), 3)
     if verdict["ok"]:
         result["text"] = verdict["safe_text"]
         result["was_fallback"] = False

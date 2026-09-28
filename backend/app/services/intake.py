@@ -18,6 +18,7 @@ scoring is permitted. Intake never resumes: SX is terminal in the policy.
 """
 
 import hashlib
+import time
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
@@ -36,7 +37,7 @@ from ..core.config import get_settings
 from ..core.enums import CONSENT_STATUSES, SESSION_CHANNELS
 from ..core.errors import BadRequest, Conflict, NotFound
 from ..models import Alert, Case, Consent, Session, Turn
-from . import audit
+from . import audit, latency
 from .consent import CONSENT_DECLINED, CONSENT_GRANTED, CONSENT_PENDING
 from .turn_loop import FixedScriptUnavailable, plan_turn
 
@@ -229,6 +230,7 @@ async def submit_turn(
     """Handle one victim turn: typed, or a transcribed voice turn (PC-11) carrying ``asr``
     measurements. Both take exactly the same path; see the module docstring for the order."""
     out = Outbound()
+    started = time.perf_counter()
     text = (text or "").strip()
     if not text:
         raise BadRequest("empty message")
@@ -278,7 +280,9 @@ async def submit_turn(
         return out
 
     # 2. synchronous crisis pre-check, before policy
+    t_pre = time.perf_counter()
     pre = crisis_check(text)
+    timings: Dict[str, Any] = {"safety_precheck": round(1000 * (time.perf_counter() - t_pre), 3)}
 
     victims = [t for t in _turn_dicts(turns) if t["speaker"] == "victim"]
     slots = dialogue_slots(victims, extract(victims))
@@ -294,6 +298,7 @@ async def submit_turn(
     intent = ""
     try:
         plan = plan_turn(session.state, slots, text, flags, get_provider(get_settings().LLM_PROVIDER))
+        timings.update({k: v for k, v in (plan.get("timings_ms") or {}).items() if k != "safety_precheck"})
         next_state = plan["next_state"]
         intent = plan["intent"]
         assistant_text = plan["text"]
@@ -304,6 +309,8 @@ async def submit_turn(
                            detail={"state": next_state, "turn_id": victim.id})
 
     session.state = next_state
+    timings["reply_path"] = round(1000 * (time.perf_counter() - started), 3)
+    latency.record(db, session_id, victim.id, {**timings, **latency.asr_service_timings(asr)})
 
     if assistant_text:
         reply = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq + 1, speaker="assistant",
