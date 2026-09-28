@@ -269,3 +269,67 @@ class TestLogisticBaseline(unittest.TestCase):
     def test_arms_mirror_stage_w(self):
         self.assertEqual(set(self.lr.ARMS.values()) <= set(sw.ARMS), True)
         self.assertEqual(self.lr.HYPER["threshold"], 0.5)
+
+
+class TestCorpusV2(unittest.TestCase):
+    """7b-v2 removes the multi-turn shortcut without touching 7b-v1."""
+
+    @classmethod
+    def setUpClass(cls):
+        from ml.training import hardening as hx
+        cls.hx = hx
+        cls.v1 = hx.generate()
+        cls.v2 = hx.generate(version="7b-v2")
+
+    def test_v2_keeps_every_v1_record(self):
+        v1 = {(r["id"], r["content_hash"]) for r in self.v1}
+        v2 = {(r["id"], r["content_hash"]) for r in self.v2}
+        self.assertTrue(v1 < v2)
+        self.assertTrue(all(r["generator_version"] == "7b.1.0" for r in self.v1))
+        self.assertTrue(all(r["generator_version"] == "7b.2.0" for r in self.v2))
+
+    def test_multi_turn_no_longer_predicts_risk(self):
+        for split, s in self.hx.multi_turn_stats(self.v2).items():
+            self.assertLess(abs(s["multi"]["any_positive_rate"] - s["single"]["any_positive_rate"]), 0.05, split)
+        v1 = self.hx.multi_turn_stats(self.v1)
+        self.assertTrue(all(s["multi"]["any_positive_rate"] == 1.0 for s in v1.values()))
+
+    def test_balanced_records_stay_in_one_split_and_language(self):
+        by_id = {r["id"]: r for r in self.v2}
+        added = [r for r in self.v2 if r["family"].startswith("combo2:")]
+        self.assertTrue(added)
+        for r in added:
+            parts = [by_id[i] for i in r["lineage"]["records"]]
+            self.assertTrue(all(p["split"] == r["split"] and p["language"] == r["language"] for p in parts))
+            if r["lineage"]["kind"] == "all_negative":
+                self.assertFalse(any(r["labels"].values()))
+            else:
+                self.assertEqual(r["labels"], next(p for p in parts if p["positive_labels"])["labels"])
+        self.assertEqual(self.hx.coverage(self.v2)["problems"], [])
+
+    def test_unknown_version_is_refused(self):
+        with self.assertRaises(ValueError):
+            self.hx.corpus_dir("7b-v9")
+
+
+class TestConfigure(unittest.TestCase):
+    def tearDown(self):
+        sw.configure("7b-v1")
+
+    def test_v2_writes_to_its_own_folders_and_v1_is_unchanged(self):
+        self.assertEqual((sw.FICTIONAL_VERSION, sw.ROOT), ("7b-v1", ("stage-w",)))
+        sw.configure("7b-v2")
+        self.assertEqual((sw.FICTIONAL_VERSION, sw.ROOT, sw.SMOKE_ROOT),
+                         ("7b-v2", ("stage-w-7b-v2",), ("stage-w-smoke-7b-v2",)))
+        self.assertEqual(sw.plan({})["fictional_corpus"], "7b-v2")
+        with self.assertRaises(ValueError):
+            sw.configure("nope")
+
+    def test_holdout_split_by_turns(self):
+        labels = {c: c == "legal_urgency" for c in DETECTOR_CATEGORIES}
+        none = {c: False for c in DETECTOR_CATEGORIES}
+        rows = [{"gold": labels, "slices": ["single_turn"]}, {"gold": none, "slices": ["multi_turn"]}]
+        hit = [1.0 if c == "legal_urgency" else 0.0 for c in sw.LABELS]
+        out = swe.by_turns(rows, [hit, [0.0] * len(sw.LABELS)])
+        self.assertEqual(out["single_turn"]["records"], 1)
+        self.assertEqual(out["multi_turn"]["any_positive_rate"], 0.0)

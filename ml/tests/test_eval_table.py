@@ -268,3 +268,23 @@ class TestLatencyRows(unittest.TestCase):
         self.assertTrue(any(r["status"] == "measured" for r in m2))
         self.assertFalse(any("not instrumented" in r["note"] for r in m2))
         table.check_wording(table.render_markdown(built), 0)
+
+
+class TestCorpusVersions(unittest.TestCase):
+    def test_v2_rows_are_tagged_and_turn_split_rows_appear(self):
+        exposed = {"samples": 57, "model": {"micro_f1": 0.5}, "rules": {"micro_f1": 0.93}}
+        run = {"arm": "LR-W2", "holdout": {"records": 10, "macro": {"f1": 0.4},
+                                            "by_turns": {"single_turn": {"records": 8, "macro_f1": 0.5,
+                                                                         "any_positive_rate": 0.6},
+                                                         "multi_turn": {"records": 2, "macro_f1": 0.2,
+                                                                        "any_positive_rate": 0.5}}},
+               "weak_test": {}, "exposed": {"dev": exposed, "candidates": exposed}}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "baseline-lr-7b-v2" / "reports" / "evaluation.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps({"runs": [run]}), encoding="utf-8")
+            rows = table.baseline_rows(Path(tmp), "baseline-lr-7b-v2", "7b-v2")
+            all_rows = table.private_rows(tmp, 10, 1)
+        self.assertTrue(all("corpus 7b-v2" in r["metric"] for r in rows))
+        self.assertEqual(len([r for r in rows if "-turn records" in r["metric"]]), 2)
+        self.assertTrue(any("corpus 7b-v2" in r["metric"] for r in all_rows))

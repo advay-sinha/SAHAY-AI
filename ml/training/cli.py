@@ -100,8 +100,10 @@ def main(argv: Optional[List[str]] = None) -> int:
     sub.add_parser("regression")
     sub.add_parser("verify-shadow")
     sub.add_parser("error-analysis")
-    sub.add_parser("hardening-build")
-    sub.add_parser("hardening-verify")
+    hb = sub.add_parser("hardening-build")
+    hb.add_argument("--version", default="7b-v1", help="frozen corpus version to build (7b-v1 or 7b-v2)")
+    hv = sub.add_parser("hardening-verify")
+    hv.add_argument("--version", default="7b-v1")
     sub.add_parser("stage-c7b-plan")
     p7 = sub.add_parser("stage-c7b")
     p7.add_argument("--phase", type=int, choices=(1, 2), required=True)
@@ -111,13 +113,18 @@ def main(argv: Optional[List[str]] = None) -> int:
     sub.add_parser("stage-c7b-correct")
     sub.add_parser("stage-w-plan")
     pw = sub.add_parser("stage-w")
+    pw.add_argument("--corpus", default="7b-v1", help="fictional corpus version")
     pw.add_argument("--phase", type=int, choices=(1, 2), required=True)
     pw.add_argument("--smoke", type=int, default=None, help="one epoch on N rows per pool, into stage-w-smoke/")
     sub.add_parser("stage-w-select")
+    for name in ("stage-w-plan", "stage-w-select"):
+        sub.choices[name].add_argument("--corpus", default="7b-v1", help="fictional corpus version")
     pe = sub.add_parser("stage-w-evaluate")
     pe.add_argument("--smoke", type=int, default=None, help="evaluate the stage-w-smoke/ runs on N rows per set")
+    pe.add_argument("--corpus", default="7b-v1", help="fictional corpus version")
     pb = sub.add_parser("baseline-lr")
     pb.add_argument("--smoke", type=int, default=None, help="one epoch on N rows per pool, into baseline-lr-smoke/")
+    pb.add_argument("--corpus", default="7b-v1", help="fictional corpus version")
     args = parser.parse_args(argv)
     try:
         with network_blocked() as net:
@@ -144,8 +151,9 @@ def main(argv: Optional[List[str]] = None) -> int:
                 root = paths.training_root(args.training_root)
                 keys_path = paths.confined(root, *paths.EXTERNAL_CORPUS.split("/"), "exact_keys.txt")
                 keys = set(keys_path.read_text(encoding="utf-8").split()) if keys_path.is_file() else None
-                r = hardening.build(root, keys)
-                payload = {k: r[k] for k in ("generated", "kept", "contamination", "families", "review_packet")}
+                r = hardening.build(root, keys, args.version)
+                payload = {k: r[k] for k in ("version", "generated", "kept", "multi_turn_stats", "contamination",
+                                             "families", "review_packet")}
                 payload["freeze"] = {k: r["freeze"][k] for k in ("version", "frozen_at", "records", "state")}
             elif args.command in ("stage-c7b-plan", "stage-c7b", "stage-c7b-select", "stage-c7b-evaluate",
                                   "task7b-retention", "stage-c7b-correct"):
@@ -165,6 +173,7 @@ def main(argv: Optional[List[str]] = None) -> int:
                     payload = stage_c7b.evaluate(root)
             elif args.command in ("stage-w-plan", "stage-w", "stage-w-select"):
                 from . import stage_w
+                stage_w.configure(args.corpus)
                 root = paths.training_root(args.training_root)
                 if args.command == "stage-w-plan":
                     payload = stage_w.write_plan(root)
@@ -173,14 +182,16 @@ def main(argv: Optional[List[str]] = None) -> int:
                 else:
                     payload = stage_w.select(root)
             elif args.command == "stage-w-evaluate":
-                from . import stage_w_eval
+                from . import stage_w, stage_w_eval
+                stage_w.configure(args.corpus)
                 payload = stage_w_eval.evaluate(paths.training_root(args.training_root), smoke=args.smoke)
             elif args.command == "baseline-lr":
-                from . import baseline_lr
+                from . import baseline_lr, stage_w
+                stage_w.configure(args.corpus)
                 payload = baseline_lr.run(paths.training_root(args.training_root), smoke=args.smoke)
             elif args.command == "hardening-verify":
                 from . import hardening
-                payload = hardening.verify_freeze(paths.training_root(args.training_root))
+                payload = hardening.verify_freeze(paths.training_root(args.training_root), args.version)
             elif args.command == "error-analysis":
                 from . import error_analysis
                 payload = error_analysis.run(paths.training_root(args.training_root))

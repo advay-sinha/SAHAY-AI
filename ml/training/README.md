@@ -257,6 +257,31 @@ python -m ml.training.cli stage-w-select
 python -m ml.training.cli stage-w-evaluate
 ```
 
+## Corpus 7b-v2: removing the multi-turn shortcut (2026-09-29)
+
+In `7b-v1`, **every** multi-turn record carries at least one risk label, against about 61% of single-turn records. "Has a `[SEP]` turn marker" therefore predicts "risky"; the AE-15 baseline found this (see `STAGE_W_CARD.md`).
+
+`7b-v2` (generator `7b.2.0`) keeps every `7b-v1` record and family split unchanged, and adds two-turn records built from existing single-turn records of the same split and language:
+- one positive plus one negative;
+- two negatives.
+
+Multi-turn records then carry a risk label as often as single-turn ones: 0.62 against 0.62 in train, validation and holdout.
+
+`7b-v1` stays frozen and byte-identical: the version is a parameter defaulting to `7b-v1`. `v2` holdout singles equal `v1`'s, so `v2` measures the shortcut; it is not new independent evidence. The evaluator now reports holdout F1 separately for single-turn and multi-turn records.
+
+```text
+python -m ml.training.cli hardening-build --version 7b-v2
+python -m ml.training.cli hardening-verify --version 7b-v2
+python -m ml.training.cli stage-w-plan --corpus 7b-v2
+python -m ml.training.cli stage-w --phase 1 --corpus 7b-v2
+python -m ml.training.cli stage-w --phase 2 --corpus 7b-v2
+python -m ml.training.cli stage-w-select --corpus 7b-v2
+python -m ml.training.cli stage-w-evaluate --corpus 7b-v2
+python -m ml.training.cli baseline-lr --corpus 7b-v2
+```
+
+Outputs go to `stage-w-7b-v2/` and `baseline-lr-7b-v2/`, and never overwrite the `7b-v1` experiment.
+
 ## Three evidence classes, reported separately
 
 - **A. External auxiliary evidence:** masked-language validation loss and perplexity, and Stage B

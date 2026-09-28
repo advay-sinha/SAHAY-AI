@@ -418,6 +418,11 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - Benchmark: `backend/scenarios/latency_benchmark.py` sends fictional English utterances, spoken by the built-in Windows Indian-English voices (`scripts/make-benchmark-audio.ps1`), through the real upload endpoint against a disposable SQLite database.
     - Mock-ASR check: reply path p50 12 ms, p95 22 ms.
     - Not measured: VAD endpointing (the phone), LAN upload (the phone), TTS (M13) and Hindi (no voice installed; H5).
+  - **Corpus `7b-v2`: code done 2026-09-29; the owner runs it (R10).**
+    - Balanced multi-turn records remove the shortcut: multi-turn records carry a risk label 0.62 of the time against 0.62 for single-turn (1.00 in v1).
+    - `7b-v1` is unchanged; its freeze still verifies.
+    - A trial build kept 11,739 records, with no contamination block.
+    - To measure the shortcut, retrain Stage W and the baseline with `--corpus 7b-v2`, then compare the single-turn and multi-turn holdout F1.
   - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔).
 
 ### M15 — Shadow model (optional; not recommended before the finale)

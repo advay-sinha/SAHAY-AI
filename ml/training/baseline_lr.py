@@ -156,8 +156,9 @@ def top_features(model: LogReg, vocabulary: Set[str], k: int = 10) -> Dict[str, 
 def run(root: Path, *, smoke: Optional[int] = None, log: Any = print) -> Dict[str, Any]:
     from . import stage_w_eval as swe  # imported here: it reads the exposed fixtures only for evaluation
     is_smoke = smoke is not None
-    base = SMOKE_ROOT if is_smoke else ROOT
-    train_rows = sw.fictional_rows(hx.load_split(root, "train"))
+    suffix = "" if sw.FICTIONAL_VERSION == hx.VERSION else f"-{sw.FICTIONAL_VERSION}"
+    base = (SMOKE_ROOT[0] + suffix,) if is_smoke else (ROOT[0] + suffix,)
+    train_rows = sw.fictional_rows(hx.load_split(root, "train", sw.FICTIONAL_VERSION))
     pools = sw.load_weak(root, "train")
     if is_smoke:
         train_rows = train_rows[:smoke]
@@ -165,6 +166,7 @@ def run(root: Path, *, smoke: Optional[int] = None, log: Any = print) -> Dict[st
     vocabulary = {f for r in train_rows for f in feature_strings(r["text"])}
     data = swe.load_data(root, smoke)
     report: Dict[str, Any] = {"model_id": "interpretable_logistic_baseline", "hyperparameters": HYPER,
+                              "fictional_corpus": sw.FICTIONAL_VERSION,
                               "calibrated": False, "authoritative": False, "smoke": is_smoke,
                               "evidence_classes": swe.EVIDENCE, "runs": []}
     for name, arm in ARMS.items():

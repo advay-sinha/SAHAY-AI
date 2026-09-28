@@ -166,6 +166,23 @@ def evaluate_run(run: Mapping[str, Any], root: Path, data: Mapping[str, Any], de
     return {"arm": run["arm"], "seed": run["seed"], "selected_epoch": run["selected_epoch"], **scored}
 
 
+def by_turns(rows: Sequence[Mapping[str, Any]], probs: Sequence[Sequence[float]]) -> Dict[str, Any]:
+    """Holdout macro and micro F1 for single-turn and multi-turn records separately (shortcut check)."""
+    out: Dict[str, Any] = {}
+    n_det = len(sw.DETECTOR_LABELS)
+    for kind in ("single_turn", "multi_turn"):
+        idx = [i for i, r in enumerate(rows) if kind in (r.get("slices") or ())]
+        if not idx:
+            out[kind] = {"records": 0}
+            continue
+        gold = [rows[i]["gold"] for i in idx]
+        pred = [metrics.firings(probs[i][:n_det], sw.DETECTOR_LABELS) for i in idx]
+        s = metrics.summary(gold, pred, sw.DETECTOR_LABELS)
+        out[kind] = {"records": len(idx), "macro_f1": s["macro"]["f1"], "micro_f1": s["micro"]["f1"],
+                     "any_positive_rate": round(sum(any(g.values()) for g in gold) / len(idx), 4)}
+    return out
+
+
 def score_model(data: Mapping[str, Any], predict_fn: Callable[[Sequence[Mapping[str, Any]]], List[List[float]]]
                 ) -> Dict[str, Any]:
     """Score any 9-logit predictor (``predict_fn(rows) -> probabilities``) on every evaluation set."""
@@ -173,6 +190,7 @@ def score_model(data: Mapping[str, Any], predict_fn: Callable[[Sequence[Mapping[
     probs = predict_fn(data["holdout"])
     holdout = _strip(evaluate_rows(data["holdout"], [p[:n_det] for p in probs]))
     holdout["evidence_class"] = EVIDENCE["holdout"]
+    holdout["by_turns"] = by_turns(data["holdout"], probs)
     weak: Dict[str, Any] = {}
     for source, rows in data["weak"].items():
         head = sw.LABELS.index(WEAK_HEAD[source])
@@ -209,7 +227,7 @@ def score_model(data: Mapping[str, Any], predict_fn: Callable[[Sequence[Mapping[
 
 
 def load_data(root: Path, limit: Optional[int] = None) -> Dict[str, Any]:
-    holdout = sw.fictional_rows(hx.load_split(root, "synthetic_hardening_holdout"))
+    holdout = sw.fictional_rows(hx.load_split(root, "synthetic_hardening_holdout", sw.FICTIONAL_VERSION))
     weak = sw.load_weak(root, "test")
     if limit:
         holdout = holdout[:limit]
@@ -240,7 +258,7 @@ def evaluate(root: Path, *, smoke: Optional[int] = None, log: Any = print) -> Di
     for run in runs:
         log(f"  evaluating {run['arm']} seed {run['seed']}")
         results.append(evaluate_run(run, root, data, device))
-    report = {"model_id": sw.MODEL_ID, "threshold": metrics.THRESHOLD, "calibrated": False, "authoritative": False,
+    report = {"model_id": sw.MODEL_ID, "fictional_corpus": sw.FICTIONAL_VERSION, "threshold": metrics.THRESHOLD, "calibrated": False, "authoritative": False,
               "smoke": is_smoke, "selected": selected, "never_evaluated": list(FORBIDDEN), "evidence_classes": EVIDENCE,
               "weak_test_sizes": {s: len(r) for s, r in data["weak"].items()}, "runs": results}
     paths.write_json(paths.confined(root, *base, "reports", "evaluation.json"), report)

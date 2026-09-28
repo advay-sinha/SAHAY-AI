@@ -323,10 +323,22 @@ def text_rows(root: Path, resamples: int, seed: int) -> List[Dict[str, Any]]:
     return rows
 
 
-def stage_w_rows(root: Path) -> List[Dict[str, Any]]:
+def _turn_rows(metric_id: str, name: str, holdout: Mapping[str, Any], source: str) -> List[Dict[str, Any]]:
+    """Holdout macro F1 on single-turn and multi-turn records separately (the multi-turn shortcut check)."""
+    out = []
+    for kind, s in sorted((holdout.get("by_turns") or {}).items()):
+        if s.get("records") and s.get("macro_f1") is not None:
+            out.append(row(metric_id, f"{name}, {kind.replace('_', '-')} records", scope="synthetic holdout",
+                           status="measured", evidence_class="synthetic_development", source=source,
+                           value=s["macro_f1"], n=s["records"],
+                           note=f"share of records with a risk label {s.get('any_positive_rate')}"))
+    return out
+
+
+def stage_w_rows(root: Path, folder: str = "stage-w", corpus: str = "7b-v1") -> List[Dict[str, Any]]:
     """The selected Stage W checkpoint (shadow MuRIL, weak supervision): headline rows by evidence class."""
-    path = root / "stage-w" / "reports" / "evaluation.json"
-    source = "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json"
+    path = root / folder / "reports" / "evaluation.json"
+    source = f"SAHAY_TRAINING_ROOT/{folder}/reports/evaluation.json"
     if not path.is_file():
         return [row("SHD", "Shadow safety detector (Stage W)", scope="all", status="not_available",
                     evidence_class="none", source=source, note="no Stage W evaluation report found")]
@@ -336,9 +348,10 @@ def stage_w_rows(root: Path) -> List[Dict[str, Any]]:
     if run is None:
         return [row("SHD", "Shadow safety detector (Stage W)", scope="all", status="not_available",
                     evidence_class="none", source=source, note="no selected run in the report")]
-    tag = f"{run['arm']} seed {run['seed']}"
+    tag = f"{run['arm']} seed {run['seed']}" + ("" if corpus == "7b-v1" else f", corpus {corpus}")
     out: List[Dict[str, Any]] = []
     h = run["holdout"]
+    out += _turn_rows("SHD", f"Shadow detector macro F1 ({tag})", h, source)
     out.append(row("SHD", f"Shadow detector macro F1, fictional holdout ({tag})", scope="synthetic holdout",
                    status="measured", evidence_class="synthetic_development", source=source,
                    value=h["macro"]["f1"], n=h.get("records"),
@@ -374,17 +387,18 @@ def stage_w_rows(root: Path) -> List[Dict[str, Any]]:
     return out
 
 
-def baseline_rows(root: Path) -> List[Dict[str, Any]]:
+def baseline_rows(root: Path, folder: str = "baseline-lr", corpus: str = "7b-v1") -> List[Dict[str, Any]]:
     """AE-15: the standard-library logistic baseline, scored by the Stage W evaluator on the same sets."""
-    path = root / "baseline-lr" / "reports" / "evaluation.json"
-    source = "SAHAY_TRAINING_ROOT/baseline-lr/reports/evaluation.json"
+    path = root / folder / "reports" / "evaluation.json"
+    source = f"SAHAY_TRAINING_ROOT/{folder}/reports/evaluation.json"
     if not path.is_file():
         return [row("AE15", "Interpretable logistic baseline", scope="all", status="not_available",
                     evidence_class="none", source=source, note="no baseline report found")]
     out: List[Dict[str, Any]] = []
     for run in json.loads(path.read_text(encoding="utf-8"))["runs"]:
-        arm = run["arm"]
+        arm = run["arm"] + ("" if corpus == "7b-v1" else f", corpus {corpus}")
         h = run["holdout"]
+        out += _turn_rows("AE15", f"Logistic baseline macro F1 ({arm})", h, source)
         out.append(row("AE15", f"Logistic baseline macro F1, fictional holdout ({arm})", scope="synthetic holdout",
                        status="measured", evidence_class="synthetic_development", source=source,
                        value=h["macro"]["f1"], n=h.get("records")))
@@ -415,6 +429,12 @@ def private_rows(training_root: Optional[str], resamples: int, seed: int) -> Lis
                                   ("AE15", "Interpretable logistic baseline"))]
     root = Path(training_root)
     rows = ser_rows(root, resamples, seed) + text_rows(root, resamples, seed) + stage_w_rows(root) + baseline_rows(root)
+    # 7b-v2 (balanced multi-turn corpus) experiments appear only once they have been run.
+    for corpus in ("7b-v2",):
+        if (root / f"stage-w-{corpus}" / "reports" / "evaluation.json").is_file():
+            rows += stage_w_rows(root, f"stage-w-{corpus}", corpus)
+        if (root / f"baseline-lr-{corpus}" / "reports" / "evaluation.json").is_file():
+            rows += baseline_rows(root, f"baseline-lr-{corpus}", corpus)
     if not any(r["metric_id"] == "SER" for r in rows):
         rows.append(row("SER", "Speech emotion UAR", scope="all", status="not_available", evidence_class="none",
                         source="SAHAY_TRAINING_ROOT/ser/runs", note="no run reports found"))

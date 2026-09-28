@@ -167,7 +167,7 @@ class BuiltRoot(unittest.TestCase):
         (t7 / "records.jsonl").write_text("", encoding="utf-8")
         full = hx.generate()
         small = [r for r in full if r["lineage"].get("variant", 0) in (0, 1)]
-        with mock.patch.object(hx, "generate", lambda: small), \
+        with mock.patch.object(hx, "generate", lambda **_: small), \
                 mock.patch.object(hx, "contamination", lambda recs, t7_, keys, index=None: {
                     "kept": list(recs), "blocked_families": {}, "blocked_records": 0, "warnings": {},
                     "blind_corpus": "unavailable"}), network_blocked() as net:

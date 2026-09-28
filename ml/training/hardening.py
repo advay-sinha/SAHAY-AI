@@ -46,6 +46,14 @@ from . import fictional, paths
 VERSION = "7b-v1"
 GENERATOR_VERSION = "7b.1.0"
 SEED = "sahay-hardening-7b-v1"
+#: Frozen corpus versions. 7b-v2 (plan M14, 2026-09-29) keeps every 7b-v1 single-turn record and
+#: family split, and adds multi-turn records that are all-negative or one positive plus one
+#: negative, so "has several turns" no longer predicts "has a risk label" (the shortcut the AE-15
+#: baseline found). It exists to measure that shortcut; its holdout singles equal 7b-v1's.
+VERSIONS: Dict[str, Dict[str, Any]] = {
+    "7b-v1": {"generator_version": "7b.1.0", "balanced_multi_turn": False},
+    "7b-v2": {"generator_version": "7b.2.0", "balanced_multi_turn": True},
+}
 LABELS: Tuple[str, ...] = tuple(DETECTOR_CATEGORIES)
 LANGUAGES = ("en", "hi", "hinglish")
 SPLITS = ("train", "validation", "synthetic_hardening_holdout")
@@ -54,6 +62,17 @@ HOLDOUT_NOTE = ("synthetic_hardening_holdout is synthetic and agent-generated: d
 ALL_EXPOSED_FILES = tuple(lk.EXPOSED_FILES) + ("locked.json",)
 CORPUS_DIR = ("task7b", "corpus", VERSION)
 REVIEW_DIR = ("task7b", "review", VERSION)
+
+
+def corpus_dir(version: str = VERSION) -> Tuple[str, ...]:
+    if version not in VERSIONS:
+        raise ValueError(f"unknown corpus version {version!r}")
+    return ("task7b", "corpus", version)
+
+
+def review_dir(version: str = VERSION) -> Tuple[str, ...]:
+    corpus_dir(version)
+    return ("task7b", "review", version)
 C, L, K, H = "crisis_self_harm", "legal_urgency", "communication_safety_coercion", "explicit_human_request"
 _CODE = {"C": C, "D": "immediate_danger", "T": "continuing_threat", "M": "medical_urgency",
          "I": "isolation_boycott_displacement", "L": L, "K": K, "H": H}
@@ -652,7 +671,8 @@ def _record(rid: str, family: str, group: str, split: str, language: str, turns:
             "review_status": "unreviewed", "fictional": True}
 
 
-def generate(variants: int = 10, combos_per_pair: int = 40) -> List[Dict[str, Any]]:
+def generate(variants: int = 10, combos_per_pair: int = 40, version: str = VERSION) -> List[Dict[str, Any]]:
+    spec = VERSIONS[version]
     splits = assign_splits()
     records: List[Dict[str, Any]] = []
     seen: Set[Tuple[str, str]] = set()
@@ -715,7 +735,66 @@ def generate(variants: int = 10, combos_per_pair: int = 40) -> List[Dict[str, An
                     add(_record(f"HX-M-{a[0]}-{b[0]}-{lang}-{i:03d}", f"combo:{a[0]}+{b[0]}", f"combo:{a[0]}+{b[0]}",
                                 split, lang, turns, labels, [], ("multi_turn_combo", *fx, *sx),
                                 {"cores": [a[0], b[0]], "variant": i}, reason))
+    if spec["balanced_multi_turn"]:
+        for rec in balanced_multi_turn(records):
+            add(rec)
+    for rec in records:
+        rec["generator_version"] = spec["generator_version"]
     return records
+
+
+#: 7b-v2: for every (split, language), how many extra multi-turn records to add per two-positive
+#: combo. With about 0.5 one-positive and 0.92 all-negative per two-positive combo, multi-turn
+#: records carry a risk label about as often as single-turn records do (about 0.62).
+BALANCE = {"one_positive": 0.5, "all_negative": 0.92}
+
+
+def balanced_multi_turn(records: Sequence[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+    """Two-turn records built from existing single-turn records of one split and language:
+    one positive plus one negative (labels of the positive), and two negatives (no label)."""
+    out: List[Dict[str, Any]] = []
+    for split in SPLITS:
+        for lang in LANGUAGES:
+            singles = [r for r in records if r["split"] == split and r["language"] == lang and len(r["turns"]) == 1]
+            pos = sorted((r for r in singles if r["positive_labels"]), key=lambda r: r["id"])
+            neg = sorted((r for r in singles if not r["positive_labels"]), key=lambda r: r["id"])
+            combos = sum(1 for r in records if r["split"] == split and r["language"] == lang
+                         and r["family"].startswith("combo:"))
+            if not pos or len(neg) < 2 or not combos:
+                continue
+            plan = (("one_positive", round(combos * BALANCE["one_positive"])),
+                    ("all_negative", round(combos * BALANCE["all_negative"])))
+            for kind, n in plan:
+                for i in range(n):
+                    rng = random.Random(_h("combo2", kind, split, lang, i))
+                    if kind == "one_positive":
+                        a, b = pos[rng.randrange(len(pos))], neg[rng.randrange(len(neg))]
+                        labels = dict(a["labels"])
+                        negatives = sorted(set(b["negative_labels"]) - set(a["positive_labels"]))
+                    else:
+                        a, b = rng.sample(neg, 2)
+                        labels = {name: False for name in LABELS}
+                        negatives = sorted(set(a["negative_labels"]) | set(b["negative_labels"]))
+                    pair = [a, b] if rng.random() < 0.5 else [b, a]
+                    fam = f"combo2:{a['family']}+{b['family']}"
+                    out.append(_record(f"HX-B-{kind[:3]}-{split[:3]}-{lang}-{i:03d}", fam, "combo:" + fam, split,
+                                       lang, [pair[0]["turns"][0]["text"], pair[1]["turns"][0]["text"]], labels,
+                                       negatives, ("multi_turn_balanced", kind),
+                                       {"records": [a["id"], b["id"]], "variant": i, "kind": kind},
+                                       f"turn composition ({kind}): records {a['id']} and {b['id']}"))
+    return out
+
+
+def multi_turn_stats(records: Sequence[Mapping[str, Any]]) -> Dict[str, Dict[str, Any]]:
+    """Per split: how often single- and multi-turn records carry any risk label (the shortcut check)."""
+    out: Dict[str, Dict[str, Any]] = {}
+    for split in SPLITS:
+        rows = [r for r in records if r["split"] == split]
+        for kind, sel in (("single", [r for r in rows if len(r["turns"]) == 1]),
+                          ("multi", [r for r in rows if len(r["turns"]) > 1])):
+            rate = round(sum(bool(r["positive_labels"]) for r in sel) / len(sel), 4) if sel else None
+            out.setdefault(split, {})[kind] = {"records": len(sel), "any_positive_rate": rate}
+    return out
 
 
 # --- contamination ----------------------------------------------------------------------------------
@@ -773,6 +852,8 @@ def contamination(records: Sequence[Mapping[str, Any]], task7: Sequence[Mapping[
 def area_of(r: Mapping[str, Any]) -> str:
     if r["family"].startswith("combo:"):
         return "multi_label"
+    if r["family"].startswith("combo2:"):
+        return "multi_turn_balanced"
     core = next(c for c in CORES if c[0] == r["family"])
     return {"crisis": "crisis", "coercion": "coercion", "legal": "legal"}.get(core[1], "controls_and_other")
 
@@ -814,21 +895,23 @@ def bank_hash() -> str:
                  "roman": ROMAN_VARIANTS})
 
 
-def freeze_payload(records: Sequence[Mapping[str, Any]], cov: Mapping[str, Any]) -> Dict[str, Any]:
+def freeze_payload(records: Sequence[Mapping[str, Any]], cov: Mapping[str, Any], version: str = VERSION
+                   ) -> Dict[str, Any]:
     split_hashes = {s: _sha(sorted(r["content_hash"] + "|" + r["id"] for r in records if r["split"] == s))
                     for s in SPLITS}
     family_hashes = {s: _sha(cov["families"][s]) for s in SPLITS}
-    return {"version": VERSION, "generator_version": GENERATOR_VERSION, "seed": SEED, "bank_sha256": bank_hash(),
+    return {"version": version, "generator_version": VERSIONS[version]["generator_version"], "seed": SEED,
+            "bank_sha256": bank_hash(),
             "split_record_sha256": split_hashes, "split_family_sha256": family_hashes,
             "records": {s: sum(r["split"] == s for r in records) for s in SPLITS},
             "holdout_note": HOLDOUT_NOTE}
 
 
-def build(root: Path, external_keys: Optional[Set[str]] = None) -> Dict[str, Any]:
-    out = paths.confined(root, *CORPUS_DIR)
+def build(root: Path, external_keys: Optional[Set[str]] = None, version: str = VERSION) -> Dict[str, Any]:
+    out = paths.confined(root, *corpus_dir(version))
     if (out / "freeze.json").is_file():
-        raise RuntimeError(f"corpus {VERSION} is frozen; create a new version instead of regenerating it")
-    records = generate()
+        raise RuntimeError(f"corpus {version} is frozen; create a new version instead of regenerating it")
+    records = generate(version=version)
     screen = contamination(records, fictional.load(root), external_keys)
     kept = screen["kept"]
     cov = coverage(kept)
@@ -843,34 +926,36 @@ def build(root: Path, external_keys: Optional[Set[str]] = None) -> Dict[str, Any
                 fh.write(json.dumps(r, sort_keys=True, ensure_ascii=False) + "\n")
         tmp.replace(out / f"{split}.jsonl")
     paths.write_json(out / "split_manifest.json", {"families": cov["families"], "coverage": cov["splits"]})
-    frozen = freeze_payload(kept, cov)
+    frozen = freeze_payload(kept, cov, version)
     frozen.update({"frozen_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "state": "frozen_before_training",
                    "files_sha256": {f"{s}.jsonl": paths.sha256_file(out / f"{s}.jsonl") for s in SPLITS}
                    | {"split_manifest.json": paths.sha256_file(out / "split_manifest.json")}})
     paths.write_json(out / "freeze.json", frozen)
-    packet = review_packet(root, kept)
-    report = {"generated": len(records), "kept": len(kept), "contamination": {k: v for k, v in screen.items()
-                                                                                if k != "kept"},
+    packet = review_packet(root, kept, version)
+    report = {"version": version, "generated": len(records), "kept": len(kept),
+              "multi_turn_stats": multi_turn_stats(kept),
+              "contamination": {k: v for k, v in screen.items() if k != "kept"},
               "coverage": cov["splits"], "families": {s: len(v) for s, v in cov["families"].items()},
               "freeze": frozen, "review_packet": packet}
-    paths.write_json(paths.confined(root, "task7b", "reports", "corpus.json"), report)
+    name = "corpus.json" if version == VERSION else f"corpus-{version}.json"
+    paths.write_json(paths.confined(root, "task7b", "reports", name), report)
     return report
 
 
-def load_split(root: Path, split: str) -> List[Dict[str, Any]]:
-    path = paths.confined(root, *CORPUS_DIR, f"{split}.jsonl")
+def load_split(root: Path, split: str, version: str = VERSION) -> List[Dict[str, Any]]:
+    path = paths.confined(root, *corpus_dir(version), f"{split}.jsonl")
     with open(path, encoding="utf-8") as fh:
         return [json.loads(line) for line in fh if line.strip()]
 
 
-def verify_freeze(root: Path) -> Dict[str, Any]:
+def verify_freeze(root: Path, version: str = VERSION) -> Dict[str, Any]:
     """Recompute every frozen hash from the files on disk (run in a fresh process)."""
-    out = paths.confined(root, *CORPUS_DIR)
+    out = paths.confined(root, *corpus_dir(version))
     frozen = json.loads((out / "freeze.json").read_text(encoding="utf-8"))
     files_ok = {name: paths.sha256_file(out / name) == digest for name, digest in frozen["files_sha256"].items()}
-    records = [r for s in SPLITS for r in load_split(root, s)]
+    records = [r for s in SPLITS for r in load_split(root, s, version)]
     manifest = json.loads((out / "split_manifest.json").read_text(encoding="utf-8"))
-    recomputed = freeze_payload(records, {"families": manifest["families"]})
+    recomputed = freeze_payload(records, {"families": manifest["families"]}, version)
     same = {k: recomputed[k] == frozen[k] for k in ("split_record_sha256", "split_family_sha256", "records",
                                                      "bank_sha256")}
     return {"version": frozen["version"], "frozen_at": frozen["frozen_at"], "files_match": files_ok,
@@ -881,7 +966,7 @@ REVIEW_FIELDS = ("reviewer_identity", "role", "language_correct", "label_correct
                  "safety_concern", "decision", "reasoning", "timestamp")
 
 
-def review_packet(root: Path, records: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+def review_packet(root: Path, records: Sequence[Mapping[str, Any]], version: str = VERSION) -> Dict[str, Any]:
     """A private sampling of every family, label, language, contrast type and multi-label combination,
     with every review field empty. No review is ever filled in here."""
     chosen: Dict[str, Mapping[str, Any]] = {}
@@ -909,7 +994,7 @@ def review_packet(root: Path, records: Sequence[Mapping[str, Any]]) -> Dict[str,
              "turns": [t["text"] for t in r["turns"]], "sampled_for": r["sampled_for"],
              **{f: None for f in REVIEW_FIELDS}, "decision_options": ["approve", "revise", "reject"],
              "review_state": "pending_human_review"} for r in sorted(chosen.values(), key=lambda x: x["id"])]
-    out = paths.confined(root, *REVIEW_DIR)
+    out = paths.confined(root, *review_dir(version))
     out.mkdir(parents=True, exist_ok=True)
     with open(out / "review-packet.jsonl.partial", "w", encoding="utf-8", newline="\n") as fh:
         for row in rows:

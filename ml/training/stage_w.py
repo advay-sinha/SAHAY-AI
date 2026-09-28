@@ -77,6 +77,18 @@ IDENTITY = ("experimental weak-supervision shadow output: development-only, unca
             "labels that are not SAHAY ground truth, not clinically validated, never authoritative")
 ROOT = ("stage-w",)
 SMOKE_ROOT = ("stage-w-smoke",)
+#: The fictional corpus version (``hardening.VERSIONS``). 7b-v1 is the recorded experiment; 7b-v2
+#: (balanced multi-turn records) is a separate experiment with its own output folder.
+FICTIONAL_VERSION = hx.VERSION
+
+
+def configure(corpus: str) -> None:
+    """Select the fictional corpus version. Anything but 7b-v1 writes under its own folder."""
+    global FICTIONAL_VERSION, ROOT, SMOKE_ROOT
+    hx.corpus_dir(corpus)  # validates the name
+    FICTIONAL_VERSION = corpus
+    suffix = "" if corpus == hx.VERSION else f"-{corpus}"
+    ROOT, SMOKE_ROOT = (f"stage-w{suffix}",), (f"stage-w-smoke{suffix}",)
 HEAD_FILE = "head.safetensors"
 CONFIG_FILE = "weak_shadow_config.json"
 ENCODER_DIR = "encoder"
@@ -158,7 +170,7 @@ def weak_draw(pools: Mapping[str, Sequence[Mapping[str, Any]]], budget: int, see
 def plan(weak_sha: Mapping[str, str]) -> Dict[str, Any]:
     return {"model_id": MODEL_ID, "labels": list(LABELS), "arms": {k: list(v) for k, v in ARMS.items()},
             "schedule": SCHEDULE, "hyperparameters": HYPER, "selection_rule": SELECTION_RULE,
-            "fictional_corpus": hx.VERSION, "weak_corpus_files_sha256": dict(sorted(weak_sha.items())),
+            "fictional_corpus": FICTIONAL_VERSION, "weak_corpus_files_sha256": dict(sorted(weak_sha.items())),
             "threshold_tuning": "none; fixed 0.5",
             "never_read_for_training_or_selection": ["weak test bucket", "synthetic_hardening_holdout",
                                                      "exposed fixtures", "locked corpus"]}
@@ -176,7 +188,7 @@ def write_plan(root: Path) -> Dict[str, Any]:
         if existing["plan_sha256"] != plan_hash(p):
             raise RuntimeError("the predeclared plan differs from the recorded one; it may not change after recording")
         return existing
-    if not hx.verify_freeze(root)["ok"]:
+    if not hx.verify_freeze(root, FICTIONAL_VERSION)["ok"]:
         raise RuntimeError("the Task 7B corpus freeze does not verify; nothing is trained")
     for name, digest in weak_manifest_sha(root).items():
         if paths.sha256_file(paths.confined(root, *WEAK_CORPUS, name)) != digest:
@@ -352,7 +364,7 @@ def train_run(root: Path, arm: str, seed: int, train: Sequence[Mapping[str, Any]
     name = f"{arm}-seed-{seed}"
     hashes = save_checkpoint(net, tok, _root(root, "checkpoints", name, smoke=smoke),
                              {"arm": arm, "seed": seed, "epoch": best["epoch"], "stage": "W",
-                              "weak_targets": list(ARMS[arm]), "fictional_corpus": hx.VERSION})
+                              "weak_targets": list(ARMS[arm]), "fictional_corpus": FICTIONAL_VERSION})
     v = best["validation"]
     result = {"arm": arm, "seed": seed, "selected_epoch": best["epoch"], "history": history,
               "validation": {k: v[k] for k in ("macro", "min_label_recall", "micro", "per_label", "by_language")},
@@ -369,11 +381,11 @@ def run_phase(root: Path, phase: int, *, smoke: Optional[int] = None, log: Any =
     is_smoke = smoke is not None
     if not is_smoke:
         check_plan(root)
-        if not hx.verify_freeze(root)["ok"]:
+        if not hx.verify_freeze(root, FICTIONAL_VERSION)["ok"]:
             raise RuntimeError("the Task 7B corpus freeze does not verify; nothing is trained")
     enc_dir, stage_a_run = encoder_dir(root)
-    train = fictional_rows(hx.load_split(root, "train"))
-    val = fictional_rows(hx.load_split(root, "validation"))
+    train = fictional_rows(hx.load_split(root, "train", FICTIONAL_VERSION))
+    val = fictional_rows(hx.load_split(root, "validation", FICTIONAL_VERSION))
     pools = load_weak(root, "train")
     if is_smoke:
         train, val = train[:smoke], val[:smoke]
