@@ -25,6 +25,7 @@ text is used instead.
 - [Safety invariants](#safety-invariants)
 - [How a session works](#how-a-session-works)
 - [Stress Vulnerability Index](#stress-vulnerability-index)
+- [AI models and evaluation](#ai-models-and-evaluation)
 - [Architecture](#architecture)
 - [Repository layout](#repository-layout)
 - [Frozen contracts](#frozen-contracts)
@@ -146,6 +147,43 @@ library only, no I/O, no model loading — so it is fully testable and explainab
 Weights are labelled **provisional, pending expert calibration** wherever they are
 shown in the UI.
 
+## AI models and evaluation
+
+The **deterministic pipeline is authoritative**: the crisis pre-check, the rule-based
+detectors, the output validator and the SVI engine. Every trained model is compared
+against it and runs in **shadow**: its output is shown beside the rules in the local ML
+demonstration, but it never routes, scores or speaks.
+
+| Component | What it is | Status |
+|---|---|---|
+| Crisis pre-check and detectors | Lexicons with clause-scoped negation and attribution cues, in English, Hindi and Hinglish | **Authoritative** |
+| Output validator | 87 phrase rules plus licensed-question checks, applied before any sentence is spoken | **Authoritative** |
+| SVI engine | Weighted sum with hard overrides and abstention | **Authoritative**; weights provisional |
+| Speech-to-text | Whisper Small behind Silero VAD, in a loopback-only local service (PC-11) | In the voice path; Hindi WER not yet measured |
+| D4 voice distress | A rule comparing a caller's pitch, loudness and pauses with their own first turns | Wired; unvalidated |
+| Speech emotion (SER) | emotion2vec+, Whisper-encoder and WavLM heads, trained on acted English speech | Shadow; off in D4 until its gate passes on team recordings |
+| Text affect | MuRIL fine-tuned on EmoInHindi and GoEmotions | Shadow |
+| Shadow safety detector (Stage W) | MuRIL with borrowed weak labels (Reddit crisis, Dreaddit stress, hate speech) plus a fictional corpus | Shadow; `rejected_for_product_integration` |
+| Voice output | Human-recorded fixed scripts plus the built-in offline Windows voice (PC-12) | Wired; nothing spoken until the scripts are approved |
+
+Measured results:
+- **Evidence class.** All numbers below come from fixtures published during
+  development: they show regression behaviour, not generalisation. The locked set has
+  **0** samples, so nothing is official.
+- **Rules.** On development fixtures they miss 0 of 17 critical events; on candidate
+  fixtures, 1 of 14. The crisis pre-check finds 9 of 9 and 8 of 9 crisis cases.
+  Detector micro F1 is 0.93 and 0.88.
+- **Red team.** 39 of 39 cases blocked before synthesis.
+- **Shadow MuRIL.** It reaches 0.99 AUROC on Reddit crisis text, where the rules find
+  0.38 of posts. On SAHAY's own fixtures it reaches only 0.56–0.62 micro F1 against the
+  rules' 0.93 and 0.88, and it fires on harmless absence wording.
+- **Latency** (laptop, synthetic speech). A server-side voice turn takes 581 ms at p95;
+  adding the phone's 700 ms end-of-speech wait gives about 1.3 s, within the 3 s budget.
+
+The full evaluation table has 150 rows, each labelled with its source and evidence
+class: `ml/eval/results/eval-table-2026-09-29.md`. The judge-defence pages are in
+`docs/defence/`. Every component has a card, listed in `docs/defence/README.md`.
+
 ## Architecture
 
 ```text
@@ -193,19 +231,26 @@ svi.compute(dimension_scores, confidences, quality)
 
 ```text
 backend/       FastAPI gateway — REST, WebSocket, role fan-out, workers, Alembic, seed
-  app/api/       auth, sessions, cases
+  app/api/       auth, sessions (incl. voice upload PC-11, turn audio PC-12), cases
   app/ws/        events, session socket, fanout (server-side role filter)
-  app/services/  consent, turn loop, decisions, timeline
-  app/adapters/  llm, storage, retrieval, assessment_runner (all mockable)
-  tests/         role fan-out, consent gate, timeline leakage, contract mirror, auth
+  app/services/  consent, turn loop, decisions, timeline, latency metrics
+  app/adapters/  llm, asr, tts, storage, retrieval, assessment_runner (all mockable)
+  scenarios/     scenario runner and the M2 latency benchmark
+  tests/         role fan-out, consent gate, timeline leakage, contract mirror, auth, audio
 ml/            Safety-critical and model code
   dialogue/      states, intents, policy, fixed scripts
   guardrails/    crisis pre-check, validator, banned patterns, lexicons
   svi/           dimensions, weights, engine, hard overrides
-  asr/ tts/      transcription, VAD, language ID, synthesis, pre-synthesis
-  acoustics/     prosodic features, audio quality gating
-  nlp/           detectors, classifiers, slot extraction
-  eval/          deterministic safety evaluation harness and metrics
+  nlp/           detectors, lexicons, slot extraction, transliteration
+  acoustics/     prosody, audio quality, the D4 voice-distress rule
+  voice/         loopback speech-to-text service (Whisper Small + Silero VAD)
+  tts/           fixed-script recording registry, offline Windows voice
+  runtime/       pinned model manifest, offline loading, benchmarks
+  ser/           speech-emotion candidates (shadow)
+  textaffect/    MuRIL text affect (shadow)
+  training/      Stage A/B/C/W training, logistic baseline, shortcut check (shadow)
+  data/          dataset governance, label firewall, corpus builders
+  eval/          deterministic evaluation harness, evaluation table, defence pages
 frontend/      React + Vite executive console — queue, case packet, decisions, audit
 mobile/        Expo victim app — consent, voice, chat, timeline, offline queue
 data-scripts/  Corpus manifest and dataset registry (metadata only, never media)
@@ -255,7 +300,9 @@ action.recommended - safesignal.flag - escalation.packet
 
 ```text
 POST /auth/login
-POST /sessions | POST /sessions/{id}/audio | POST /sessions/{id}/end
+POST /sessions | POST /sessions/{id}/end
+POST /sessions/{id}/audio?lang=hi|en        whole-utterance voice turn (PC-11) -> {turn_id, status}
+GET  /sessions/{id}/turns/{turn_id}/audio   assistant-turn audio (PC-12) -> audio/wav, or 404
 GET  /queue
 GET  /cases/{id}            full escalation packet
 POST /cases/{id}/claim | /cases/{id}/takeover
@@ -277,16 +324,19 @@ assessment event reaching a victim client.
 The reply path is budgeted end to end. Assessment runs on a parallel path and must
 never block a reply.
 
-| Stage | Target |
-|---|---|
-| VAD endpoint | ~700 ms silence |
-| ASR final (utterance) | <= 0.6 s |
-| Safety pre-check | <= 0.05 s |
-| Dialogue policy | <= 0.01 s |
-| LLM phrasing | <= 0.8 s |
-| Output validator | <= 0.02 s |
-| TTS first chunk | <= 0.5 s (0 s for pre-synthesised turns) |
-| **Victim stops speaking → assistant starts** | **< 3 s** |
+| Stage | Target | Measured, p95 (laptop, synthetic speech) |
+|---|---|---|
+| VAD endpoint | ~700 ms silence | configured on the phone; not measured |
+| ASR final (utterance) | <= 0.6 s | 572 ms for the speech-to-text request |
+| Safety pre-check | <= 0.05 s | 0.1 ms |
+| Dialogue policy | <= 0.01 s | 0.1 ms |
+| LLM phrasing | <= 0.8 s | not exercised (mock LLM) |
+| Output validator | <= 0.02 s | not exercised (no generated text) |
+| TTS first chunk | <= 0.5 s (0 s for pre-synthesised turns) | 38 ms (offline English voice) |
+| **Victim stops speaking → assistant starts** | **< 3 s** | server voice turn 581 ms; about 1.3 s with the 700 ms end-of-speech wait. Wi-Fi and the phone are not yet measured |
+
+Timings are recorded per turn in `latency_metrics`. `backend/scenarios/latency_benchmark.py`
+reproduces the table: `ml/eval/results/latency-2026-09-29.md`.
 
 ## Getting started
 
@@ -329,6 +379,10 @@ repository.
 | `DATABASE_POOL_SIZE` | `5` | Pool sizing; see `.env.example` for the overflow and timeout keys |
 | `SUPABASE_PROJECT_REF` | empty | Remote demo seeding stays denied unless this and the seed gates are satisfied |
 | `LLM_PROVIDER` | `mock` | The whole dialogue must run with the LLM disabled |
+| `ASR_PROVIDER` | `mock` | `local_service` calls the loopback speech-to-text process (`python -m ml.voice.service`) |
+| `ASR_SERVICE_URL` | `http://127.0.0.1:8765` | Loopback only; anything else is refused |
+| `TTS_PROVIDER` | `none` | `windows_voice` speaks validated turns with a built-in offline voice; `none` shows text only |
+| `FIXED_AUDIO_ROOT` | `./runtime/audio/fixed` | Approved human recordings of S0, S9, SX, SH (`python -m ml.tts.presynth status`) |
 | `ASSESSMENT_RUNNER` | `local` | Background runner; never on the reply path |
 | `POLICY_RETRIEVER` | `local` | Deterministic local retrieval |
 | `SVI_CONFIDENCE_FLOOR` | `0.45` | Below this, abstain: `needs_human`, no score |
@@ -383,6 +437,15 @@ node --test "mobile/tests/*.test.js"                # no assessment data in the 
   environment or `node_modules` reports `BLOCKED` rather than silently weakening the
   check.
 
+Evaluation, regenerated from result files:
+
+```powershell
+python -m ml.eval.run_eval --out ml/eval/results --tag <date>                  # deterministic safety evaluation
+python -m ml.eval.table --eval-json ml/eval/results/eval-<date>.json --out ml/eval/results --tag eval-table-<date>
+python -m ml.eval.defence --eval-json <eval json> --table-json <table json> --out docs/defence
+backend\.venv\Scripts\python.exe backend\scenarios\latency_benchmark.py --rounds 3   # M2 latency
+```
+
 Checks a script cannot make, and that are part of the definition of done:
 
 - the phone reaches the LAN IPv4 address of the host machine
@@ -425,6 +488,12 @@ documentation, issues, commits or chat.
 | `docs/DATASETS_AND_SERVICES.md` | Approved and deferred external assets |
 | `docs/EXTERNAL_DECISIONS.md` | Decision log for every external dependency |
 | `docs/TEAM-OPERATIONS.md` | Ownership, reviews and integration workflow |
+| `docs/plan/ML_NATIONAL_MVP.md` | ML phase plan: what is done, what is measured, what is left |
+| `docs/defence/` | Judge-defence pages: headline numbers, red team, limitations, Q&A, card index |
+| `ml/eval/results/` | Evaluation runs, the evaluation table and the latency report |
+| `ml/eval/CONTAMINATION.md` | Which fixtures are exposed, and why their results are regression evidence |
+| `docs/research/local-research-analysis.tex` | The research analysis (PDF alongside) |
+| `docs/plan/human-tasks/` | The human tasks (H1–H13) that the remaining verification depends on |
 | `CONTRIBUTING.md` | Branch naming, commits, review rules, definition of done |
 
 ## Contributing
@@ -451,10 +520,21 @@ demo machine or a physical phone.
 This is a working prototype under active development, and the gaps are stated rather
 than hidden:
 
-- **The fixed scripts for `S0`, `S9` and `SX` are not yet written.** They must be
-  authored in Hindi and English, reviewed — `SX` by a counsellor or psychology faculty
-  member — and pre-synthesised. They are never model-generated, and the code fails
-  closed until a script is recorded with a named reviewer and a review date.
+- **The fixed scripts for `S0`, `S9`, `SX` and `SH` are not yet written.**
+  - They must be authored in Hindi and English, and reviewed (`SX` by a counsellor or
+    psychology faculty member).
+  - They are then recorded by people and approved in the recording registry.
+  - They are never model-generated, and the code fails closed until then.
+- **No independent evaluation exists yet.** The locked set has 0 samples and the blind
+  corpus is not written. Every safety number is exposed regression evidence.
+- **Speech emotion, text affect and the shadow MuRIL detector stay shadow-only.** The
+  speech-emotion gate needs team recordings in Hindi and English.
+- **Still unmeasured:** Hindi word error rate, and latency on a real phone over Wi-Fi.
+  There is no Hindi voice on the demo laptop, so Hindi replies are shown as text.
+- **Lexicon changes are drafts until two people review them:** crisis lexicon,
+  detector lexicons, output rules.
+- **The remaining verification is human work.** See `docs/plan/human-tasks/` (H1–H13)
+  and Section 14 of the research analysis.
 - SVI weights are provisional and have not been calibrated by domain experts.
 - Language support is limited to what has actually been tested; no claim is made for
   untested languages or dialects.
