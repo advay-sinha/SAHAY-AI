@@ -1,0 +1,960 @@
+===============================================================================
+SAHAY-AI  ---  PROPOSED SOLUTION
+Slide 2 content for the SIH 2026 deck  ---  infographic build sheet
+-------------------------------------------------------------------------------
+Problem Statement SIH26093  .  Team ALT F4  .  NHAA 14566 and the Integrated
+Portal  .  Ministry of Social Justice and Empowerment
+Version 1.0  .  25 September 2026
+===============================================================================
+
+This file contains only the proposed solution. Everything below is either
+ready-to-paste slide copy or build direction. Nothing here is prose meant to
+go on the slide as-is.
+
+Slide rules this content is written to obey:
+  - six slides maximum in the deck, including the title slide
+  - points, diagrams and infographics, never paragraphs
+  - card label 4 words or fewer, card body 16 words or fewer
+  - whole slide at or under 110 words, excluding the template pointer lines
+
+
+===============================================================================
+1.  THE SPINE
+===============================================================================
+
+    REACHES OUT -> CONSENT -> LISTENS -> ASSESSES -> PRIORITISES -> HUMAN
+                                                                    DECIDES
+
+Two elements cut ACROSS the spine rather than sitting inside it. They are what
+makes the graphic read as a system rather than a pipeline.
+
+    INTERRUPT BAND   above the spine, crisis colour
+                     the crisis path can fire from any stage
+
+    FOUNDATION BAR   below the spine, muted
+                     what never reaches the person
+
+
+===============================================================================
+2.  EXACT ON-SLIDE COPY
+===============================================================================
+
+Paste these strings as they are. Word counts are given so the slide budget can
+be checked after any edit.
+
+-------------------------------------------------------------------------------
+(1)  REACHES OUT                                                     [2 words]
+
+     Voice or chat. 14566, app or portal. Hindi, English or Hinglish.
+                                                                    [11 words]
+     chip:  ONE CONVERSATION                                         [2 words]
+
+-------------------------------------------------------------------------------
+(2)  CONSENT FIRST                                                   [2 words]
+
+     Told it is an AI. A human reviews everything. Can ask for a person
+     anytime.                                                       [15 words]
+
+     chip:  DECLINE -> STRAIGHT TO HUMAN                             [4 words]
+
+-------------------------------------------------------------------------------
+(3)  LISTENS                                                         [1 word ]
+
+     Eight to twelve turns. Never interrupts. Never asks what was already
+     answered.                                                       [12 words]
+
+     chip:  MACHINE PICKS THE QUESTION                               [4 words]
+
+-------------------------------------------------------------------------------
+(4)  ASSESSES                                                        [1 word ]
+
+     Nine dimensions, from words and voice. Every score linked to the exact
+     utterance.                                                      [13 words]
+
+     chip:  RUNS IN PARALLEL                                         [3 words]
+
+-------------------------------------------------------------------------------
+(5)  PRIORITISES                                                     [1 word ]
+
+     Band, confidence, evidence. Says "needs human" when unsure instead of
+     guessing.                                                       [12 words]
+
+     chip:  OR IT ABSTAINS                                           [3 words]
+
+-------------------------------------------------------------------------------
+(6)  HUMAN DECIDES                                                   [2 words]
+
+     Officer confirms, modifies, rejects or takes over. Counselling, legal,
+     medical, police.                                                [11 words]
+
+     chip:  EVERY ACTION LOGGED                                      [3 words]
+
+-------------------------------------------------------------------------------
+INTERRUPT BAND      spans cards 2 to 5, with arrows touching each
+
+     CRISIS DETECTED -> FIXED APPROVED SCRIPT -> HUMAN, IMMEDIATELY
+     Checked before anything else, on every turn.                    [15 words]
+
+-------------------------------------------------------------------------------
+FOUNDATION BAR      full width, beneath everything
+
+     The person never sees a score, band or alert. Enforced on the server.
+                                                                    [13 words]
+-------------------------------------------------------------------------------
+
+
+===============================================================================
+3.  LAYOUT ON A 16:9 SLIDE
+===============================================================================
+
++------------------------------------------------------------------------+
+|  PROPOSED SOLUTION              [template pointer lines, small, grey]   |
+|                                                                        |
+|  ========================================================              |
+|  ||  CRISIS -> FIXED SCRIPT -> HUMAN, IMMEDIATELY      ||              |
+|  ||  checked before anything else, on every turn       ||              |
+|  ========^=======^=======^=======^=======================              |
+|          |       |       |       |    <- dashed arrows up from 2,3,4,5 |
+|  +-------+--+ +--+----+ +-+-----+ ++------+ +-------+ +-------+        |
+|  |   (1)    |>|  (2)   |>|  (3)  |>|  (4)  |>|  (5)  |>|  (6)  |       |
+|  | REACHES  | | CONSENT| | LISTENS| |ASSESS-| |PRIOR- | | HUMAN |       |
+|  |   OUT    | |  FIRST | |        | |  ES   | |ITISES | |DECIDES|       |
+|  |          | |        | |        | |       | |       | |       |       |
+|  |  body    | |  body  | |  body  | | body  | | body  | | body  |       |
+|  |  chip    | |  chip  | |  chip  | | chip  | | chip  | | chip  |       |
+|  +----------+ +--------+ +--------+ +-------+ +-------+ +-------+       |
+|    warm ------------------> cool ------------------> warm              |
+|                                                                        |
+|  ###  The person never sees a score, band or alert. Server-side.  ###  |
++------------------------------------------------------------------------+
+
+Six cards across a 13.33 inch canvas gives roughly 1.9 inches per card once
+gutters are allowed for. That is tight but workable at 11 pt body text.
+
+IF IT CROWDS:  merge (4) and (5) into a single card labelled
+               ASSESSES AND PRIORITISES.
+               That is the safest merge, because they are one parallel
+               process in the system anyway. Five cards gives 2.3 inches
+               each and the flow still reads correctly.
+
+
+===============================================================================
+4.  VISUAL GRAMMAR
+===============================================================================
+
+Cards 1 and 2      warm tones          this is the person's side
+Cards 3, 4, 5      cool tones          this is the machine
+Card 6             warm again          back to a human
+
+     The colour returning to warm on the last card is the whole argument of
+     the slide. Do not break it.
+
+Interrupt band     rose  #F43F5E       the ONLY place this colour appears on
+                                       the slide, and ideally in the deck
+Foundation bar     muted slate         present, low contrast, not shouting
+Connectors         solid chevrons between cards
+Interrupt arrows   dashed, pointing UP into the band
+
+Palette, unchanged from the existing deck:
+     indigo   #4F46E5     primary
+     teal     #14B8A6
+     amber    #F59E0B
+     rose     #F43F5E     crisis only
+     slate    #1E293B     text
+     panel    #F1F5F9
+
+Icons, one idea each, single family, no mixed illustration styles:
+     (1)  microphone plus speech bubble
+     (2)  shield with a check mark
+     (3)  ear, or a waveform
+     (4)  nine layered bars
+     (5)  gauge or band meter
+     (6)  person at a desk
+
+Type:  body at least 11 pt at the template canvas size, card labels at least
+       14 pt, nothing below 10 pt anywhere.
+
+
+===============================================================================
+5.  WORD BUDGET
+===============================================================================
+
+     6 card labels                                        12
+     6 card bodies                                        74
+     6 chips                                              20
+     interrupt band                                       15
+     foundation bar                                       13
+                                                        -----
+     TOTAL                                                134
+
+Target is 110. To trim to about 109, delete the chips on cards 1, 3 and 4.
+Keep the chips on cards 2, 5 and 6: consent, abstention and human authority
+are the three differentiators on this slide, and the chips are what carry
+them.
+
+
+===============================================================================
+6.  MAPPING TO THE CURRENT SLIDE 2
+===============================================================================
+
+The existing strip has four steps. This is the same spine, split finer. Card
+geometry, card style and the slide layout do not change.
+
+     CURRENT                     BECOMES
+     ----------------------      --------------------------------------
+     VICTIM SPEAKS               (1) REACHES OUT
+     --                          (2) CONSENT FIRST          <- new card
+     SAHAY-AI LISTENS            (3) LISTENS
+     AI ASSESSES                 (4) ASSESSES + (5) PRIORITISES  <- split
+     HUMAN RESPONSE              (6) HUMAN DECIDES
+     --                          interrupt band             <- new
+     --                          foundation bar             <- new
+
+Net change: insert one card, split one card, add two horizontal bands.
+The slide stays recognisably the same slide.
+
+Also fix while editing this slide:
+     multilngual   ->  multilingual
+     VICITM SPEAKS ->  VICTIM SPEAKS
+     Consellors    ->  Counsellors
+     Explaniable   ->  Explainable
+
+
+===============================================================================
+7.  MINIMAL-CHANGE VERSION
+===============================================================================
+
+Use this if the deck is close to frozen and a rebuild is not worth the risk.
+
+Keep all four existing cards exactly as they are. Add only three elements:
+
+     1.  a small consent shield chip on the connector between card 1 and
+         card 2, carrying:
+             CONSENT + AI DISCLOSURE
+             "A human officer reviews everything. Ask for a person anytime."
+
+     2.  the interrupt band below the strip, carrying:
+             CRISIS DETECTED -> FIXED APPROVED SCRIPT -> HUMAN, IMMEDIATELY
+
+     3.  the foundation bar at the bottom, carrying:
+             The person never sees a score, band or alert. Server-side.
+
+Roughly 40 added words, three new elements, no card touched. Weaker than the
+six-stage version, but it is a twenty-minute edit rather than a rebuild.
+
+
+===============================================================================
+8.  WHAT EACH STAGE IS ACTUALLY DOING
+===============================================================================
+
+Background for whoever presents the slide. This is NOT slide copy.
+
+(1)  REACHES OUT
+     Every channel terminates at one normalised ingestion interface: the
+     victim app, the Integrated Portal, the existing chatbot, and 14566
+     telephony through a licensed operator. The channel is recorded. No
+     assessment has begun yet.
+
+(2)  CONSENT FIRST
+     State S0 plays a fixed, pre-recorded, human-approved script identifying
+     the assistant as an AI, stating that a human officer reviews everything,
+     and stating the right to a person at any time. Consent is stored as a
+     verifiable artefact. A decline routes straight to a human queue and
+     suppresses scoring entirely, rather than computing it and hiding it.
+
+(3)  LISTENS
+     State S1 takes the free narrative without interruption or probing. States
+     S2 to S8 then ask only the licensed questions that the narrative left
+     unanswered, and any state already answered is skipped. Target is eight to
+     twelve turns total. A deterministic state machine chooses which question
+     is asked; a language model is permitted only to phrase it, and every
+     generated sentence is validated before it is spoken.
+
+(4)  ASSESSES
+     Nine dimensions are scored from the transcript and, on voice sessions,
+     from prosody and speech emotion. Every dimension carries the identifiers
+     of the turns it was derived from. This runs in parallel and never delays
+     the reply.
+
+(5)  PRIORITISES
+     A 0 to 100 index across the nine weighted dimensions produces a band of
+     Low, Moderate, High or Critical. Confirmed immediate danger or crisis
+     forces Critical regardless of the weighted score. Where confidence is
+     low, audio quality is poor, or the transcript cannot be trusted, the
+     system returns Needs Human Assessment and produces no score at all.
+
+(6)  HUMAN DECIDES
+     The case enters an ordered queue that is never filtered. An executive
+     claims it, reads the packet with its evidence links, and confirms,
+     modifies, rejects, or takes over the live conversation. AI proposals and
+     human decisions are stored in separate tables. Every action is written to
+     an append-only audit log.
+
+INTERRUPT BAND
+     A synchronous, deterministic crisis pre-check runs ahead of dialogue
+     policy on every single turn. A match forces state SX, a fixed
+     counsellor-reviewed script, Critical priority and immediate human
+     takeover, and intake never resumes on its own. No model makes this
+     decision.
+
+FOUNDATION BAR
+     A server-side role filter removes every assessment field from anything a
+     victim client receives: score, band, any of the nine dimensions, emotion
+     label, confidence value, safety alert and officer notes. An automated
+     test asserts it, and the build fails if the test fails.
+
+
+===============================================================================
+9.  HALF-SLIDE BOX VARIANT  (self-contained panel)
+===============================================================================
+
+Use this when the proposed solution has to sit as its own bounded box filling
+half a slide, with other content beside it. It is the same six stages, laid
+out vertically instead of horizontally, with the crisis path as a side rail.
+
+Sections 1 to 8 above describe the FULL-WIDTH version. This section replaces
+sections 2, 3 and 5 for the half-slide case. The visual grammar in section 4
+is unchanged.
+
+
+-------------------------------------------------------------------------------
+9.1  BOX DIMENSIONS
+-------------------------------------------------------------------------------
+
+On the official template canvas  (13.333 x 7.5 in  =  12192000 x 6858000 EMU):
+
+     half width           6.67 in
+     usable box           6.20 in wide  x  5.80 in tall
+     in EMU               5669280  x  5303520
+
+On the current deck canvas  (20 x 11.25 in  =  18288000 x 10287000 EMU):
+
+     half width          10.00 in
+     usable box           9.30 in wide  x  8.70 in tall
+     in EMU               8504280  x  7955280
+
+Row heights inside the box, six-stage version:
+
+     box header            0.80 in   (0.55 title + 0.25 strapline)
+     6 stage rows          0.72 in each  =  4.32 in
+     foundation bar        0.45 in
+     internal gutters      0.23 in total
+                          --------
+     total                 5.80 in
+
+That is tight. If it feels cramped, use the five-stage merge in 9.4.
+
+
+-------------------------------------------------------------------------------
+9.2  LAYOUT A  ---  VERTICAL STACK WITH CRISIS RAIL   (recommended)
+-------------------------------------------------------------------------------
+
++==========================================================+
+|  PROPOSED SOLUTION                                       |  0.80 in
+|  One conversation. No repetition.                        |
++====+=====================================================+
+|    |  (1)  REACHES OUT                                   |
+|  C |       Voice or chat. Own language. Any channel.     |  0.72 in
+|  R +-----------------------------------------------------+
+|  I |  (2)  CONSENT FIRST                                 |
+|  S | >     Told it is an AI. A person, anytime.          |  0.72 in
+|  I +-----------------------------------------------------+
+|  S |  (3)  LISTENS                                       |
+|    | >     Eight to twelve turns. Never asks twice.      |  0.72 in
+|  R +-----------------------------------------------------+
+|  A |  (4)  ASSESSES                                      |
+|  I | >     Nine dimensions. Every score shows its words. |  0.72 in
+|  L +-----------------------------------------------------+
+|    |  (5)  PRIORITISES                                   |
+|    | >     Band and confidence, or "needs human".        |  0.72 in
+|    +-----------------------------------------------------+
+|    |  (6)  HUMAN DECIDES                                 |
+|    |       Officer confirms, modifies or takes over.     |  0.72 in
++====+=====================================================+
+|  The person never sees a score. Enforced server-side.    |  0.45 in
++==========================================================+
+  0.55 in
+   rail
+
+THE RAIL
+     A vertical bar down the full left edge, 0.55 in wide, in the crisis
+     colour. The word CRISIS set vertically (rotated 90 degrees, reading
+     bottom to top). Small arrow heads ( > ) point right into stages 2, 3,
+     4 and 5, showing that the crisis path can fire from any of them.
+
+     Rail caption, set small along the bar or immediately under it:
+          CRISIS -> FIXED SCRIPT -> HUMAN, NOW
+          checked on every turn
+
+     The rail does NOT touch stage 1, because nothing has been said yet, and
+     does not touch stage 6, because that is already a human. That detail is
+     worth keeping: it shows the rail was thought about rather than drawn
+     across everything.
+
+READING ORDER
+     Top to bottom, which is what a narrow box wants. The eye lands on the
+     header, runs down the numbered stages, and stops on the foundation bar.
+
+
+-------------------------------------------------------------------------------
+9.3  EXACT COPY  ---  TIGHTENED FOR HALF SLIDE
+-------------------------------------------------------------------------------
+
+Half the width means roughly half the words. Bodies here are 8 words or
+fewer. These strings replace the ones in section 2 when using the box.
+
+     BOX HEADER
+          PROPOSED SOLUTION                                   [2 words]
+          One conversation. No repetition.                    [4 words]
+
+     (1)  REACHES OUT                                         [2 words]
+          Voice or chat. Own language. Any channel.           [7 words]
+
+     (2)  CONSENT FIRST                                       [2 words]
+          Told it is an AI. A person, anytime.                [8 words]
+
+     (3)  LISTENS                                             [1 word ]
+          Eight to twelve turns. Never asks twice.            [7 words]
+
+     (4)  ASSESSES                                            [1 word ]
+          Nine dimensions. Every score shows its words.       [7 words]
+
+     (5)  PRIORITISES                                         [1 word ]
+          Band and confidence, or "needs human".              [6 words]
+
+     (6)  HUMAN DECIDES                                       [2 words]
+          Officer confirms, modifies or takes over.           [6 words]
+
+     RAIL
+          CRISIS -> FIXED SCRIPT -> HUMAN, NOW                [6 words]
+          checked on every turn                               [4 words]
+
+     FOUNDATION BAR
+          The person never sees a score.                      [6 words]
+          Enforced server-side.                               [2 words]
+
+     No chips in the half-slide version. There is no room, and the rail plus
+     the foundation bar already carry the two claims that matter most.
+
+
+-------------------------------------------------------------------------------
+9.4  FIVE-STAGE MERGE  (use if six rows crowd)
+-------------------------------------------------------------------------------
+
+Merge stages 4 and 5. They are one parallel process in the system, so the
+merge costs nothing conceptually and buys 0.72 in of vertical room, taking
+each row to 0.86 in.
+
+     (4)  ASSESSES AND PRIORITISES                            [3 words]
+          Nine dimensions, evidence-linked. Band, or "needs human".
+                                                              [7 words]
+
+Everything else is unchanged. The rail then touches stages 2, 3 and 4.
+
+
+-------------------------------------------------------------------------------
+9.5  LAYOUT B  ---  TWO BY THREE GRID  (wide and short box)
+-------------------------------------------------------------------------------
+
+Use this only if the box is wider than it is tall, for example a half slide
+split top and bottom rather than left and right.
+
++=============================================================+
+|  PROPOSED SOLUTION          One conversation. No repetition.|
++=============================================================+
+|  +-------------------+        +-------------------+         |
+|  | (1) REACHES OUT   |  ---\  | (2) CONSENT FIRST |         |
+|  |  voice or chat    |      > |  AI disclosed     |         |
+|  +-------------------+  ---/  +-------------------+         |
+|            |                            |                   |
+|  +-------------------+        +-------------------+         |
+|  | (3) LISTENS       |  ---\  | (4) ASSESSES      |         |
+|  |  8-12 turns       |      > |  nine dimensions  |         |
+|  +-------------------+  ---/  +-------------------+         |
+|            |                            |                   |
+|  +-------------------+        +-------------------+         |
+|  | (5) PRIORITISES   |  ---\  | (6) HUMAN DECIDES |         |
+|  |  band or abstain  |      > |  officer acts     |         |
+|  +-------------------+  ---/  +-------------------+         |
++=============================================================+
+|  !  CRISIS -> FIXED SCRIPT -> HUMAN, NOW   (every turn)     |
++=============================================================+
+|  The person never sees a score. Enforced server-side.       |
++=============================================================+
+
+The flow is serpentine: 1 -> 2 down to 3 -> 4 down to 5 -> 6. Number every
+card, because serpentine reading order is not obvious without numbers.
+
+In this layout the crisis element becomes a horizontal band beneath the grid
+rather than a side rail, since there is no tall edge to run it along.
+
+Layout A is stronger. Use B only when the box shape forces it.
+
+
+-------------------------------------------------------------------------------
+9.6  WORD BUDGET FOR THE BOX
+-------------------------------------------------------------------------------
+
+     box header                                            6
+     6 stage labels                                        9
+     6 stage bodies                                       41
+     rail                                                 10
+     foundation bar                                        8
+                                                        -----
+     TOTAL                                                74
+
+A half-slide box should sit at or under 70 to 75 words. This lands inside
+that. There is no trim margin, so do not add anything to the box without
+removing something else.
+
+
+-------------------------------------------------------------------------------
+9.7  WHAT GOES IN THE OTHER HALF
+-------------------------------------------------------------------------------
+
+The box is the mechanism. The other half should be the reason, not more
+mechanism. In order of strength:
+
+     1.  The victim voice. The existing quoted lines ("I'm scared", "I don't
+         know what to do") with the "One conversation. No repetition." motif.
+         This is the strongest pairing: feeling on one side, machinery on the
+         other.
+
+     2.  The friction list. Three or four cards of what happens today:
+         repeated accounts, buried cues, inconsistent triage.
+
+     3.  The outcome. Who benefits: victim, responder, district and ministry.
+
+Do NOT put a second diagram beside it. Two diagrams on one slide compete and
+neither is read.
+
+
+-------------------------------------------------------------------------------
+9.8  BUILD NOTES
+-------------------------------------------------------------------------------
+
+Type sizes inside the box, at the 13.333 in template canvas:
+
+     box title            16 pt bold
+     strapline            10 pt
+     stage label          12 pt bold, upper case
+     stage body            9.5 pt
+     rail text             8 pt, letter-spaced, rotated
+     foundation bar        9 pt
+
+     Never below 8 pt. If a string will not fit at these sizes, cut the
+     string rather than the type size.
+
+Build order, so the box stays aligned:
+
+     1.  Draw the outer box with a 2 pt border and 2 pt corner radius.
+     2.  Place the header band and the foundation bar first. They are fixed.
+     3.  Divide the remaining height by the number of stages and place
+         invisible guides before drawing any card.
+     4.  Draw the rail last, over the stage rows, so its arrow heads sit on
+         top of the row dividers.
+
+     Group the whole box as one object once built. It then moves between
+     slides and between the two canvas sizes without falling apart.
+
+Contrast check: the rail is the only rose element. If the other half of the
+slide contains anything rose, recolour that, not the rail.
+
+
+===============================================================================
+10.  FULL-SLIDE REVAMP  (proposed solution + app flow merged)
+===============================================================================
+
+This section is written against the slide that already exists: the SAHAY-AI
+"App Flow Diagram" slide with five numbered stages, the crisis arrow, the Key
+Features bar and the blue footer. It merges the proposed solution and the app
+flow into one full slide, which is the right call and saves a slide against
+the six-slide limit.
+
+Sections 1 to 9 describe how to build the flow from nothing. THIS section is
+what to change on the slide as built.
+
+
+-------------------------------------------------------------------------------
+10.1  WHAT THE SLIDE ALREADY GETS RIGHT  ---  DO NOT BREAK THESE
+-------------------------------------------------------------------------------
+
+     -  Five numbered stages, each in its own tinted panel, left to right.
+        The numbering makes the reading order unambiguous.
+     -  Real product UI inside stages 1, 3 and 4. Almost no competing team
+        will have this. It is the strongest asset on the slide.
+     -  Devanagari text inside the phone mockup. It proves multilingual
+        support instead of claiming it.
+     -  The SVI panel shows "Review required" rather than a confident score.
+        That is the abstention case, and showing it is a deliberate, correct
+        and unusual choice. Keep it exactly as it is.
+     -  "Not a diagnosis" already present in stage 3.
+     -  A crisis path already exists and is already red.
+     -  Key Features bar with five circular icons.
+     -  ALT F9 badge, SIH 2026 logo, SAHAY-AI wordmark, blue footer bar.
+        All four stay untouched.
+
+
+-------------------------------------------------------------------------------
+10.2  THEME SPECIFICATION  (extracted from the slide as built)
+-------------------------------------------------------------------------------
+
+CANVAS            16:9
+
+BACKGROUND        white, with a very light blue-grey page tint
+
+TYPOGRAPHY
+     wordmark          high-contrast serif display, all caps, deep navy
+     slide subtitle    same serif, medium weight, deep navy
+     stage titles      serif, bold, deep navy
+     body and UI       clean humanist sans
+     footer            sans, wide letter-spacing, all caps, white on blue
+
+COLOUR
+     deep navy         #16276B     headings, wordmark, body text
+     bright blue       #1D6FD8     footer bar, connector arrows
+     purple            #5B3FD1     ALT F9 badge, brain icon, accents
+     crisis red        #D92D20     crisis arrow, escalation box, warning mark
+     success green     #16A34A     check marks in stage 5
+
+STAGE PANEL TINTS   (left to right)
+     1 Consent              #E8F1FC   light blue
+     2 Bounded Intake       #F1ECFC   light purple
+     3 Evidence SVI         #E8F7EF   light green
+     4 Human Decision       #FDF1E5   light peach
+     5 Follow-up            #E8F1FC   light blue
+
+SHAPE LANGUAGE
+     rounded rectangles, ~10 px radius
+     circular pastel icon badges
+     thin 1 px borders, very soft or no shadow
+     blue chevron arrows between stages
+
+ICON STYLE
+     single line-and-fill family, two-tone, no mixed illustration styles
+
+
+-------------------------------------------------------------------------------
+10.3  CORRECTIONS REQUIRED
+-------------------------------------------------------------------------------
+
+     TYPO, stage 3 footer
+          "Decisiole support"        ->  "Decision support"
+
+     CONTRADICTION, crisis path
+          The label reads "Crisis at any stage" but the arrow visibly leaves
+          stage 2 only. Fix so the words and the picture agree. See 10.4.
+
+     TEAM NAME
+          The badge reads ALT F9. Slide 1 of the deck reads ALT F4. One of
+          them is wrong. Make every slide match the registered team name.
+
+     SUBTITLE
+          The two-line sentence under the wordmark is a paragraph. The
+          template asks for points, not paragraphs. Replace per 10.5.
+
+
+-------------------------------------------------------------------------------
+10.4  THE FIVE CONTENT UPGRADES
+-------------------------------------------------------------------------------
+
+(A)  MAKE THE CRISIS PATH SPAN THE FLOW
+
+     Now:   one red arrow from stage 2 to stage 4, labelled "Crisis at any
+            stage", which the picture contradicts.
+
+     Change: a thin red rail running beneath stages 1 to 4, with a small red
+            tick rising into EACH of those stages, then turning up into the
+            existing escalation box in stage 4.
+
+     Label on the rail:
+            CRISIS CHECK RUNS ON EVERY TURN, BEFORE ANYTHING ELSE
+
+     The escalation box in stage 4 stays as it is. Only its inbound path
+     changes. This is the single highest-value edit on the slide: it turns a
+     feature into an architectural claim.
+
+(B)  ADD THE PRIVACY BOUNDARY
+
+     The strongest safety claim in the project is currently absent. Stage 3
+     says "Authorised responder view", which hints at it without stating it.
+
+     Add a thin full-width band directly beneath stages 1 to 5, above the
+     Key Features bar, in muted slate:
+
+            THE PERSON NEVER SEES A SCORE, BAND OR ALERT  .  SERVER-ENFORCED
+
+     One line. It costs almost no vertical space and it is the claim that
+     separates this from every other submission.
+
+(C)  STATE THE DETERMINISM CLAIM IN STAGE 2
+
+     Stage 2 describes what is collected but not who decides what is asked.
+     Add one line under the existing "Brief, purpose-limited..." text:
+
+            A fixed question set decides what is asked.
+            AI only phrases it.
+
+(D)  SHARPEN ONE KEY FEATURE
+
+     "Scalable & Integrable" is the weakest of the five and says nothing
+     specific. Replace with:
+
+            label:  Works With 14566
+            sub:    Adds to the helpline. Changes nothing it already does.
+
+     Keep the other four features as they are.
+
+(E)  ADD THE SOVEREIGNTY CHIP
+
+     Nothing on the slide says where the data lives. Add a small chip at the
+     right end of the privacy band from (B), or inside the footer bar:
+
+            RUNS IN INDIA  .  NO AUDIO LEAVES THE DEPLOYMENT
+
+
+-------------------------------------------------------------------------------
+10.5  REVISED EXACT COPY
+-------------------------------------------------------------------------------
+
+Only the regions that change are listed. Everything not listed stays.
+
+HEADER  ---  unchanged
+     SAHAY-AI
+     From Distress to Support --- In Real Time
+     ALT F9 badge, SIH 2026 logo
+
+SUBTITLE  ---  replace the two-line sentence with three chips in a row
+     LISTENS ONCE, IN THEIR OWN LANGUAGE
+     EXPLAINS EVERY SCORE WITH THE WORDS BEHIND IT
+     A TRAINED OFFICER DECIDES EVERY ACTION
+                                                     [3 chips, 20 words]
+     This drops roughly 15 words and reads in about two seconds instead of
+     eight.
+
+STAGE 2  ---  add beneath the existing body text
+     A fixed question set decides what is asked. AI only phrases it.
+                                                                [11 words]
+
+STAGE 3  ---  correct the footer line
+     Decision support  .  Not a diagnosis
+
+CRISIS RAIL  ---  replaces "Crisis at any stage"
+     CRISIS CHECK RUNS ON EVERY TURN, BEFORE ANYTHING ELSE       [9 words]
+
+     Escalation box in stage 4, unchanged:
+     Immediate danger -> Urgent human escalation
+
+PRIVACY BAND  ---  new, full width, beneath the five stages
+     THE PERSON NEVER SEES A SCORE, BAND OR ALERT  .  SERVER-ENFORCED
+                                                                [11 words]
+     right-aligned chip on the same band:
+     RUNS IN INDIA  .  NO AUDIO LEAVES THE DEPLOYMENT            [9 words]
+
+KEY FEATURES  ---  replace the fifth only
+     Real-time Analysis                        (unchanged)
+     Multi Native-Language Support             (unchanged)
+     Explainable AI Outputs                    (unchanged)
+     Human-in-the-Loop Design                  (unchanged)
+     Works With 14566                          (was: Scalable & Integrable)
+          sub: Adds to the helpline. Changes nothing it already does.
+
+FOOTER  ---  unchanged
+     A SAFER TOMORROW, TOGETHER  |  SIH 2026
+
+
+-------------------------------------------------------------------------------
+10.6  LAYOUT MAP  (proportions of slide height)
+-------------------------------------------------------------------------------
+
++------------------------------------------------------------------------+
+| (ALT F9)        SAHAY-AI                              (SIH 2026 logo)  | 14%
+|            From Distress to Support - In Real Time                     |
++------------------------------------------------------------------------+
+|   [chip 1]          [chip 2]               [chip 3]                    |  6%
++------------------------------------------------------------------------+
+|                      App Flow Diagram                                  |  5%
++--------+---------+-----------+-------------+---------------------------+
+|   1    |    2    |     3     |      4      |            5              |
+|Consent |Bounded  |Evidence-  |Human        |Victim-safe                | 52%
+|        |Intake   |backed SVI |Decision     |Follow-up                  |
+| phone  | icons + | SVI panel | console UI  | check list                |
+| mockup | fusion  | mockup    | mockup      |                           |
++--------+---------+-----------+-------------+---------------------------+
+| ^^^^   crisis rail, red ticks into stages 1-4   ^^^^                   |  4%
++------------------------------------------------------------------------+
+| THE PERSON NEVER SEES A SCORE...    | RUNS IN INDIA . NO AUDIO LEAVES  |  5%
++------------------------------------------------------------------------+
+| Key Features   (o) (o) (o) (o) (o)  five circular icons and labels     | 10%
++------------------------------------------------------------------------+
+| A SAFER TOMORROW, TOGETHER  |  SIH 2026                                |  4%
++------------------------------------------------------------------------+
+
+The two new bands cost 9% of slide height. Recover it by reducing the
+subtitle block from two text lines to one chip row, which is the change in
+10.5 anyway.
+
+
+-------------------------------------------------------------------------------
+10.7  PROMPT FOR AN AI IMAGE OR DESIGN TOOL
+-------------------------------------------------------------------------------
+
+Paste the block between the markers. It is self-contained.
+
+---------------------------------- BEGIN ----------------------------------
+
+Design a single 16:9 presentation slide: a government-grade product
+infographic for an Indian national hackathon submission. Clean, editorial,
+confident. Not a generic tech poster, not neon, no dark mode, no 3D
+renders, no stock photography of people.
+
+CANVAS AND BACKGROUND
+White background with a very faint blue-grey page tint. Generous margins.
+Everything sits on a calm, uncluttered field.
+
+BRAND ELEMENTS, ALL THREE MANDATORY
+- Top left: a purple outlined oval badge containing the text "ALT F9".
+- Top centre: the wordmark "SAHAY-AI" in a large, high-contrast serif,
+  all caps, deep navy. Directly beneath it in the same serif, smaller:
+  "From Distress to Support - In Real Time".
+- Top right: a "SMART INDIA HACKATHON 2026" lockup with a stylised
+  circuit-brain-in-a-lightbulb emblem in orange and navy.
+
+COLOUR PALETTE, USE ONLY THESE
+deep navy #16276B for headings and body text
+bright blue #1D6FD8 for the footer bar and the connector arrows
+purple #5B3FD1 for the badge and accent icons
+crisis red #D92D20 used ONLY for the crisis path
+success green #16A34A used only for check marks
+stage panel tints, left to right: #E8F1FC light blue, #F1ECFC light purple,
+#E8F7EF light green, #FDF1E5 light peach, #E8F1FC light blue
+
+TYPOGRAPHY
+High-contrast serif for the wordmark, the slide subtitle and the five stage
+titles. A clean humanist sans for all body text, UI mockups and labels. The
+footer in all caps sans with wide letter spacing, white on the blue bar.
+
+LAYOUT, TOP TO BOTTOM
+
+1. Header band with the three brand elements described above.
+
+2. A row of three small rounded chips, evenly spaced, navy text on white:
+   "LISTENS ONCE, IN THEIR OWN LANGUAGE"
+   "EXPLAINS EVERY SCORE WITH THE WORDS BEHIND IT"
+   "A TRAINED OFFICER DECIDES EVERY ACTION"
+
+3. A centred pill-shaped label reading "App Flow Diagram", pale blue fill,
+   with a thin horizontal rule extending left and right from it.
+
+4. The main row: five numbered stage panels of equal height, side by side,
+   separated by small bright-blue chevron arrows pointing right. Each panel
+   is a rounded rectangle in its tint, with a circled number badge and a
+   serif title:
+
+   1  "Consent" - contains a realistic smartphone mockup. Inside the phone:
+      a small SAHAY-AI app header, then three stacked option rows with
+      icons - a microphone row, a document row, a language-selection row
+      showing "Hindi / English / Regional" - and a navy primary button at
+      the bottom. Caption below the phone: "Informed opt-in . Choose
+      language . Skip, pause or withdraw anytime".
+
+   2  "Bounded Intake" - a central purple circular badge containing a
+      brain-and-circuit glyph, with four smaller circular icon badges
+      arranged around it, connected by thin dashed lines: a microphone, a
+      document, a translation glyph, a list glyph. Below, in a soft purple
+      rounded box: "Brief, purpose-limited audio and text intake. Collect
+      only necessary details; no forced retelling." Beneath that, in
+      smaller text: "A fixed question set decides what is asked. AI only
+      phrases it."
+
+   3  "Evidence-backed SVI" - a white card styled as a product panel titled
+      "Authorised responder view" with a small info icon, then a heading
+      "SVI Assessment" and five label-value rows in a light table:
+      "SVI band: Review required" (peach pill), "Evidence: Intake-linked
+      excerpts", "Rationale: Factors + source links", "Confidence:
+      Uncertainty shown", "Missing data: Flagged" (peach pill). Footer line
+      inside the card: "Decision support . Not a diagnosis". Caption below
+      the card: "Traceable evidence for human review".
+
+   4  "Human Decision" - a realistic desktop dashboard mockup with a dark
+      navy left sidebar labelled "SAHAY-AI EXECUTIVE CONSOLE" with menu
+      items, and a light main area containing three small statistic tiles
+      and a "Live Case Queue" table with columns for priority, reference,
+      language, session time and SVI band, showing one row flagged
+      "Critical" in red and one flagged "Needs Human Assessment" in blue.
+      Caption below: "Responder reviews, overrides and selects support."
+      Beneath that, a red-bordered alert box with a warning triangle
+      reading: "Immediate danger -> Urgent human escalation".
+
+   5  "Victim-safe Follow-up" - a navy line illustration of a small group
+      of people held in a pair of open hands, then four rows each with a
+      green circular check mark: "Agree a safe contact channel and time",
+      "Discreet messages; no sensitive previews", "Consent before referrals
+      or sharing", "Opt out or stop contact anytime".
+
+5. A thin red rail running horizontally beneath stage panels 1 to 4, with
+   four small red tick marks rising from the rail into the bottom edge of
+   each of those four panels, and the right end of the rail turning upward
+   into the red escalation box in panel 4. Small red all-caps label centred
+   on the rail: "CRISIS CHECK RUNS ON EVERY TURN, BEFORE ANYTHING ELSE".
+
+6. A thin full-width band in muted slate-grey, containing on the left:
+   "THE PERSON NEVER SEES A SCORE, BAND OR ALERT . SERVER-ENFORCED"
+   and on the right, as a small chip:
+   "RUNS IN INDIA . NO AUDIO LEAVES THE DEPLOYMENT".
+
+7. A "Key Features" bar: the words "Key Features" in large navy serif on
+   the left, then five items in a row, each a pastel circular icon badge
+   with a two-line label beside it -
+   a red lightning bolt "Real-time Analysis",
+   a blue translation glyph "Multi Native-Language Support",
+   a green shield with a check "Explainable AI Outputs",
+   a peach group-of-people glyph "Human-in-the-Loop Design",
+   a purple gear "Works With 14566".
+
+8. A full-width bright blue footer bar with centred white all-caps
+   letter-spaced text: "A SAFER TOMORROW, TOGETHER  |  SIH 2026".
+
+RULES
+- Crisis red appears ONLY on the rail, the escalation box and its warning
+  triangle. Nowhere else.
+- Every icon comes from one consistent two-tone line-and-fill family.
+- No photographs, no human faces, no depiction of a distressed person.
+- All text must be crisp, correctly spelled and horizontally set.
+- Keep it readable when projected: no body text smaller than roughly
+  1 percent of the slide height.
+
+----------------------------------- END -----------------------------------
+
+
+-------------------------------------------------------------------------------
+10.8  PRACTICAL NOTE ON GENERATING VERSUS ASSEMBLING
+-------------------------------------------------------------------------------
+
+Image generators still garble small text, and this slide is mostly small
+text inside UI mockups. Two sane ways to use the prompt above:
+
+     BEST      Generate only the pieces: the phone mockup, the fusion icon
+               cluster, the hands illustration, the five feature icons.
+               Then assemble the slide in PowerPoint and set every word of
+               text as real text. Text stays editable, spell-checkable and
+               sharp at any zoom, and the exported PDF keeps it selectable.
+
+     FASTER    Generate the whole slide as a reference composition, then
+               rebuild it in PowerPoint using the generated image only as a
+               layout guide. Do not ship a generated slide with generated
+               text on it: a misspelled word inside a picture cannot be
+               fixed without regenerating, and judges do read the small text.
+
+     NEVER     Ship the generated image directly. The current slide already
+               contains one typo that survived into the built version; a
+               generated one will contain several and they will be baked in.
+
+
+===============================================================================
+END
+Companion documents:
+     docs/SAHAY-AI_National_MVP_Capability.pdf   full capability statement
+     docs/SIH2026_DECK_UPDATE_SPEC.docx          the rest of the deck
+     docs/research/local-research-analysis.pdf   evidence and projections
+===============================================================================

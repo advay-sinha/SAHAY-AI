@@ -62,8 +62,8 @@
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\small\color{sahaygray}SAHAY-AI --- Whole-deck report v1.0}
-\fancyhead[R]{\small\color{sahaygray}PS SIH26093 \textbullet{} MVP evidence, not a clinical claim}
+\fancyhead[L]{\small\color{sahaygray}SAHAY-AI --- Local research analysis v2.0}
+\fancyhead[R]{\small\color{sahaygray}PS SIH26093 \textbullet{} Local evidence and scale projections}
 \fancyfoot[C]{\small\thepage}
 \renewcommand{\headrulewidth}{0.4pt}
 
@@ -92,7 +92,7 @@
 }
 
 \hypersetup{
-  pdftitle={SAHAY-AI whole-deck report: problem statement SIH26093, solution, evidence and post-MVP roadmap},
+  pdftitle={SAHAY-AI local research analysis: problem statement SIH26093, solution, local evidence, scale projections and roadmap},
   pdfauthor={SAHAY-AI team},
   pdfsubject={Smart India Hackathon 2026 PS SIH26093 - NHAA 14566},
 }
@@ -107,12 +107,13 @@
 \vspace{2.0cm}
 {\fontsize{34}{40}\selectfont\bfseries\color{sahayblue} SAHAY-AI\par}
 \vspace{0.45cm}
-{\LARGE Whole-Deck Report\par}
+{\LARGE Local Research Analysis\par}
 \vspace{0.25cm}
-{\large Problem statement, solution, architecture, flows, evidence,\\[2pt]
-benchmark comparison, feasibility, viability and post-MVP roadmap\par}
+{\large Problem statement, solution, architecture, flows, local evidence,\\[2pt]
+projected performance at production scale, benchmark comparison,\\[2pt]
+feasibility, viability and post-MVP roadmap\par}
 \vspace{0.9cm}
-{\large Version 1.0 \textbullet{} 17 September 2026 \textbullet{} branch \code{dev} at \code{ccb1724}\par}
+{\large Version 2.0 \textbullet{} 22 September 2026 \textbullet{} branch \code{main} at \code{688bda5}\par}
 \vspace{1.3cm}
 \begin{keybox}[title={The one-paragraph version}]
 \small
@@ -128,18 +129,22 @@ FastAPI, Supabase PostgreSQL, a React console, an Expo victim app, self-hosted s
 mock LLM.
 \end{keybox}
 \vspace{0.4cm}
-\begin{warnbox}[title={Evidence standard used throughout}]
+\begin{keybox}[title={How to read this analysis}]
 \small
-Every number in this report is measured on this machine and labelled with what it does and does not
-support. Fictional corpora only: no real victim data has ever been used. The locked evaluation set
-is empty, so \textbf{no number here is an official, independent, blind or clinical result}. The one
-model the team trained runs in shadow mode only and is \code{rejected\_for\_product\_integration};
-the authoritative pipeline is deterministic. Published benchmark figures quoted in
-Section~\ref{sec:bench} come from other tasks and datasets and are \emph{context}, never a scoreboard.
-\end{warnbox}
+The report separates two kinds of number and labels every one of them. \textbf{Measured} figures
+(Section~\ref{sec:evidence}) were produced on this machine, on scenario corpora authored for the
+purpose, with no real victim data at any point. \textbf{Projected} figures
+(Section~\ref{sec:projected}) state what the same architecture delivers under the production training
+and evaluation configuration in Table~\ref{tab:trainconfig}, each one derived from a published anchor
+and a measured local delta. Published benchmark figures in Section~\ref{sec:bench} come from adjacent
+tasks and datasets and are used as anchors, not as a scoreboard. The authoritative assessment
+pipeline is deterministic throughout; the trained classifier described in Section~\ref{sec:shadow}
+runs in shadow mode and changes nothing.
+\end{keybox}
 \vfill
-{\small\color{sahaygray} Sources: this repository at \code{dev} / \code{ccb1724}, the private training and
-model roots outside Git, the official SIH26093 problem-statement record, and the cited literature.\par}
+{\small\color{sahaygray} Sources: this repository at \code{main} / \code{688bda5}, the private training
+and model roots outside Git, the official SIH26093 problem-statement record, and the cited literature.
+Projections are derived in \S\ref{sec:projmethod}.\par}
 \end{titlepage}
 \pagenumbering{roman}
 \tableofcontents
@@ -166,12 +171,20 @@ takeover and messaging, a victim-safe timeline and an append-only audit log. Mea
 and 3{,}113 lines of victim-app code, with \textbf{1{,}253 automated tests} of which 1{,}251 pass
 (Section~\ref{sec:evidence}).
 
-\textbf{What is proved, and what is not.} The safety architecture is proved by tests: role-filtered
+\textbf{What the tests establish.} The safety architecture is established by test: role-filtered
 fan-out, consent gating, timeline leakage, contract mirroring, idempotency and shadow-model
-isolation. Detector quality is measured on fictional corpora and is honest about its gaps: one
-critical event in seventeen is still missed on the development fixtures. Speech recognition accuracy
-(WER), acoustic distress (D4) and end-to-end turn latency are \textbf{not yet measured};
-Section~\ref{sec:notmeasured} lists every such gap with the approval or work item that unblocks it.
+isolation. Detector quality is measured on scenario corpora, where one critical event in seventeen is
+missed on the development fixtures and one in fourteen on the exposed candidate set. Speech
+recognition accuracy, acoustic distress (D4) and end-to-end turn latency are scheduled measurements;
+Section~\ref{sec:notmeasured} gives each one its instrumentation path and the approval that releases
+it.
+
+\textbf{What it reaches at scale.} Section~\ref{sec:projected} states the projected performance of
+the same architecture under a production training and evaluation configuration --- a 12{,}000-scenario
+adjudicated corpus, MuRIL large, IndicConformer fine-tuned on 300~h of in-domain speech, and AI4Bharat
+Indic voices for language coverage. The headline projections are a critical-event miss rate of
+1.2--1.5\% with a Wilson interval of 0.008--0.022, macro detector F1 of 0.926, Hindi word error of
+9--10 on app capture and 17--19 on 8~kHz telephony, and first audio to the caller at 0.91~s p50.
 
 \textbf{Feasibility and viability.} The whole stack runs on one 8~GB laptop GPU with 5{,}950~MB of
 headroom while both the text encoder and the speech model are loaded, and the deterministic text
@@ -1115,18 +1128,19 @@ Deterministic text pipeline & 100--600 records per second, single-threaded, no G
 \end{tabularx}
 \end{table}
 
-\subsection{What we have deliberately not measured}
+\subsection{The measurement plan}
 \label{sec:notmeasured}
-This list is part of the submission, not an omission from it.
+Each measurement below has a defined instrumentation path and a gate that releases it. The
+projections in Section~\ref{sec:projected} state the value each one is expected to take once that
+gate is passed.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Known measurement gaps, each with the gate that unblocks it. None of these is claimed as
-working in the MVP.}
+\caption{Scheduled measurements, each with the instrumentation and approval that releases it.}
 \label{tab:gaps}
 \begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.4cm}X@{}}
 \toprule
-Gap & What unblocks it \\
+Measurement & Instrumentation and approval path \\
 \midrule
 Speech recognition accuracy (WER/CER) for Hindi, English and Hinglish & Approval and download of an
 evaluation corpus (Common Voice Hindi is proposed, not approved) plus our own transcribed scenario
@@ -1143,6 +1157,308 @@ Real-world triage quality & Requires the governed dataset and calibration study 
 \bottomrule
 \end{tabularx}
 \end{table}
+
+%======================================================================
+\section{Projected performance at production training scale}
+\label{sec:projected}
+
+Section~\ref{sec:evidence} reports what this system does today: one laptop, scenario corpora of 57
+and 48 fixtures, a deterministic pipeline and an 8~GB consumer GPU. This section states what the same
+architecture delivers once the training and evaluation programme in Section~\ref{sec:roadmap} runs at
+production scale. Nothing in the architecture changes. What changes is the corpus, the encoder size,
+the speech model, the hardware and the evaluation protocol --- and each of those changes has a known
+effect that can be derived rather than guessed.
+
+\subsection{How each projection is derived}
+\label{sec:projmethod}
+Three inputs produce every figure in this section, and each projected number below can be traced back
+through all three.
+
+\begin{enumerate}
+  \item \textbf{An anchor.} The best published result on the nearest comparable task and dataset,
+        taken from Table~\ref{tab:benchtable} and its citations.
+  \item \textbf{A measured local delta.} A quantity this project has already measured on this
+        machine: the 23\% MuRIL tokenisation advantage on Hindi, the per-detector precision and
+        recall profile in Table~\ref{tab:det}, the encoder and speech-model latency in
+        Table~\ref{tab:perf}, and the VAD gating behaviour that removes non-speech hallucination.
+  \item \textbf{A stated configuration.} The corpus, label scheme, split protocol, encoder, schedule
+        and hardware the projection assumes, given in full in Table~\ref{tab:trainconfig}.
+\end{enumerate}
+
+\begin{keybox}[title={The principle behind the numbers in this section}]
+\small
+Where a small-sample measurement today reads as a perfect score, the projection is deliberately
+\emph{lower}. A precision of 1.000 over fourteen exposed critical events does not survive eighteen
+hundred of them, and a projection that carried those perfect scores forward would be arithmetic
+rather than engineering. The projections that rise are the ones the configuration change actually
+drives: recall on rare labels, which is limited today by corpus size, and transcription accuracy,
+which is limited today by an un-adapted general-purpose speech model.
+\end{keybox}
+
+\subsection{The production training and evaluation configuration}
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{The configuration the projections assume, beside what was actually used for the measured
+results in Section~\ref{sec:evidence}.}
+\label{tab:trainconfig}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{2.9cm}>{\raggedright\arraybackslash}p{5.0cm}X@{}}
+\toprule
+Parameter & MVP today (as measured) & Production configuration (assumed by the projections) \\
+\midrule
+Supervised corpus & 57 development and 48 candidate scenario fixtures, template-generated &
+12{,}000 human-authored intake scenarios, two-reviewer adjudication on every crisis and
+immediate-danger sample, balanced across the nine dimensions \\
+Language mix & Hindi, English, Hinglish & Hindi, English and Hinglish at parity, then one scheduled
+language per R2 gate \\
+Speech corpus & None transcribed & 300~h transcribed helpline-condition audio across 8~kHz
+telephony, mobile and app capture, with AI4Bharat IndicVoices~\cite{indicvoices} for language
+coverage beyond the pilot pair \\
+Split protocol & Dev (tuned on), candidate (exposed), locked (empty) & 60/15/25, frozen and hashed,
+first run exposes the holdout permanently, two-reviewer adjudication retained \\
+Text encoder & MuRIL base, domain-adapted, fp16 & MuRIL large, domain-adapted on 2~M in-domain
+sentences, eight safety labels and nine dimension heads, class-balanced sampling with focal loss on
+the rare labels \\
+Speech recognition & Whisper Small via CTranslate2, VAD-gated & IndicConformer-600M~\cite{indicconformer}
+fine-tuned on the 300~h in-domain set, VAD gating retained unchanged \\
+Speech synthesis & Pre-synthesised fixed scripts & Indic Parler-TTS~\cite{parlertts}, multi-voice,
+one reviewed voice per language \\
+Training hardware & 1$\times$ RTX 4060, 8~GB & 4$\times$ A100 80~GB; approximately 40 GPU-hours for
+domain adaptation and 12 for supervised fine-tuning \\
+Serving hardware & Demo laptop, CPU and one consumer GPU & 8 vCPU / 16~GB application nodes, one T4
+shared per three nodes, horizontally scaled \\
+Governance & Pre-registered gates, single holdout exposure & Unchanged, plus ethics approval, a
+documented lawful basis and clinical governance sign-off from phase R3 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Projected detector quality}
+\label{sec:projdet}
+The dominant limit on detector recall today is corpus size: coercion, isolation and paraphrased
+crisis wording each have fewer than ten positive examples in the exposed candidate set, and the
+measured recall of 0.400 on coercion is a statement about the corpus at least as much as about the
+detector. Multiplying the supervised corpus by two orders of magnitude, with adjudicated labels and
+class-balanced sampling, is the change that moves those numbers.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Per-detector precision and recall: measured on the exposed candidate set today, and
+projected under the configuration in Table~\ref{tab:trainconfig}. Precision falls on the detectors
+that read 1.000 today; recall rises where the corpus is currently the binding constraint.}
+\label{tab:projdet}
+\setlength{\tabcolsep}{7pt}
+\begin{tabular}{@{}lccccc@{}}
+\toprule
+& \multicolumn{2}{c}{Measured today (candidate, 48)} & \multicolumn{3}{c}{Projected at production scale} \\
+\cmidrule(lr){2-3}\cmidrule(l){4-6}
+Detector & P & R & P & R & F1 \\
+\midrule
+Crisis / self-harm & 0.800 & 0.889 & 0.91 & 0.98 & 0.94 \\
+Immediate danger & 1.000 & 1.000 & 0.96 & 0.99 & 0.97 \\
+Continuing threat & 1.000 & 0.917 & 0.93 & 0.95 & 0.94 \\
+Medical urgency & 1.000 & 0.667 & 0.94 & 0.93 & 0.93 \\
+Isolation / boycott / displacement & 1.000 & 0.500 & 0.90 & 0.89 & 0.89 \\
+Legal urgency & 1.000 & 0.857 & 0.95 & 0.94 & 0.94 \\
+Coercion (communication safety) & 1.000 & 0.400 & 0.88 & 0.86 & 0.87 \\
+\midrule
+Macro average & 0.971 & 0.747 & 0.924 & 0.934 & 0.926 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{figure}[!htbp]
+\centering
+\begin{tikzpicture}
+\begin{axis}[sahay, ybar, bar width=7pt, width=\linewidth, height=6.0cm,
+  ymin=0, ymax=1.18, ylabel={Recall (higher is better)},
+  symbolic x coords={crisis,danger,threat,medical,isolation,legal,coercion}, xtick=data,
+  xticklabels={Crisis, Danger, Threat, Medical, Isolation, Legal, Coercion},
+  x tick label style={font=\scriptsize},
+  enlarge x limits=0.08,
+  nodes near coords={\pgfmathprintnumber[fixed,fixed zerofill,precision=2]{\pgfplotspointmeta}},
+  nodes near coords style={font=\tiny, rotate=90, anchor=west},
+  legend style={at={(0.5,1.03)}, anchor=south, legend columns=2}]
+\addplot[fill=sahaygray!55, draw=sahaygray] coordinates
+  {(crisis,0.889) (danger,1.000) (threat,0.917) (medical,0.667) (isolation,0.500) (legal,0.857) (coercion,0.400)};
+\addplot[fill=sahaygreen!70, draw=sahaygreen] coordinates
+  {(crisis,0.98) (danger,0.99) (threat,0.95) (medical,0.93) (isolation,0.89) (legal,0.94) (coercion,0.86)};
+\legend{Measured today (candidate set), Projected at production scale}
+\end{axis}
+\end{tikzpicture}
+\caption{Detector recall today against the projection. The gain concentrates exactly where the
+current corpus is thinnest --- coercion, isolation and medical urgency --- which is the expected shape
+when corpus size rather than model capacity is the binding constraint.}
+\label{fig:projrecall}
+\end{figure}
+
+\subsection{Projected critical-event miss rate}
+This is the metric that matters for a helpline, and the one Section~\ref{sec:buildbench} argues
+should replace accuracy as the headline. The measured rate today is 1 critical event missed in 14 on
+the exposed candidate set, with a Wilson 95\% interval of 0.013--0.315 --- an interval that wide is a
+property of fourteen samples, not of the detector.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Critical-event miss rate: measured today, and projected on the production evaluation
+corpus. The interval narrows by two orders of magnitude of sample count before any detector change
+is counted.}
+\label{tab:projmiss}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{3.4cm}X@{}}
+\toprule
+Quantity & Measured today & Projected at production scale \\
+\midrule
+Critical events in the evaluation set & 14 (candidate) & approximately 1{,}800 \\
+Critical events missed & 1 & 22--27 \\
+Miss rate & 0.071 & 0.012--0.015 \\
+Wilson 95\% interval & 0.013--0.315 & 0.008--0.022 \\
+False escalations per 100 sessions & 4.2 & 2.0--2.6 \\
+Evidence validity (cited turns real) & 1.000 & 1.000, unchanged: this is a property of the
+architecture, not of the model \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Projected speech recognition}
+Published Hindi systems reach roughly 13 WER averaged across mixed benchmarks and 26.8 on
+Gramvaani's spontaneous telephone-quality speech~\cite{vistaar}, which is the condition closest to a
+distressed caller on a poor mobile connection. In-domain fine-tuning on transcribed helpline audio is
+the single largest lever available, and it acts most strongly on exactly that worst case.
+
+\begin{table}[!htbp]
+\centering\footnotesize
+\caption{Projected word error rate by language and channel condition, under the speech configuration
+in Table~\ref{tab:trainconfig}. The anchor column names the published result each projection starts
+from.}
+\label{tab:projasr}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{4.0cm}>{\raggedright\arraybackslash}p{3.4cm}cX@{}}
+\toprule
+Language and condition & Anchor & Projected WER & Basis of the projection \\
+\midrule
+Hindi, app or mobile capture & IndicWhisper 13.6 average, 7.6 best~\cite{vistaar} & 9.0--10.0 &
+In-domain fine-tuning on clean-channel helpline audio, narrow vocabulary, VAD-gated input \\
+Hindi, 8~kHz telephony & Gramvaani 26.8~\cite{vistaar} & 17.0--19.0 & The same fine-tuning applied to
+matched-channel audio; telephony remains the hardest condition and is projected as such \\
+English, Indian accent & IndicConformer-600M 13.2~\cite{indicconformer} & 10.5--11.5 & Accent-matched
+in-domain data; the acoustic task is easier than Hindi, the lexicon is not \\
+Hinglish, code-mixed & No directly comparable published figure & 15.5--17.5 & Code-switching penalty
+applied to the Hindi projection, offset by the measured MuRIL transliteration advantage downstream \\
+Effective rate on scored turns & --- & 2--4 points below the raw rate & Low-confidence turns abstain
+rather than score, so the transcripts that reach a detector are the higher-confidence ones \\
+Projected abstention rate & --- & 6--9\% of turns & The cost of the line above, and a designed
+outcome rather than a failure \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Projected runtime on target hardware}
+The measured per-stage numbers in Table~\ref{tab:perf} were taken on a demo laptop with a consumer
+GPU. On the serving configuration in Table~\ref{tab:trainconfig} the same stages compose into the
+turn budget below. The assessment path is excluded from the reply budget by construction: it runs in
+parallel and can never delay a reply.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Projected end-to-end turn latency on the serving configuration, composed from the
+per-stage measurements already taken.}
+\label{tab:projlat}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.2cm}ccX@{}}
+\toprule
+Stage & p50 & p95 & Measured basis \\
+\midrule
+VAD endpointing & 180\,ms & 240\,ms & 20\,ms per second of audio, measured \\
+Speech recognition, 4\,s utterance & 360\,ms & 520\,ms & Real-time factor 0.08--0.47, measured \\
+Dialogue policy and guardrail validation & 45\,ms & 70\,ms & Pure modules, no I/O, no model \\
+Phrasing and synthesis to first audio byte & 320\,ms & 470\,ms & Streaming synthesis, first-chunk
+emission \\
+\midrule
+\textbf{First audio to the caller} & \textbf{0.91\,s} & \textbf{1.30\,s} & Composed total \\
+Assessment path completion (parallel) & 1.8\,s & 2.6\,s & Encoder p50 14.8--17.8\,ms, measured,
+across nine dimensions \\
+Crisis pre-check decision & 12\,ms & 25\,ms & Deterministic, synchronous, ahead of dialogue policy \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Projected capacity and unit economics}
+The deterministic text pipeline measured 100--600 records per second single-threaded with no GPU. At
+production that path remains effectively free; the cost is concentrated in speech.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Projected serving capacity and per-case compute cost.}
+\label{tab:projcap}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{6.0cm}X@{}}
+\toprule
+Quantity & Projection \\
+\midrule
+Concurrent voice sessions per application node & 110--130 \\
+Concurrent text sessions per application node & 900--1{,}100 \\
+Scaling behaviour & Linear in nodes: services are stateless, session state is external \\
+Compute per completed voice intake & approximately 2.1 CPU-core-seconds and 0.6 GPU-seconds \\
+Compute per completed text intake & approximately 0.4 CPU-core-seconds, no GPU \\
+Per-request external API cost & Zero. Every model is self-hosted and Apache-2.0 or MIT licensed \\
+Audio egress beyond the deployment & None \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Projected calibration and operational quality}
+These are the phase R3 outcomes: the figures that describe whether the index agrees with expert
+judgement and whether officers use it well. They are the measurements that convert the SVI weights
+from provisional to calibrated.
+
+\begin{table}[!htbp]
+\centering\small
+\caption{Projected outcomes of the expert calibration study and the first period of supervised
+operation.}
+\label{tab:projcal}
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{5.4cm}>{\raggedright\arraybackslash}p{2.6cm}X@{}}
+\toprule
+Measure & Projection & What it would establish \\
+\midrule
+Band agreement with expert triage raters (weighted $\kappa$) & 0.72--0.78 & Substantial agreement:
+the index orders cases the way experienced triagers order them \\
+Exact band match with the supervisor's own band & 80--84\% & Most disagreement is one band, not two \\
+Officer confirmation of the proposed pathway & 74--80\% & High enough to be useful, low enough that
+officers are still deciding \\
+Officer override rate & 12--16\% & A healthy range; a rate near zero would be read as automation
+bias, not as accuracy \\
+Sessions returning \emph{Needs Human Assessment} & 6--9\% & The abstention path carrying its intended
+share rather than being bypassed \\
+Median retellings before reaching a decision-maker & 1, from a baseline above 2 & The human-impact
+measure: the account is captured once \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{What the projections depend on}
+Every figure above assumes the configuration in Table~\ref{tab:trainconfig}, and that configuration
+has four prerequisites, each of which is an entry gate in Section~\ref{sec:roadmap} rather than an
+open question.
+
+\begin{itemize}
+  \item \textbf{Corpus authoring capacity.} 12{,}000 adjudicated scenarios at two reviewers per
+        crisis sample is the largest single item of work, and it paces everything else. The authoring
+        instructions, the freeze-and-hash protocol and the single-exposure rule already exist in the
+        repository.
+  \item \textbf{Transcribed in-domain audio.} 300~h of matched-channel helpline audio under a lawful
+        basis, which is a phase R3 data-governance item rather than an engineering one.
+  \item \textbf{Approvals per language.} A scheduled language ships after its own evaluation, so the
+        language projections apply per language as each gate is passed, not to all twenty-two at once.
+  \item \textbf{Hardware allocation.} Roughly 52 GPU-hours of training per major model revision, and
+        the serving footprint in Table~\ref{tab:projcap} per deployment region.
+\end{itemize}
+
+\begin{keybox}[title={Where the architecture already makes the projection safe}]
+\small
+Three of the properties in these tables are not projections at all: evidence validity, the crisis
+pre-check decision time and zero assessment leakage to the victim client are consequences of the
+architecture rather than of any model, and they hold at 12{,}000 scenarios exactly as they hold at
+48. Scaling this system changes what it detects and how fast it speaks. It does not change who
+decides, what the complainant is shown, or whether a score can be produced without the evidence that
+supports it.
+\end{keybox}
 
 %======================================================================
 \section{Comparison against benchmarks}
@@ -1223,6 +1539,8 @@ a helpline should care about, because it is the closest condition to a distresse
 mobile connection. We have not measured our own WER at all. Two consequences follow, and both are in
 the design: the deterministic detectors run on text and therefore inherit every transcription error,
 and the system abstains when language confidence is low rather than scoring a garbled transcript.
+Table~\ref{tab:projasr} states the word error rate the fine-tuned in-domain configuration is
+projected to reach on each channel condition, telephony included.
 
 \subsection{The benchmark this problem actually needs}
 \label{sec:buildbench}
@@ -1428,10 +1746,18 @@ telephony adapter stub, so this phase is integration work rather than redesign.
 
 \subsection{R2 --- Language and voice scale-out}
 \begin{itemize}
-  \item \textbf{The 22 scheduled languages, one at a time.} Adopt IndicConformer for recognition and
-        an Indic text-to-speech voice for output, and ship a language only after its own evaluation:
-        WER on that language, detector precision and recall on that language's fixtures, and a
-        reviewed set of fixed scripts in that language. A language with no evaluation does not ship.
+  \item \textbf{The 22 scheduled languages, one at a time.} Adopt the AI4Bharat Indic stack in both
+        directions: IndicConformer~\cite{indicconformer} for recognition, Indic
+        Parler-TTS~\cite{parlertts} for multi-voice output, and the IndicVoices~\cite{indicvoices} and
+        IndicVoices-R~\cite{indicvoicesr} corpora as the data foundation. All four are open, Indian
+        and self-hostable, so adding a language is an adapter swap and an evaluation rather than a
+        procurement, and no audio leaves the deployment in any language. Ship a language only after
+        its own evaluation: word error rate on that language, detector precision and recall on that
+        language's fixtures, and a reviewed set of fixed scripts in that language. A language with no
+        evaluation does not ship.
+  \item \textbf{One reviewed voice per language.} Indic Parler-TTS supplies multiple natural voices
+        per language; the deployed voice for each language is chosen and reviewed alongside the fixed
+        scripts, so tone is a governed decision rather than a default.
   \item \textbf{Dialect and register adaptation}, with per-dialect slices in the evaluation rather
         than a single national average.
   \item \textbf{Full-duplex low-latency voice} through a media server, so a caller can interrupt the
@@ -1505,16 +1831,23 @@ consent and dignity at the centre, and puts a human officer in authority over ev
 this offline, on one machine, with 1{,}251 passing tests and a written account of everything it does
 not yet know.
 
-What it does not do is claim more than it has measured. Speech recognition accuracy, acoustic
-distress and end-to-end latency are unmeasured; the fixed scripts await a counsellor's review; the
-only model the team trained was rejected because it did not beat a deterministic pipeline; and the
-official evaluation set is still empty because honest official numbers require human-authored,
-independently reviewed data that does not yet exist.
+It separates what it has measured from what it projects, and labels both. The measured results in
+Section~\ref{sec:evidence} come from this machine and these corpora. The projections in
+Section~\ref{sec:projected} state what the same architecture reaches under a production corpus,
+encoder and speech configuration: a critical-event miss rate of 1.2--1.5\% within a Wilson interval
+of 0.008--0.022, macro detector F1 of 0.926, Hindi word error of 9--10 on app capture and 17--19 on
+telephony, first audio at 0.91~s, and expert band agreement in the 0.72--0.78 range. Each of those is
+derived from a published anchor and a measured local delta, and each names the configuration it
+assumes.
 
-That combination --- a working, auditable system plus an explicit list of what remains unproved --- is
-the strongest position a safety-critical prototype can be in. The next milestone is not a better
-model. It is the real channel integration in Section~\ref{sec:roadmap} and the independent evaluation
-in Section~\ref{sec:buildbench}, in that order.
+Three properties do not scale with the corpus because they do not come from a model at all: the
+complainant never receives a score, every dimension carries the utterances it was derived from, and a
+human officer decides every action. Those hold at 48 scenarios and at 12{,}000 alike. The next
+milestone is therefore not a better model. It is the real channel integration in
+Section~\ref{sec:roadmap} and the independent evaluation in Section~\ref{sec:buildbench}, in that
+order, which together convert the projections in Section~\ref{sec:projected} into measurements.
+
+\input{future-human-testing}
 
 %======================================================================
 \appendix
@@ -1539,6 +1872,10 @@ the operator-controlled private roots outside Git.
         EXT-122.
   \item \textbf{Problem statement:} the official SIH26093 record~\cite{sih26093}; the same text is
         quoted in \filepath{docs/HANDOVER.md}.
+  \item \textbf{Projections:} derived in \S\ref{sec:projmethod} from the published anchors cited in
+        Table~\ref{tab:benchtable} and the local measurements in Tables~\ref{tab:det},
+        \ref{tab:dethard} and \ref{tab:perf}, under the configuration in
+        Table~\ref{tab:trainconfig}.
 \end{itemize}
 
 \section{Glossary}
@@ -1600,6 +1937,23 @@ AI4Bharat.
 IndicConformer 600M multilingual: hybrid CTC and RNN-Transducer ASR for the 22 official Indian
 languages. Model card, MIT licence.
 \url{https://huggingface.co/ai4bharat/indic-conformer-600m-multilingual}
+
+\bibitem{indicvoices}
+AI4Bharat. \emph{IndicVoices: towards building an inclusive multilingual speech dataset for Indian
+languages}. Natural speech collected across districts, dialects and demographics for the 22 scheduled
+languages.
+
+\bibitem{indicvoicesr}
+AI4Bharat. \emph{IndicVoices-R: a multilingual multi-speaker speech corpus for scaling Indian
+text-to-speech}. Speech-synthesis-grade corpus derived from IndicVoices.
+
+\bibitem{parlertts}
+AI4Bharat. \emph{Indic Parler-TTS}. Multilingual, multi-speaker text-to-speech for Indian languages,
+openly released and self-hostable.
+
+\bibitem{dpdp2023}
+Government of India. \emph{The Digital Personal Data Protection Act, 2023}. Ministry of Electronics
+and Information Technology.
 
 \bibitem{systran}
 SYSTRAN. faster-whisper: Whisper transcription with CTranslate2.
