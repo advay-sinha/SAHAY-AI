@@ -1,0 +1,47 @@
+%======================================================================
+% Future work: human-driven testing (included from local-research-analysis.tex).
+% Source: docs/plan/human-tasks/SAHAY-AI_Human_Tasks.{html,pdf} (H1--H13) and the
+% evaluation table ml/eval/results/eval-table-2026-09-29.md.
+%======================================================================
+\section{Future work: human-driven testing}\label{sec:humantesting}
+
+Everything in this report that could be built and measured by the development team alone has been
+built and measured. What remains is testing that only people can do: writing and approving what the
+system says, recording voices, reviewing fixtures, writing a blind corpus, and timing real use. Until
+these are done, the affected metrics stay \emph{pending} in the evaluation table, never zero, and the
+locked-set count stays at 0, so no number in this report is presented as independent evidence.
+
+The tasks below are ordered by what they unlock. Effort figures are estimates from the task plan, not
+measurements.
+
+\begin{longtable}{@{}>{\raggedright\arraybackslash}p{0.8cm}>{\raggedright\arraybackslash}p{4.2cm}>{\raggedright\arraybackslash}p{4.6cm}>{\raggedright\arraybackslash}p{4.4cm}@{}}
+\toprule
+\textbf{ID} & \textbf{Human task} & \textbf{What it tests or unlocks} & \textbf{Metric it turns from pending to measured} \\
+\midrule
+\endhead
+H1 & Decide, write and approve the fixed scripts S0, S9, SX and SH in Hindi and English (two dialogue reviewers, a native Hindi speaker) & The opening, closing, crisis and hand-off scripts. The system fails closed and speaks none of them until approved & End-to-end voice demo; fixed-script audio path (M13) \\
+H2 & A counsellor or psychology faculty member reviews the crisis script SX & Whether the crisis response is appropriate for a person at risk & Reviewer-signed SX; crisis-path rehearsal \\
+H3 & Review the question and fallback wording (currently draft) & Whether each licensed question is clear, neutral and non-leading in both languages & Spoken intake questions S2--S8 \\
+H4 & Record the fixed-script audio with human voices & Human-recorded audio for S0, S9, SX and SH (the registry serves only approved recordings) & Fixed-script playback on the phone \\
+H5 & Emotion speech recordings: at least 6 speakers, 5 emotions, Hindi and English (and Hinglish), with consent & Speech-emotion model selection and its promotion gate on Indian speakers; D4 voice-distress behaviour on real voices; Hindi speech recognition & SER gate (R6b, R7); D4 validation; Hindi turn latency; part of M6 \\
+H6 & Write text-emotion evaluation sentences in Hindi and Hinglish (independent labeller) & The MuRIL text-affect model on human-written, not machine-transliterated, Hinglish & Text-affect gate (D-9b) \\
+H7 & Build the blind evaluation corpus: about 180 scenarios, 360 blind reviews, at least 5 distinct people & Generalisation of the crisis pre-check, detectors and routing to text their builders never saw & \textbf{M1 critical-event miss rate and M7 detector precision and recall on locked data}: the independent safety numbers \\
+H8 & Complete the pending two-person safety reviews (crisis pre-check, hardening, detector drafts v1.1 and v1.2) & Whether each lexicon and rule change is correct and safe, by people who did not write it & Reviewed status for every draft lexicon \\
+H9 & Decide on a 4th language, and staff it if yes & Language scope & Support for that language (none claimed until tested) \\
+H10 & Account-gated data: Common Voice Hindi (and optionally IITKGP-SEHSC) & Speech recognition on real Hindi speakers & \textbf{M6 word error rate by language and condition} \\
+H11 & Expert review of the provisional SVI weights and bands (counsellor or helpline expert) & Whether the weights and the Critical-reachability rule match helpline practice & SVI weights move from provisional to reviewed \\
+H12 & Timed decision test: 3--5 outside readers decide on case packets & Whether an executive can act on the packet quickly & \textbf{M4 executive decision time} ($<$ 90 s) \\
+H13 & Real-phone testing, demo rehearsal and a backup video & The whole path on a phone over Wi-Fi: end-of-speech detection, upload, playback, crisis interrupt, human decision, timeline & \textbf{M2 turn latency on a phone}, \textbf{M3 time to first alert}, M9 repeat-question rate \\
+\bottomrule
+\end{longtable}
+
+\paragraph{Order.} H1, H2 and H3 unblock the voice demo and should start first, together with H5,
+which has the longest lead time, and a small pilot of H7. H4 follows the approved scripts. H11, H12
+and H13 come last, before the freeze.
+
+\paragraph{How results enter the report.} Each task produces files that the existing tooling already
+reads: approved scripts and recordings enter the fixed-script registry, reviewed fixtures enter the
+locked split, and recordings enter the speech pipeline. The evaluation table and the judge-defence
+pages are then regenerated from those files. Numbers produced this way will be marked with the new
+evidence class they earn (locked, blind or human-recorded), and every earlier exposed or synthetic
+number keeps its original label.
