@@ -60,7 +60,7 @@ runtime/*/*
 *.db-shm
 *.db-wal
 *.npy
-
+log.txt
 # Local working files: never committed.
 prompt.txt
 START_HERE.md
