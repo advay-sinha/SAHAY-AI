@@ -1,11 +1,16 @@
 """Stage W weak-supervision corpus (plan M14, EXT-129): source labels as training labels, with caveats.
 
-    python -m ml.data.weak_corpus build [--training-root DIR]
+    python -m ml.data.weak_corpus build [--training-root DIR] [--root DATASETS_ROOT]
 
 It reads the private, already privacy-processed EXT-119 segment file
-(``<SAHAY_TRAINING_ROOT>/corpora/external-ext119-v1/segments.jsonl``) and nothing else. It never
-opens a raw dataset. For each source it keeps the windows whose source label has a documented
-meaning and maps that label to ONE SAHAY training target through ``label_firewall.map_for_training``:
+(``<SAHAY_TRAINING_ROOT>/corpora/external-ext119-v1/segments.jsonl``). The one exception is
+Dreaddit: when the official archive (``dreaddit.zip``, train 2,838 + test 715) is present at its
+registry path and matches the registry's pinned size and sha256, its two CSVs are read in memory
+(no extraction, after the archive-safety check). They pass through the same Task 5 redaction and
+windowing and replace the 715-row copy, and the train rows are made post-disjoint from test.
+Without the archive, the 715-row copy from the segment file is used and the manifest says so.
+For each source it keeps the windows whose source label has a documented meaning and maps that
+label to ONE SAHAY training target through ``label_firewall.map_for_training``:
 
 | Source | Source label -> target | Caveat carried |
 |---|---|---|
@@ -20,16 +25,26 @@ family crosses them. Standard library only; output is written beneath the traini
 """
 
 import argparse
+import csv
 import hashlib
+import io
 import json
 import os
 import sys
 import time
+import zipfile
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Tuple
 
+from . import archive_safety as az
+from . import external_corpus as xc
 from . import governance as gov
 from . import label_firewall as fw
+from .training_corpus import text_windows
+
+DREADDIT = "dreaddit"
+DREADDIT_KAGGLE_COPY = "kaggle_715_row_copy (paper test split only)"
+DREADDIT_OFFICIAL = "official_archive (train + test)"
 
 TRAINING_ROOT_ENV = "SAHAY_TRAINING_ROOT"
 CORPUS_NAME = "weak-ext129-v1"
@@ -136,6 +151,67 @@ def select_rows(segments: Iterable[Mapping[str, Any]], maps: Mapping[str, Mappin
     return sorted(rows, key=lambda r: (r["split"], r["dataset_id"], _key(r["uid"])))
 
 
+def datasets_root(explicit: Optional[str] = None) -> Optional[Path]:
+    raw = explicit or os.environ.get(gov.ROOT_ENV, "")
+    return Path(raw).expanduser().resolve() if raw.strip() else None
+
+
+def _member(names: List[str], word: str) -> str:
+    hits = [n for n in names if n.casefold().endswith(".csv") and word in Path(n).name.casefold()
+            and not Path(n).name.startswith("._")]
+    if len(hits) != 1:
+        raise WeakCorpusError(f"the Dreaddit archive does not have exactly one {word} CSV ({len(hits)} found)")
+    return hits[0]
+
+
+def parse_dreaddit_csv(data: bytes, split: str, maps: Mapping[str, Mapping[str, Any]]) -> Tuple[List[Dict[str, Any]], int]:
+    """Rows of one official CSV: redacted, windowed, labelled through ``maps``. Returns rows and skipped count."""
+    reader = csv.DictReader(io.StringIO(data.decode("utf-8-sig")))
+    if not reader.fieldnames or not {"text", "label"} <= set(reader.fieldnames):
+        raise WeakCorpusError("a Dreaddit CSV lacks the text and label columns")
+    rows, skipped = [], 0
+    for i, rec in enumerate(reader):
+        m = maps.get(f"source:{DREADDIT}:{str(rec.get('label', '')).strip()}")
+        text = str(rec.get("text") or "").strip()
+        if m is None or not text:
+            skipped += 1
+            continue
+        post = str(rec.get("post_id") or rec.get("id") or i)
+        family = f"EXT:{DREADDIT}:post:{hashlib.sha256(post.encode('utf-8')).hexdigest()[:16]}"
+        clean, _ = xc.redact(text)
+        record = hashlib.sha256(f"{split}|{post}|{rec.get('sentence_range', '')}|{i}".encode("utf-8")).hexdigest()[:16]
+        for w, window in enumerate(text_windows(clean)):
+            rows.append({"uid": f"EXT:{DREADDIT}:official:{split}:{record}#w{w}", "family": family,
+                         "dataset_id": DREADDIT, "language": "en", "script": "latin", "text": window,
+                         "target": m["target"], "value": m["value"], "split": split, "weight": 1.0,
+                         "evidence_class": m["evidence_class"]})
+    return rows, skipped
+
+
+def official_dreaddit(root: Optional[Path], registry: Mapping[str, Any], maps: Mapping[str, Mapping[str, Any]]
+                      ) -> Optional[Dict[str, Any]]:
+    """Rows from the official archive, or None when it is absent. A present but wrong archive is refused."""
+    if root is None:
+        return None
+    rec = gov.get(registry, DREADDIT)
+    path = root.joinpath(*Path(rec["local_relative_path"]).parts)
+    if not path.is_file():
+        return None
+    if path.stat().st_size != rec["byte_size"] or _sha(path) != rec["sha256"]:
+        raise WeakCorpusError("dreaddit.zip does not match the registry's pinned size and sha256")
+    safety = az.inspect_zip(path)
+    if not safety.get("safe"):
+        raise WeakCorpusError(f"dreaddit.zip failed the archive-safety check: {safety.get('findings')}")
+    with zipfile.ZipFile(path) as zf:
+        names = zf.namelist()
+        parsed = {split: parse_dreaddit_csv(zf.read(_member(names, split)), split, maps) for split in ("train", "test")}
+    test_families = {r["family"] for r in parsed["test"][0]}
+    train = [r for r in parsed["train"][0] if r["family"] not in test_families]
+    dropped = len(parsed["train"][0]) - len(train)
+    return {"rows": train + parsed["test"][0], "skipped": {s: parsed[s][1] for s in parsed},
+            "train_windows_dropped_for_post_overlap": dropped}
+
+
 def _read_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
     with open(path, encoding="utf-8") as fh:
         for line in fh:
@@ -167,7 +243,7 @@ def counts(rows: Iterable[Mapping[str, Any]]) -> Dict[str, Dict[str, int]]:
     return dict(sorted(out.items()))
 
 
-def build(root: Path, registry: Optional[Mapping[str, Any]] = None) -> Dict[str, Any]:
+def build(root: Path, registry: Optional[Mapping[str, Any]] = None, datasets: Optional[Path] = None) -> Dict[str, Any]:
     registry = registry or gov.load_registry()
     maps = mappings(registry)
     seg_path = root.joinpath(*SEGMENTS)
@@ -178,6 +254,12 @@ def build(root: Path, registry: Optional[Mapping[str, Any]] = None) -> Dict[str,
     if seg_sha != ext_manifest.get("segments_sha256"):
         raise WeakCorpusError("the EXT-119 segment file does not match its manifest hash")
     rows = select_rows(_read_jsonl(seg_path), maps)
+    official = official_dreaddit(datasets, registry, maps)
+    dreaddit_source = DREADDIT_KAGGLE_COPY
+    if official is not None:
+        rows = [r for r in rows if r["dataset_id"] != DREADDIT] + official["rows"]
+        rows.sort(key=lambda r: (r["split"], r["dataset_id"], _key(r["uid"])))
+        dreaddit_source = DREADDIT_OFFICIAL
     out = root / "corpora" / CORPUS_NAME
     out.mkdir(parents=True, exist_ok=True)
     files = {}
@@ -190,6 +272,8 @@ def build(root: Path, registry: Optional[Mapping[str, Any]] = None) -> Dict[str,
         "evidence_class": fw.WEAK_SUPERVISION, "basis": "EXT-129",
         "artifact_class": "quarantined_research_artifact",
         "source_segments_sha256": seg_sha, "files_sha256": files, "counts": counts(rows),
+        "dreaddit_source": dreaddit_source,
+        "dreaddit_official": ({k: v for k, v in official.items() if k != "rows"} if official else None),
         "mappings": {raw: {k: v for k, v in m.items()} for raw, m in sorted(maps.items())},
         "never": sorted(fw.NEVER_EVEN_FOR_TRAINING),
         "note": ("source labels used as weak training labels only; metrics against them are weak-supervision "
@@ -204,15 +288,17 @@ def build(root: Path, registry: Optional[Mapping[str, Any]] = None) -> Dict[str,
 def main(argv: Optional[List[str]] = None) -> int:
     parser = argparse.ArgumentParser(prog="python -m ml.data.weak_corpus", description=__doc__.split("\n")[0])
     parser.add_argument("--training-root", help=f"overrides {TRAINING_ROOT_ENV}")
+    parser.add_argument("--root", help=f"datasets root; overrides {gov.ROOT_ENV}")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("build")
     args = parser.parse_args(argv)
     try:
-        manifest = build(training_root(args.training_root))
+        manifest = build(training_root(args.training_root), datasets=datasets_root(args.root))
     except (WeakCorpusError, gov.GovernanceError, fw.LabelFirewallError) as exc:
         print(f"refused: {exc}", file=sys.stderr)
         return 2
-    print(json.dumps({k: manifest[k] for k in ("corpus", "evidence_class", "counts", "files_sha256")}, indent=1))
+    print(json.dumps({k: manifest[k] for k in ("corpus", "evidence_class", "dreaddit_source", "dreaddit_official",
+                                               "counts", "files_sha256")}, indent=1))
     return 0
 
 

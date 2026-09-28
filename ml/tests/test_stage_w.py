@@ -76,6 +76,52 @@ class TestWeakCorpus(unittest.TestCase):
         with self.assertRaises(wc.WeakCorpusError):
             wc.select_rows(segs, self.maps)
 
+    def _zip(self, tmp, train_csv, test_csv):
+        import hashlib
+        import io
+        import zipfile
+        buf = io.BytesIO()
+        with zipfile.ZipFile(buf, "w") as zf:
+            zf.writestr("dreaddit/dreaddit-train.csv", train_csv)
+            zf.writestr("dreaddit/dreaddit-test.csv", test_csv)
+        data = buf.getvalue()
+        path = Path(tmp) / "corpus" / "text" / "english" / "dreaddit" / "dreaddit.zip"
+        path.parent.mkdir(parents=True)
+        path.write_bytes(data)
+        return {"datasets": [{"id": "dreaddit", "local_relative_path": "corpus/text/english/dreaddit/dreaddit.zip",
+                              "byte_size": len(data), "sha256": hashlib.sha256(data).hexdigest()}]}
+
+    def test_official_archive_is_parsed_redacted_and_post_disjoint(self):
+        import tempfile
+        header = "subreddit,post_id,sentence_range,text,id,label\n"
+        train = header + ("ptsd,p1,\"[0, 5]\",I cannot stop shaking mail a.b@example.com,1,1\n"
+                          "ptsd,p2,\"[0, 5]\",A calm fictional day at work,2,0\n"
+                          "ptsd,p9,\"[0, 5]\",Unlabelled fictional row,3,\n")
+        test = header + "ptsd,p2,\"[5, 9]\",Same post later in the story,4,1\n"
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = self._zip(tmp, train, test)
+            out = wc.official_dreaddit(Path(tmp), reg, self.maps)
+        by_split = {s: [r for r in out["rows"] if r["split"] == s] for s in ("train", "test")}
+        self.assertEqual([r["value"] for r in by_split["train"]], [1])        # p2 dropped: its post is in test
+        self.assertEqual(out["train_windows_dropped_for_post_overlap"], 1)
+        self.assertEqual(out["skipped"], {"train": 1, "test": 0})
+        self.assertIn("[EMAIL]", by_split["train"][0]["text"])
+        self.assertTrue(all(r["target"] == "D5" and r["evidence_class"] == fw.WEAK_SUPERVISION for r in out["rows"]))
+
+    def test_absent_or_mismatched_archive(self):
+        import tempfile
+        with tempfile.TemporaryDirectory() as tmp:
+            reg = self._zip(tmp, "text,label\n", "text,label\n")
+            self.assertIsNone(wc.official_dreaddit(None, reg, self.maps))
+            self.assertIsNone(wc.official_dreaddit(Path(tmp) / "elsewhere", reg, self.maps))
+            reg["datasets"][0]["sha256"] = "0" * 64
+            with self.assertRaises(wc.WeakCorpusError):
+                wc.official_dreaddit(Path(tmp), reg, self.maps)
+
+    def test_csv_without_text_and_label_is_refused(self):
+        with self.assertRaises(wc.WeakCorpusError):
+            wc.parse_dreaddit_csv(b"body,score\nx,1\n", "train", self.maps)
+
     def test_builder_never_uses_the_official_mapping(self):
         self.assertNotIn("map_to_sahay", (ML / "data" / "weak_corpus.py").read_text(encoding="utf-8"))
 

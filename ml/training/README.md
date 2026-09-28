@@ -217,7 +217,13 @@ crisis handling, SVI, D5, D4, evidence or anything victim-facing.
   |---|---|---|---|
   | `crisis_self_harm` | subreddit of origin | 10,000 / 10,000 (first window per post) | 3,000 / 3,000 |
   | `continuing_threat` | hate-speech label (English rows) | 8,090 / 7,210 | 911 / 741 |
-  | `D5` → `d5_text_distress` | crowd-annotated stress (715-post local copy) | 402 / 458 | 61 / 47 |
+  | `D5` → `d5_text_distress` | crowd-annotated stress | 402 / 458 with the 715-row copy | 61 / 47 |
+
+  When the official Dreaddit archive is present at its registry path and matches the pinned
+  sha256, the builder reads its train and test CSVs instead of the 715-row copy.
+  - They go through the same redaction and windowing.
+  - Train posts that also appear in test are dropped.
+  - The manifest's `dreaddit_source` field records which copy was used.
 
 - **Keyed by target.** Training code keys weak data by target, never by dataset name. Only
   `ml/data` knows the sources.

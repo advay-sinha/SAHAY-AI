@@ -554,6 +554,24 @@ Decision maker:  Project owner, 2026-09-28 (Stage W plan approved, including W2)
 ```
 
 ```text
+Date:            2026-09-28
+ID:              EXT-105 / EXT-129 — Dreaddit official archive re-download (APPROVED)
+What:            dreaddit.zip from http://www.cs.columbia.edu/~eturcan/data/dreaddit.zip
+                 (train 2,838 + test 715 segments), placed at the registry path
+                 corpus/text/english/dreaddit/dreaddit.zip. It must match the registry's
+                 existing pin: 1,348,791 bytes, sha256 6c7d8859764231cc…3f61cb. The
+                 builder refuses anything else.
+Why:             Stage W D5 training data (860 → about 3,700 windows). The local 715-row
+                 copy is only the paper's test split.
+Use:             Read in memory by ml/data/weak_corpus.py only: archive-safety check,
+                 Task 5 redaction, post-disjoint train/test. Training and validation
+                 under EXT-129; never in the product, demo, fixtures or Git.
+Licence/cost:    No licence stated by the authors (registry: unknown); free.
+Run by:          Owner (manual download). Nothing else is downloaded or installed.
+Decision maker:  Project owner, 2026-09-28.
+```
+
+```text
 Date:            2026-09-27
 ID:              EXT-120 — implementation note (no new dependency)
 Scope:           Backend settings ASR_PROVIDER (mock | local_service; default mock),
