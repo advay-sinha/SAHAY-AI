@@ -126,3 +126,38 @@ class TestTranscribeRequest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestFastWav(unittest.TestCase):
+    """The PyAV-free path for 16 kHz mono 16-bit WAV (M2: about 80 ms saved per turn)."""
+
+    @staticmethod
+    def wav(rate=16000, channels=1, width=2, frames=b"\x00\x10\x00\xf0" * 50):
+        import io
+        import wave
+        buf = io.BytesIO()
+        with wave.open(buf, "wb") as w:
+            w.setnchannels(channels)
+            w.setsampwidth(width)
+            w.setframerate(rate)
+            w.writeframes(frames)
+        return buf.getvalue()
+
+    def test_other_formats_take_the_general_decoder(self):
+        from ml.voice.service import fast_wav
+        self.assertIsNone(fast_wav(self.wav(rate=44100)))
+        self.assertIsNone(fast_wav(self.wav(channels=2)))
+        self.assertIsNone(fast_wav(self.wav(width=1, frames=b"\x80" * 100)))
+        self.assertIsNone(fast_wav(b"ID3 not a wav at all"))
+        self.assertIsNone(fast_wav(b"RIFF\x00\x00\x00\x00WAVEbroken"))
+
+    def test_samples_are_scaled_like_faster_whisper(self):
+        try:
+            import numpy  # noqa: F401
+        except ImportError:
+            self.skipTest("numpy is only in the model environment")
+        from ml.voice.service import fast_wav
+        out = fast_wav(self.wav())
+        self.assertEqual(len(out), 100)
+        self.assertAlmostEqual(float(out[0]), 4096 / 32768)
+        self.assertAlmostEqual(float(out[1]), -4096 / 32768)
