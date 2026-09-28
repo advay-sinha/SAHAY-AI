@@ -435,6 +435,12 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
 - Model cards for every ML component, a limitations document, the per-language red-team table and the SVI provisional-weights disclaimer.
 - Run the demo rehearsal: Hindi voice → assessment → crisis interrupt → Critical alert → human decision → timeline.
 - Tag the release. Claims about clinical validity, production readiness or untested languages stay prohibited.
+- **Status (2026-09-29): documents done; the demo rehearsal and the release tag are owner and team tasks.**
+  - `docs/defence/`:
+    - `NUMBERS.md` and `RED_TEAM.md`, generated from result files by `python -m ml.eval.defence`;
+    - `LIMITATIONS.md`, `JUDGE_QA.md` and a README.
+  - New component cards: detectors and crisis pre-check, SVI (provisional-weights disclaimer), output validator, speech-to-text, voice output.
+  - `ml/tests/test_defence.py` checks that every card and page passes the wording guard and that the generated totals match the report.
 
 ### Critical path
 
