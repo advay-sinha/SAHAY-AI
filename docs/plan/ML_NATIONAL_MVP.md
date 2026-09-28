@@ -341,13 +341,19 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - Every row names its source file and evidence class.
     - Output is aggregates only.
     - A wording guard refuses clinical or production claims, and refuses "official" while the locked set is empty.
-  - Current table: `ml/eval/results/eval-table-2026-09-27.md`, built from `eval-2026-09-27.json` and the private run reports. It has 95 rows: 83 measured, 10 pending, 1 enforced by tests (M8) and 1 unvalidated (D4).
+  - Current table: `ml/eval/results/eval-table-2026-09-28.md`, built from `eval-2026-09-28.json` and the private run reports. It has 95 rows: 83 measured, 10 pending, 1 enforced by tests (M8) and 1 unvalidated (D4).
   - Headline results, all on exposed fixtures (evidence class exposed):
-    - critical-event miss rate: 1 of 17 on dev and 1 of 14 on candidates;
+    - critical-event miss rate: 0 of 17 on dev and 1 of 14 on candidates;
     - red-team: 39 of 39;
-    - coercion recall on candidates: 0.40 (2 of 5).
+    - coercion recall on candidates: 0.60 (3 of 5).
   - Pending: the locked set, M2, M3, M4, M6 and M9.
-  - Still open in M14: the exposed-failure fixes above, the fixtures that need human review and the blind corpus (both ⛔), and the AE-15 row.
+  - **Exposed-failure fixes (2026-09-28): drafted, pending two human reviews** (`detectors-v1.2-draft`; `ml/eval/reviews/p-det-3-6-review.md`).
+    - P-DET-6: a spelling map and "come back tonight" as imminent danger. DEV-EN-022 now routes Critical.
+    - P-DET-3: a conditional negation no longer cancels D3. CAND-HG-004 is now detected.
+    - No new false positives on dev, candidates or red-team.
+    - These are regression results only (`REGRESSION_TARGETS_M14`).
+  - Quoted-speech escalations (DEV-EN-011, DEV-HI-012, CAND-EN-012, CAND-HI-009) deliberately still route to a person. Suppressing them would weaken the crisis interrupt (invariant 2), so they wait on the leads' P-DET-2 decision.
+  - Still open in M14: the fixtures that need human review and the blind corpus (both ⛔), the AE-15 row, and the shadow MuRIL safety detector (EXT-129 weak supervision; you run the training).
 
 ### M15 — Shadow model (optional; not recommended before the finale)
 
