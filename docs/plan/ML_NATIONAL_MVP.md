@@ -353,7 +353,7 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
     - No new false positives on dev, candidates or red-team.
     - These are regression results only (`REGRESSION_TARGETS_M14`).
   - Quoted-speech escalations (DEV-EN-011, DEV-HI-012, CAND-EN-012, CAND-HI-009) deliberately still route to a person. Suppressing them would weaken the crisis interrupt (invariant 2), so they wait on the leads' P-DET-2 decision.
-  - **Stage W, the shadow MuRIL safety detector (EXT-129 weak supervision): code done 2026-09-28, runs pending** (`ml/data/weak_corpus.py`, `ml/training/stage_w.py`, `stage_w_eval.py`; README "Stage W").
+  - **Stage W, the shadow MuRIL safety detector (EXT-129 weak supervision): ✅ done 2026-09-28**; card `ml/training/STAGE_W_CARD.md` (`ml/data/weak_corpus.py`, `ml/training/stage_w.py`, `stage_w_eval.py`; README "Stage W").
     - Arms: W0 fictional only; W1 adds weak crisis and D5 (the D5 logit is `d5_text_distress`); W2 adds weak threat.
     - Selection uses fictional validation only.
     - Output is shadow only and never feeds SVI, D5 or routing.
@@ -362,9 +362,24 @@ Test UAR, with macro-F1 in brackets. Shadow output only (D-9a).
       | Run | What | Status |
       |---|---|---|
       | R8a | build the weak corpus, then a smoke run | ✅ 2026-09-28: official Dreaddit archive used (3,842 train and 968 test windows) |
-      | R8b | record the plan, then phase 1 (W0, W1, W2 at seed 13) | attempt 1 aborted, rerun pending |
-      | R8c | phase 2 (seeds 42 and 97 of the winner), then selection | pending |
-      | R8d | evaluation | pending |
+      | R8b | record the plan, then phase 1 (W0, W1, W2 at seed 13) | ✅ attempt 2: peak memory 5.0–5.9 GB; W0 9 min, W1 33 min, W2 29 min |
+      | R8c | phase 2 (seeds 42 and 97 of the winner), then selection | ✅ winner W2; selected W2 seed 13 |
+      | R8d | evaluation | ✅ |
+  - **Stage W results.** Details and evidence classes are in the card and in `eval-table-2026-09-28.md` (SHD rows).
+    - Weak supervision helps on source-like text. Weak-test AUROC for W0 → W2:
+
+      | Target | W0 | W2 |
+      |---|---|---|
+      | crisis | 0.84 | 0.99 |
+      | D5 | untrained | 0.83 |
+      | threat | 0.40 | 0.92 |
+
+      On the same windows, the rules find 0.38, 0.10 and 0.003 of the positives.
+    - Fictional holdout macro F1 goes from 0.68 to 0.73–0.84; the range across W2 seeds is 0.11. Hindi and Hinglish crisis recall goes from 0.76 / 0.73 to 0.94 / 0.84.
+    - On the exposed fixtures the model stays far below the rules: micro F1 0.60 against 0.93 on dev, and 0.58 against 0.88 on candidates.
+    - It catches 5 candidate fixture-labels the rules miss, including the indirect crisis statement CAND-EN-003.
+    - On the indirect-wording probes it fires on 6 of 7, but also on 3 of 3 non-crisis controls.
+    - Verdict: shadow second opinion only (`rejected_for_product_integration`). Revisit it for P-DET-4 once a reviewed locked set exists.
   - **R8b attempt 1 (2026-09-28) was aborted.**
     - What happened: W0 finished, then W1 was stopped by the Windows commit limit. At 14:12 a low-virtual-memory event recorded python.exe at 10.9 GB committed.
     - Cause: long weak windows pad batches to 128 tokens and pushed the 8 GB card into shared system memory. The smoke test had already shown a 7.2 GB peak.

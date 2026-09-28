@@ -1364,6 +1364,135 @@
       "source": "SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json",
       "status": "measured",
       "value": 0.7048
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector macro F1, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 1190,
+      "note": "labels without positive support excluded: immediate_danger, medical_urgency, isolation_boycott_displacement",
+      "scope": "synthetic holdout",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.7333
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "en",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.9899
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "hi",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.9444
+    },
+    {
+      "ci95": null,
+      "evidence_class": "synthetic_development",
+      "metric": "Shadow detector crisis recall, fictional holdout (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": null,
+      "note": "",
+      "scope": "hinglish",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8349
+    },
+    {
+      "ci95": [
+        0.7755,
+        0.8436
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: D5 (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 505,
+      "note": "AUROC 0.8296; precision 0.7244; deterministic rules recall 0.099, precision 0.8065",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8119
+    },
+    {
+      "ci95": [
+        0.777,
+        0.8338
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: continuing_threat (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 741,
+      "note": "AUROC 0.9197; precision 0.8214; deterministic rules recall 0.0027, precision 0.3333",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.807
+    },
+    {
+      "ci95": [
+        0.9513,
+        0.9655
+      ],
+      "evidence_class": "weak_supervision_from_source_label",
+      "metric": "Shadow detector recall vs source label: crisis_self_harm (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 3000,
+      "note": "AUROC 0.9929; precision 0.9693; deterministic rules recall 0.3757, precision 0.9716",
+      "scope": "weak test bucket",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.959
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_development",
+      "metric": "Shadow detector micro F1 vs deterministic rules (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 57,
+      "note": "rules micro F1 0.9333; caught by the model only 1; model false positives 25",
+      "scope": "dev",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.5951
+    },
+    {
+      "ci95": null,
+      "evidence_class": "exposed_candidate",
+      "metric": "Shadow detector micro F1 vs deterministic rules (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 48,
+      "note": "rules micro F1 0.8809; caught by the model only 5; model false positives 18",
+      "scope": "candidates",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.5843
+    },
+    {
+      "ci95": null,
+      "evidence_class": "descriptive_probe",
+      "metric": "Shadow detector fires on indirect-wording probes (W2 seed 13)",
+      "metric_id": "SHD",
+      "n": 7,
+      "note": "non-crisis controls fired 3 of 3; the crisis pre-check fired on 0 of 7",
+      "scope": "10 probes",
+      "source": "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json",
+      "status": "measured",
+      "value": 0.8571
     }
   ],
   "table_version": "eval-table-1.0",

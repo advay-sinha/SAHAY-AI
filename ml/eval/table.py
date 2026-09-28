@@ -298,13 +298,65 @@ def text_rows(root: Path, resamples: int, seed: int) -> List[Dict[str, Any]]:
     return rows
 
 
+def stage_w_rows(root: Path) -> List[Dict[str, Any]]:
+    """The selected Stage W checkpoint (shadow MuRIL, weak supervision): headline rows by evidence class."""
+    path = root / "stage-w" / "reports" / "evaluation.json"
+    source = "SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json"
+    if not path.is_file():
+        return [row("SHD", "Shadow safety detector (Stage W)", scope="all", status="not_available",
+                    evidence_class="none", source=source, note="no Stage W evaluation report found")]
+    report = json.loads(path.read_text(encoding="utf-8"))
+    sel = report.get("selected") or {}
+    run = next((r for r in report["runs"] if r["arm"] == sel.get("arm") and r["seed"] == sel.get("seed")), None)
+    if run is None:
+        return [row("SHD", "Shadow safety detector (Stage W)", scope="all", status="not_available",
+                    evidence_class="none", source=source, note="no selected run in the report")]
+    tag = f"{run['arm']} seed {run['seed']}"
+    out: List[Dict[str, Any]] = []
+    h = run["holdout"]
+    out.append(row("SHD", f"Shadow detector macro F1, fictional holdout ({tag})", scope="synthetic holdout",
+                   status="measured", evidence_class="synthetic_development", source=source,
+                   value=h["macro"]["f1"], n=h.get("records"),
+                   note="labels without positive support excluded: "
+                        + (", ".join(h["macro"].get("f1_labels_excluded_undefined") or []) or "none")))
+    for lang, rec in sorted((h.get("crisis_recall_by_language") or {}).items()):
+        if rec is not None:
+            out.append(row("SHD", f"Shadow detector crisis recall, fictional holdout ({tag})", scope=lang,
+                           status="measured", evidence_class="synthetic_development", source=source, value=rec))
+    for target, w in sorted(run["weak_test"].items()):
+        m, r = w["model"], w["rules"]
+        k, n = m["tp"], m["tp"] + m["fn"]
+        out.append(row("SHD", f"Shadow detector recall vs source label: {target} ({tag})", scope="weak test bucket",
+                       status="measured", evidence_class="weak_supervision_from_source_label", source=source,
+                       value=m["recall"], ci=wilson(k, n), n=n,
+                       note=f"AUROC {m.get('auroc')}; precision {m['precision']}; deterministic rules recall "
+                            f"{r['recall']}, precision {r['precision']}"))
+    for corpus in ("dev", "candidates"):
+        e = run["exposed"][corpus]
+        out.append(row("SHD", f"Shadow detector micro F1 vs deterministic rules ({tag})", scope=corpus,
+                       status="measured", evidence_class=EVAL_EVIDENCE.get(corpus if corpus == "dev" else "candidate"),
+                       source=source, value=e["model"]["micro_f1"], n=e["samples"],
+                       note=f"rules micro F1 {e['rules']['micro_f1']}; caught by the model only "
+                            f"{len(e['caught_by_model_only'])}; model false positives {len(e['model_false_positives'])}"))
+    probes = run["probes"]["rows"]
+    ind = [p for p in probes if p["indirect_by_author"]]
+    ctl = [p for p in probes if not p["indirect_by_author"]]
+    out.append(row("SHD", f"Shadow detector fires on indirect-wording probes ({tag})", scope="10 probes",
+                   status="measured", evidence_class="descriptive_probe", source=source,
+                   value=round(sum(p["model_fires"] for p in ind) / len(ind), 4), n=len(ind),
+                   note=f"non-crisis controls fired {sum(p['model_fires'] for p in ctl)} of {len(ctl)}; "
+                        f"the crisis pre-check fired on {sum(p['crisis_precheck_fires'] for p in ind)} of {len(ind)}"))
+    return out
+
+
 def private_rows(training_root: Optional[str], resamples: int, seed: int) -> List[Dict[str, Any]]:
     if not training_root or not Path(training_root).is_dir():
         return [row(mid, name, scope="all", status="not_available", evidence_class="none",
                     source="SAHAY_TRAINING_ROOT", note="private run reports are not available on this machine")
-                for mid, name in (("SER", "Speech emotion UAR"), ("TXT", "Text affect UAR"))]
+                for mid, name in (("SER", "Speech emotion UAR"), ("TXT", "Text affect UAR"),
+                                  ("SHD", "Shadow safety detector (Stage W)"))]
     root = Path(training_root)
-    rows = ser_rows(root, resamples, seed) + text_rows(root, resamples, seed)
+    rows = ser_rows(root, resamples, seed) + text_rows(root, resamples, seed) + stage_w_rows(root)
     if not any(r["metric_id"] == "SER" for r in rows):
         rows.append(row("SER", "Speech emotion UAR", scope="all", status="not_available", evidence_class="none",
                         source="SAHAY_TRAINING_ROOT/ser/runs", note="no run reports found"))
@@ -396,6 +448,7 @@ def render_markdown(table: Mapping[str, Any]) -> str:
         ("Abstention and bands", ("A1", "A2")),
         ("Speech emotion (shadow; acted English only)", ("SER",)),
         ("Text affect (shadow)", ("TXT",)),
+        ("Shadow safety detector, Stage W (MuRIL, weak supervision; never routes)", ("SHD",)),
         ("Not yet measured or enforced by tests (HANDOVER M2–M4, M6, M8, M9; D4)",
          ("M2", "M3", "M4", "M6", "M8", "M9", "D4")),
     )

@@ -121,6 +121,21 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 | TXT | Text affect UAR: xlmr-base-s13 | test:hi_user_turns | 0.710 | — | 495 | source_corpus_sentence_disjoint | measured | macro-F1 0.6987; lowest class recall 0.4792; subset not identifiable in the prediction file; interval omitted |
 | TXT | Text affect UAR: xlmr-base-s13 | test:hinglish | 0.705 | [0.669, 0.744] | 777 | transliterated_augmentation | measured | macro-F1 0.6803; lowest class recall 0.5 |
 
+## Shadow safety detector, Stage W (MuRIL, weak supervision; never routes)
+
+| ID | Metric | Scope | Value | 95% CI | n | Evidence | Status | Note |
+|---|---|---|---|---|---|---|---|---|
+| SHD | Shadow detector macro F1, fictional holdout (W2 seed 13) | synthetic holdout | 0.733 | — | 1190 | synthetic_development | measured | labels without positive support excluded: immediate_danger, medical_urgency, isolation_boycott_displacement |
+| SHD | Shadow detector crisis recall, fictional holdout (W2 seed 13) | en | 0.990 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector crisis recall, fictional holdout (W2 seed 13) | hi | 0.944 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector crisis recall, fictional holdout (W2 seed 13) | hinglish | 0.835 | — | — | synthetic_development | measured |  |
+| SHD | Shadow detector recall vs source label: D5 (W2 seed 13) | weak test bucket | 0.812 | [0.775, 0.844] | 505 | weak_supervision_from_source_label | measured | AUROC 0.8296; precision 0.7244; deterministic rules recall 0.099, precision 0.8065 |
+| SHD | Shadow detector recall vs source label: continuing_threat (W2 seed 13) | weak test bucket | 0.807 | [0.777, 0.834] | 741 | weak_supervision_from_source_label | measured | AUROC 0.9197; precision 0.8214; deterministic rules recall 0.0027, precision 0.3333 |
+| SHD | Shadow detector recall vs source label: crisis_self_harm (W2 seed 13) | weak test bucket | 0.959 | [0.951, 0.966] | 3000 | weak_supervision_from_source_label | measured | AUROC 0.9929; precision 0.9693; deterministic rules recall 0.3757, precision 0.9716 |
+| SHD | Shadow detector micro F1 vs deterministic rules (W2 seed 13) | dev | 0.595 | — | 57 | exposed_development | measured | rules micro F1 0.9333; caught by the model only 1; model false positives 25 |
+| SHD | Shadow detector micro F1 vs deterministic rules (W2 seed 13) | candidates | 0.584 | — | 48 | exposed_candidate | measured | rules micro F1 0.8809; caught by the model only 5; model false positives 18 |
+| SHD | Shadow detector fires on indirect-wording probes (W2 seed 13) | 10 probes | 0.857 | — | 7 | descriptive_probe | measured | non-crisis controls fired 3 of 3; the crisis pre-check fired on 0 of 7 |
+
 ## Not yet measured or enforced by tests (HANDOVER M2–M4, M6, M8, M9; D4)
 
 | ID | Metric | Scope | Value | 95% CI | n | Evidence | Status | Note |
@@ -145,6 +160,7 @@ Versions: corpus `2026.09.11-1`, crisis_lexicon `crisis-v1.2-unreviewed`, label_
 - `SAHAY_TRAINING_ROOT/ser/runs/wavlm-crema-s13/report.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/whisper-head-both-s13/report.json`
 - `SAHAY_TRAINING_ROOT/ser/runs/whisper-head-crema-s13/report.json`
+- `SAHAY_TRAINING_ROOT/stage-w/reports/evaluation.json`
 - `SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-base-s13/report.json`
 - `SAHAY_TRAINING_ROOT/textaffect/runs-v2/muril-stagea-s13/report.json`
 - `SAHAY_TRAINING_ROOT/textaffect/runs-v2/xlmr-base-s13/report.json`

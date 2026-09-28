@@ -1,0 +1,96 @@
+# Model card — `experimental_weak_shadow_classifier` (Stage W, plan M14)
+
+| Field | Value |
+|---|---|
+| Identity | Shadow output only: development-only, uncalibrated, trained partly on source labels that are not SAHAY ground truth, not clinically validated, never authoritative |
+| Decisions | EXT-129 (dataset use for MVP training and validation) and its 2026-09-28 Stage W notes, including the official Dreaddit re-download |
+| Base | Stage A domain-adapted MuRIL (`run-20260912-054730`) |
+| Network | Attention-masked mean pooling, dropout 0.1, one linear layer with 9 independent logits: the 8 schema detector categories plus `d5_text_distress` |
+| Loss | Masked focal loss (gamma 2). A weak row supervises only its own logit; fictional rows supervise the 8 detector logits, with D5 masked |
+| Threshold | Fixed 0.5; never tuned |
+| Selected checkpoint | **W2, seed 13, epoch 8**, chosen by the predeclared rule on fictional validation only |
+| Weights | Private, beneath `SAHAY_TRAINING_ROOT/stage-w/checkpoints/`. Never committed, published or loaded by a product component |
+
+## Status
+
+| Field | Value |
+|---|---|
+| Deployment | **Shadow only.** `rejected_for_product_integration`. |
+| Feeds SVI, D5, D4, routing, crisis handling, evidence | **No** |
+| Victim-facing | Never |
+| Promotion path | A reviewed locked set, a separate integration decision and the leads' approval. None exists. |
+
+## Training data
+
+| Source | Target | Train (windows, 0 / 1) | Test bucket (0 / 1) | Caveat |
+|---|---|---|---|---|
+| Task 7B fictional corpus `7b-v1` | 8 detector labels | 7,492 records | holdout: 1,190 records | synthetic, agent-generated |
+| Reddit Suicide Detection | `crisis_self_harm` | 10,000 / 10,000 | 3,000 / 3,000 | subreddit of origin, not a human judgement |
+| Hate-speech derivative (English rows) | `continuing_threat` | 8,090 / 7,210 | 911 / 741 | hate speech is not a threat |
+| Dreaddit, official archive | `D5` → `d5_text_distress` | 1,787 / 2,055 | 463 / 505 | crowd-annotated stress; not trauma or a diagnosis |
+
+Each epoch uses the whole fictional train split plus a weak draw of equal size, shared equally across the arm's weak targets.
+
+## Results (2026-09-28; one run per arm at seed 13, plus seeds 42 and 97 for W2)
+
+| Run | Validation macro F1 (selection) | Fictional holdout macro F1 | Holdout crisis recall hi / Hinglish | Weak-test AUROC: crisis / threat / D5 | Exposed micro F1, dev / candidates |
+|---|---|---|---|---|---|
+| W0 (fictional only) | 0.538 | 0.680 | 0.756 / 0.734 | 0.841 / 0.405 / 0.534 (D5 not trained) | 0.527 / 0.482 |
+| W1 (+ crisis, D5) | 0.578 | 0.751 | 0.967 / 0.917 | 0.993 / 0.358 / 0.797 | 0.508 / 0.575 |
+| **W2 (+ threat), seed 13 — selected** | **0.628** | **0.733** | **0.944 / 0.835** | **0.993 / 0.920 / 0.830** | **0.595 / 0.584** |
+| W2, seed 42 | 0.608 | 0.842 | 0.978 / 0.982 | 0.995 / 0.914 / 0.824 | 0.518 / 0.475 |
+| W2, seed 97 | 0.626 | 0.788 | 0.856 / 0.752 | 0.993 / 0.910 / 0.822 | 0.495 / 0.553 |
+| Deterministic rules | — | — | — | recall 0.376 / 0.003 / 0.099 on the same windows | **0.933 / 0.881** |
+
+### Evidence classes
+
+| Result | Evidence class |
+|---|---|
+| Fictional holdout | Synthetic development. `immediate_danger`, `medical_urgency` and `isolation_boycott_displacement` have no positive holdout support, so they are excluded as undefined. |
+| Weak test buckets | Weak supervision from source labels |
+| Exposed fixtures | Contaminated regression |
+| Probes | Descriptive only |
+
+### Findings
+
+- **Weak supervision works on text like its sources.**
+  - Crisis AUROC rises from 0.84 (W0) to 0.99.
+  - The D5 logit reaches AUROC about 0.82. Rule-based D5 finds only 0.10 of the stressed posts, at precision 0.81.
+  - Threat rises from 0.40 to 0.92, and only in W2.
+- **Hindi and Hinglish crisis recall on the fictional holdout improves**, from 0.76 and 0.73 (W0) to 0.94 and 0.84 (W2 seed 13). This happens even though every weak source is English.
+- **Seed variance is large.** W2's holdout macro F1 spans 0.733–0.842 across seeds. W1 (0.751) and W2 cannot be told apart.
+- **On SAHAY fixtures the model is far weaker than the rules.**
+  - Micro F1 is 0.60 against 0.93 on dev, and 0.58 against 0.88 on candidates.
+  - The model has 25 and 18 false positives.
+  - The deterministic pipeline stays authoritative.
+- **It catches some things the rules miss.** On candidates, 5 fixture-labels are caught only by the model:
+  - `CAND-EN-003` crisis: the indirect method-and-plan statement (P-DET-4);
+  - `CAND-EN-004` threat and coercion;
+  - `CAND-EN-005` medical;
+  - `CAND-HG-012` legal.
+
+  On dev, 1 is caught only by the model (`DEV-HI-011` threat).
+- **Indirect-wording probes are not specific.**
+  - The selected model fires on 6 of 7 indirect crisis probes. The crisis pre-check fires on 0 of 7.
+  - But it also fires on **all 3 non-crisis controls**, such as travelling tomorrow.
+  - It reads absence or sadness as crisis. It is not usable as a crisis signal; the crisis pre-check stays the only crisis authority.
+- **Red-team victim inputs:** the model agrees with the expected crisis outcome on 8 of 8. The rules also agree on 8 of 8.
+
+## What this supports
+
+A shadow second opinion shown next to the deterministic result in the local ML demonstration. It is worth considering later for P-DET-4 (a `possible_indirect_risk` flag that routes to a person, never to Critical) once a reviewed locked set can measure its false-positive rate.
+
+## What it does not support
+
+- Any claim about real helpline speech.
+- Replacing or supplementing the crisis pre-check.
+- Using the D5 logit in the SVI.
+- Any clinical claim.
+- Any claim that W2 is better than W1, given the seed spread.
+
+## Limitations
+
+- Every weak source is English web text. Its labels are proxies, not SAHAY definitions.
+- The fictional holdout comes from the same generator family as training.
+- The exposed fixtures are published, so they are regression evidence only.
+- The probes were written by the author and are unreviewed.

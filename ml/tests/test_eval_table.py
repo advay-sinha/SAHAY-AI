@@ -172,6 +172,43 @@ class TestPrivateReports(unittest.TestCase):
         self.assertIn("does not reproduce", row["note"])
 
 
+class TestStageWRows(unittest.TestCase):
+    def _report(self):
+        weak = {"tp": 8, "fn": 2, "fp": 1, "tn": 9, "precision": 0.889, "recall": 0.8, "auroc": 0.9}
+        rules = {"tp": 1, "fn": 9, "fp": 0, "tn": 10, "precision": 1.0, "recall": 0.1}
+        exposed = {"samples": 57, "model": {"micro_f1": 0.6}, "rules": {"micro_f1": 0.93},
+                   "caught_by_model_only": ["DEV-X:crisis_self_harm"], "model_false_positives": ["DEV-Y:legal_urgency"]}
+        run = {"arm": "W2", "seed": 13,
+               "holdout": {"records": 100, "macro": {"f1": 0.7, "f1_labels_excluded_undefined": []},
+                           "crisis_recall_by_language": {"en": 0.9, "hi": None}},
+               "weak_test": {"crisis_self_harm": {"model": weak, "rules": rules}},
+               "exposed": {"dev": exposed, "candidates": exposed},
+               "probes": {"rows": [{"indirect_by_author": True, "model_fires": True, "crisis_precheck_fires": False},
+                                   {"indirect_by_author": False, "model_fires": True, "crisis_precheck_fires": False}]}}
+        return {"selected": {"arm": "W2", "seed": 13}, "runs": [run, dict(run, seed=42)]}
+
+    def test_selected_run_rows_carry_their_evidence_class(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "stage-w" / "reports" / "evaluation.json"
+            path.parent.mkdir(parents=True)
+            path.write_text(json.dumps(self._report()), encoding="utf-8")
+            rows = table.stage_w_rows(Path(tmp))
+        classes = {r["evidence_class"] for r in rows}
+        self.assertEqual(classes, {"synthetic_development", "weak_supervision_from_source_label",
+                                   "exposed_development", "exposed_candidate", "descriptive_probe"})
+        self.assertTrue(all("W2 seed 13" in r["metric"] for r in rows))
+        self.assertEqual(len([r for r in rows if "crisis recall" in r["metric"]]), 1)  # hi is None: no row, no zero
+        self.assertIn("none", rows[0]["note"])
+        dumped = json.dumps(rows)
+        self.assertNotIn("DEV-X", dumped)
+
+    def test_missing_report_is_not_available(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            (row,) = table.stage_w_rows(Path(tmp))
+        self.assertEqual(row["status"], "not_available")
+        self.assertIsNone(row["value"])
+
+
 class TestCommittedBaseline(unittest.TestCase):
     def test_builds_from_a_real_run_eval_report(self):
         report = json.loads(BASELINE.read_text(encoding="utf-8"))
