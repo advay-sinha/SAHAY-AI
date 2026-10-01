@@ -13,9 +13,13 @@ import {
 
 interface HandoffScreenProps {
   onRequestHuman: () => Promise<void>;
+  /** True once the server reports that a person has joined the session. */
+  humanJoined?: boolean;
+  /** Opens the conversation so the person can write to the officer. */
+  onOpenChat?: () => void;
 }
 
-export function HandoffScreen({ onRequestHuman }: HandoffScreenProps) {
+export function HandoffScreen({ onRequestHuman, humanJoined = false, onOpenChat }: HandoffScreenProps) {
   const [state, setState] = useState<HandoffState>("idle");
   const requestCallbackRef = useRef(onRequestHuman);
   requestCallbackRef.current = onRequestHuman;
@@ -54,7 +58,7 @@ export function HandoffScreen({ onRequestHuman }: HandoffScreenProps) {
                 allowFontScaling
                 style={[typeStyles.heading, { textAlign: "center" }]}
               >
-                {t("human.requested")}
+                {humanJoined ? t("human.joined") : t("human.requested")}
               </Text>
             </SurfaceCard>
           ) : (
@@ -87,6 +91,8 @@ export function HandoffScreen({ onRequestHuman }: HandoffScreenProps) {
               label={state === "failed" ? t("error.retry") : t("human.button")}
               onPress={requestHuman}
             />
+          ) : onOpenChat ? (
+            <TalkToPersonButton label={t("human.open_chat")} onPress={onOpenChat} />
           ) : null}
         </PersistentFooter>
       </View>

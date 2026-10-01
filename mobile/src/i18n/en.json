@@ -31,6 +31,7 @@
   "human.button": "Talk to a person",
   "human.requested": "We are connecting you to a person. Please stay.",
   "human.joined": "A person has joined and can hear you now.",
+  "human.open_chat": "Write to the person here",
 
   "timeline.title": "Your request",
   "timeline.reference": "Reference number",

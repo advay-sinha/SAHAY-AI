@@ -55,15 +55,15 @@ test("hi and en carry the same keys", () => {
   assert.deepEqual(Object.keys(hi).sort(), Object.keys(en).sort());
 });
 
-// Re-pinned 2026-10-01 for disclosure.tester (EXT-130); the Hindi wording awaits a reviewer.
+// Re-pinned 2026-10-01 for disclosure.tester and human.open_chat (EXT-130); the Hindi wording awaits a reviewer.
 test("approved locale values remain unchanged", () => {
   assert.equal(
     valueDigest(load("en.json")),
-    "fa5137b526be75ab535ed97c98367bf001372e4d64899ac7fb29d08d2a27b519",
+    "567138f4357d389be9d09371467aa83ecc9d0b15399f7525c8b9c4f612f7dfa7",
   );
   assert.equal(
     valueDigest(load("hi.json")),
-    "4a0b883adc9962c459a54292090bd91a3f7fe1f51694b6b4a6db772ae280cd86",
+    "2768220eacc22effed93b14eb9265cee2adb1035b177f2e7e2719abf230b0100",
   );
 });
 

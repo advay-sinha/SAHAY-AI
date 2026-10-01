@@ -1,8 +1,8 @@
 /**
  * Static boundaries for the session and timeline slice. Node, no dependency.
  *
- * This slice adds REST session creation and one victim-safe timeline only.
- * WebSocket, chat sending, handoff delivery, the offline queue, storage,
+ * REST session creation, one victim-safe timeline, and (EXT-130) the text
+ * conversation socket for chat and handoff. The offline queue, storage,
  * audio and every ML module stay disconnected.
  */
 
@@ -72,13 +72,23 @@ test("no route or slice module imports the socket or the offline queue", () => {
   assert.deepEqual(offences, []);
 });
 
-test("no WebSocket is opened outside the pre-existing, unwired socket module", () => {
-  const offences = allProductionSources()
-    .filter(({ file, code }) => file !== path.join("src", "net", "socket.ts") && /\bWebSocket\b/.test(code))
+test("the platform socket is built in one place and the token URL in one module", () => {
+  const sockets = allProductionSources()
+    .filter(({ code }) => /\bWebSocket\b/.test(code))
+    .map(({ file }) => file)
+    .sort();
+  assert.deepEqual(sockets, [
+    path.join("src", "net", "socket.ts"),
+    path.join("src", "session", "SessionProvider.tsx"),
+  ]);
+  assert.match(stripComments(read("src", "session", "SessionProvider.tsx")), /\(url\) => new WebSocket\(url\)/);
+
+  const tokenUrls = allProductionSources()
+    .filter(({ file, code }) => file !== path.join("src", "net", "socket.ts") && /\?token=/.test(code))
     .map(({ file }) => file);
-  assert.deepEqual(offences, []);
+  assert.deepEqual(tokenUrls, [path.join("src", "net", "conversation.js")]);
   for (const parts of SLICE_FILES) {
-    assert.doesNotMatch(stripComments(read(...parts)), /\bws_url\b[^\n]*\+|new WebSocket|\?token=/);
+    assert.doesNotMatch(stripComments(read(...parts)), /\bws_url\b[^\n]*\+|\?token=/);
   }
 });
 
@@ -155,14 +165,20 @@ test("no mobile module imports ML, shadow or runtime code", () => {
   assert.deepEqual(offences, []);
 });
 
-test("chat, handoff and talk routes remain disconnected from the session", () => {
-  for (const route of ["chat.tsx", "handoff.tsx", "talk.tsx", "home.tsx"]) {
+test("chat and handoff reach the server only through the store; talk and home stay disconnected", () => {
+  for (const route of ["talk.tsx", "home.tsx"]) {
     const code = stripComments(read("app", route));
     assert.doesNotMatch(code, /SessionProvider|sessionStore|restClient|fetch\(/, route);
   }
-  const chat = read("app", "chat.tsx");
-  assert.match(chat, /aiPermitted=\{false\}/);
-  assert.match(chat, /onSend=\{unavailableSend\}/);
+  for (const route of ["chat.tsx", "handoff.tsx"]) {
+    const code = stripComments(read("app", route));
+    assert.doesNotMatch(code, /sessionStore"|restClient|conversation"|fetch\(|WebSocket|token/, route);
+  }
+  const chat = stripComments(read("app", "chat.tsx"));
+  assert.match(chat, /aiPermitted=\{consent === "granted"\}/);
+  assert.match(chat, /onSend=\{\(text\) => store\.sendChat\(text\)\}/);
+  assert.match(chat, /receivedMessages=\{conversation\.events\}/);
+  assert.match(stripComments(read("app", "handoff.tsx")), /onRequestHuman=\{\(\) => store\.requestHuman\(getLanguage\(\)\)\}/);
 });
 
 test("no dependency was added or changed", () => {

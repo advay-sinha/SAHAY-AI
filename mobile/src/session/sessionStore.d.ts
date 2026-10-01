@@ -1,3 +1,4 @@
+import type { ConversationState, SocketFactory } from "../net/conversation";
 import type { FetchLike, RequestConsent, RequestLang } from "../net/restClient";
 import type { VictimTimeline } from "../net/victimPayload";
 import type { MyRequestsLoadState } from "../screens/myRequestsState";
@@ -29,6 +30,7 @@ export interface SessionSnapshot {
   readonly session: PublicSession | null;
   readonly creation: SessionCreationState;
   readonly timeline: TimelineState;
+  readonly conversation: ConversationState;
 }
 
 export type StartSessionResult =
@@ -58,12 +60,16 @@ export interface SessionStore {
   clearSession(): void;
   loadTimeline(): Promise<void>;
   cancelTimeline(): void;
+  connectConversation(): void;
+  sendChat(text: string): Promise<void>;
+  requestHuman(lang: RequestLang): Promise<void>;
 }
 
 export function createSessionStore(options: {
   apiUrl: unknown;
   fetchImpl: FetchLike;
   timeoutMs?: number;
+  socketFactory?: SocketFactory | null;
 }): SessionStore;
 
 export function timelineLoadState(timeline: TimelineState): MyRequestsLoadState;

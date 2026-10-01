@@ -31,6 +31,16 @@ interface ChatScreenProps {
 
 const initialState: ChatState = { draft: "", messages: [] };
 
+const victimBubbleStyle = {
+  backgroundColor: theme.colors.navySecondary,
+  borderRadius: theme.radius.large,
+  borderTopRightRadius: theme.radius.small,
+  color: theme.colors.card,
+  fontSize: 17,
+  lineHeight: 26,
+  padding: theme.space.lg,
+};
+
 export function ChatScreen({
   aiPermitted,
   consent,
@@ -86,7 +96,13 @@ export function ChatScreen({
         keyboardShouldPersistTaps="handled"
         style={{ flex: 1 }}
       >
-        {displayMessages.map((message) => (
+        {displayMessages.map((message) => message.labelKey === null ? (
+          <View key={message.id} style={{ alignSelf: "flex-end", maxWidth: "88%" }}>
+            <Text accessibilityRole="text" allowFontScaling style={victimBubbleStyle}>
+              {message.text}
+            </Text>
+          </View>
+        ) : (
           <View key={message.id} style={{ alignSelf: "flex-start", gap: theme.space.xs, maxWidth: "88%" }}>
             <Text accessibilityRole="header" allowFontScaling style={[typeStyles.caption, { color: theme.colors.navy }]}>
               {t(message.labelKey)}
@@ -102,9 +118,10 @@ export function ChatScreen({
           </View>
         ))}
 
-        {state.messages.map((message) => (
+        {/* A sent message is shown once the server echoes it, above, in order. */}
+        {state.messages.filter((message) => message.status !== "sent").map((message) => (
           <View key={message.id} style={{ alignSelf: "flex-end", gap: theme.space.xs, maxWidth: "88%" }}>
-            <Text accessibilityRole="text" allowFontScaling style={{ backgroundColor: theme.colors.navySecondary, borderRadius: theme.radius.large, borderTopRightRadius: theme.radius.small, color: theme.colors.card, fontSize: 17, lineHeight: 26, padding: theme.space.lg }}>
+            <Text accessibilityRole="text" allowFontScaling style={victimBubbleStyle}>
               {message.text}
             </Text>
             <Text

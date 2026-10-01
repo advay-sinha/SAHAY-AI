@@ -189,9 +189,10 @@ test("no handoff or other request is sent on the declined path", async () => {
   await settle();
   assert.deepEqual(flow.calls.map((call) => `${call.init.method} ${call.url}`), [`POST ${BASE_URL}/sessions`]);
 
+  // The human request is sent only when the person taps, through the store.
   const handoff = read("app", "handoff.tsx");
-  assert.match(handoff, /async function unavailableHumanRequest\(\): Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
-  assert.doesNotMatch(handoff, /fetch\(|useSession|sessionStore|restClient|WebSocket/);
+  assert.match(handoff, /onRequestHuman=\{\(\) => store\.requestHuman\(getLanguage\(\)\)\}/);
+  assert.doesNotMatch(handoff, /useEffect|fetch\(|restClient|WebSocket/);
 });
 
 test("no AI conversation opens on the declined path", () => {
@@ -205,8 +206,8 @@ test("no AI conversation opens on the declined path", () => {
   assert.match(retry, /result\.session\.consent === "granted"\) router\.replace\("\/home"\)/);
   // The consent error screen is shown for a granted failure only.
   assert.match(source, /const grantedFailed = creation\.consent === "granted"/);
-  // Chat stays unconnected whatever the session holds.
+  // Chat shows AI turns only for a granted session.
   const chat = read("app", "chat.tsx");
-  assert.match(chat, /aiPermitted=\{false\}/);
-  assert.doesNotMatch(chat, /useSession|sessionStore/);
+  assert.match(chat, /aiPermitted=\{consent === "granted"\}/);
+  assert.doesNotMatch(chat, /aiPermitted=\{true\}/);
 });
