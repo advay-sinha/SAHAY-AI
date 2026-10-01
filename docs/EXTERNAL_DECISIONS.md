@@ -624,3 +624,17 @@ Not approved:    Docker, CI/CD, Redis, pgvector, an external LLM, cloud ASR/TTS,
                  public promotion of the URLs, or any real victim use.
 Decision maker:  Project lead (advay-sinha), 2026-10-01, in session.
 ```
+
+```text
+Date:            2026-10-01
+ID:              EXT-131 — web research for fixed-script wording (no new dependency)
+Decision:        APPROVED by the project lead, in session.
+Scope:           Read-only web search and fetch of public guidance to draft S0, S9, SX
+                 and SH: PIB releases (NHAA 14566, Tele-MANAS 14416), WHO AI-for-health
+                 ethics guidance, SAMHSA trauma-informed principles, the 988 Lifeline
+                 Suicide Safety Policy and Samaritans guidance. Nothing is downloaded
+                 into the repository; sources are cited in
+                 docs/dialogue/FIXED_SCRIPTS_SOURCES.md. No runtime network access.
+Decision maker:  Project lead (advay-sinha), 2026-10-01.
+```
+

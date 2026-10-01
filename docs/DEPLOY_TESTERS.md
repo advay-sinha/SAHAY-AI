@@ -57,6 +57,14 @@ npx eas-cli build --platform android --profile preview
 
 `eas-cli` needs your own Expo login. Share the APK link only with invited testers. iPhone users use `/victim` in the browser.
 
+## Tester briefing
+
+Give every tester this, outside the app:
+
+- Use an invented story. Never describe a real event, a real person or your own experience.
+- The assistant is an AI. A test officer may or may not be watching at the time you test.
+- If you, or anyone, needs help for real, do not use this app. Call **112** (emergency), **14416** (Tele-MANAS, national mental health helpline, free, 24×7) or, for an atrocity against a member of a Scheduled Caste or Scheduled Tribe, **14566** (National Helpline Against Atrocities).
+
 ## Teardown
 
 When the test window ends: delete the Render service, the Vercel project and the Supabase project; revoke the APK link; rotate seed passwords.

@@ -46,8 +46,9 @@ One sentence. Plain words. One question, and only the one the state licenses.
 
 **`SX` must be read by a counsellor or psychology faculty member before Day 8, and that review named in the deck.** It acknowledges, states plainly that a person will speak with them now, and asks them to stay. Nothing else — no advice, no assessment, no questions.
 
-> Status: **not yet written.** Owner: Team A / A2. Blocks Backend and Frontend demos.
->
-> The decisions that must be settled before any wording is drafted are listed in
-> `docs/dialogue/FIXED_SCRIPTS_REVIEW.md`. The code fails closed until a script
-> is recorded with a named reviewer and a review date.
+> Status: **drafted 2026-10-01, IN REVIEW, not speakable.** S0, S9, SX and SH are
+> written in Hindi and English from published guidance at the project lead's
+> direction; wording, decisions and sources are in
+> `docs/dialogue/FIXED_SCRIPTS_SOURCES.md`. The code still fails closed until a
+> script is recorded as APPROVED with a named reviewer and a review date. SX still
+> needs the counsellor or psychology faculty review above.

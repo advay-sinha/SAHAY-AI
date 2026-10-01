@@ -3,7 +3,7 @@
 Pure module: standard library only, no I/O. Text is a constant here; the
 pre-synthesised WAV files live under DATA_ROOT and are referenced by name only.
 
-STATUS: NOT WRITTEN.
+STATUS: DRAFTED, IN REVIEW (2026-10-01). Not speakable until approved.
 ------------------------------------------------------------------
 docs/dialogue/STATES.md records these as outstanding, owned by Team A / A2 and
 due before Day 3. They are never model-generated. SX additionally requires a
@@ -57,10 +57,67 @@ def _blank(state: State, lang: str) -> ScriptRecord:
     return ScriptRecord(state=state, lang=lang)
 
 
+#: Drafted 2026-10-01 from published guidance (sources and rationale:
+#: docs/dialogue/FIXED_SCRIPTS_SOURCES.md). IN_REVIEW is not speakable: text_for()
+#: still returns None until a record is APPROVED with a named reviewer and date.
+DRAFT_TEXT: Dict[str, str] = {
+    "S0:en": (
+        "I am SAHAY, an AI assistant, not a person. "
+        "A human helpline officer reads everything you share here, and you can ask "
+        "to talk to a person at any time. "
+        "When you are ready, tell me what happened, in your own words."
+    ),
+    "S0:hi": (
+        "मैं सहाय हूँ, एक एआई सहायक, कोई व्यक्ति नहीं। "
+        "आप यहाँ जो भी बताएँगे, उसे हेल्पलाइन का एक अधिकारी पढ़ता है, और आप कभी भी "
+        "किसी व्यक्ति से बात करने के लिए कह सकते हैं। "
+        "जब आप तैयार हों, तो अपने शब्दों में बताइए कि क्या हुआ।"
+    ),
+    "S9:en": (
+        "Thank you, what you shared has been recorded. "
+        "A human helpline officer will review it, and you can follow updates under "
+        "My requests, where your reference number is shown. "
+        "You can ask to talk to a person at any time."
+    ),
+    "S9:hi": (
+        "धन्यवाद, आपने जो बताया वह दर्ज हो गया है। "
+        "हेल्पलाइन का एक अधिकारी इसे देखेगा, और आप \"मेरी शिकायतें\" में इसकी जानकारी "
+        "देख सकते हैं, जहाँ आपका संदर्भ नंबर भी दिखाया गया है। "
+        "आप कभी भी किसी व्यक्ति से बात करने के लिए कह सकते हैं।"
+    ),
+    "SX:en": (
+        "Thank you for telling me. "
+        "I am connecting you to a person right now. "
+        "Please stay here."
+    ),
+    "SX:hi": (
+        "मुझे बताने के लिए धन्यवाद। "
+        "आपको अभी एक व्यक्ति से जोड़ा जा रहा है। "
+        "कृपया यहीं रहिए।"
+    ),
+    "SH:en": (
+        "I am connecting you to a person now. "
+        "Please stay here; they will see what you have already shared, so you do not "
+        "have to repeat it."
+    ),
+    "SH:hi": (
+        "आपको अभी एक व्यक्ति से जोड़ा जा रहा है। "
+        "कृपया यहीं रहिए; आपने जो पहले बताया है, वह उन्हें दिखेगा, इसलिए आपको "
+        "दोबारा बताने की ज़रूरत नहीं है।"
+    ),
+}
+
+
+def _draft(state: State, lang: str) -> ScriptRecord:
+    key = f"{state.value}:{lang}"
+    text = DRAFT_TEXT.get(key)
+    return ScriptRecord(state=state, lang=lang, text=text, status=IN_REVIEW if text else NOT_WRITTEN)
+
+
 #: (state, lang) -> ScriptRecord. Populating a record is a `type:dialogue`
 #: change: two reviewers, STATES.md updated in the same commit.
 SCRIPTS: Dict[str, ScriptRecord] = {
-    f"{state.value}:{lang}": _blank(state, lang)
+    f"{state.value}:{lang}": _draft(state, lang)
     for state in (State.S0_OPENING, State.S9_CLOSING, State.SX_CRISIS, State.SH_HUMAN_HANDOFF)
     for lang in ("hi", "en")
 }
