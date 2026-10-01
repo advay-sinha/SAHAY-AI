@@ -1,0 +1,24 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "npm ci --prefix frontend && npm ci --prefix mobile",
+  "buildCommand": "npm run build --prefix frontend && cd mobile && npx expo export --platform web --output-dir ../frontend/dist/victim",
+  "outputDirectory": "frontend/dist",
+  "redirects": [
+    {
+      "source": "/exec",
+      "destination": "/",
+      "permanent": false
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/victim/:path*",
+      "destination": "/victim/index.html"
+    },
+    {
+      "source": "/:path*",
+      "destination": "/index.html"
+    }
+  ]
+}

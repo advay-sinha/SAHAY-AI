@@ -22,6 +22,8 @@ interface HomeScreenProps {
   onOpenRequests: () => void;
   onOpenTalk: () => void;
   onRequestHuman: () => void;
+  /** False in hosted text-only builds (EXPO_PUBLIC_VOICE=off). */
+  showTalk?: boolean;
 }
 
 export function HomeScreen({
@@ -29,6 +31,7 @@ export function HomeScreen({
   onOpenRequests,
   onOpenTalk,
   onRequestHuman,
+  showTalk = true,
 }: HomeScreenProps) {
   const chatLabel = t("home.chat");
   const requestsLabel = t("home.my_requests");
@@ -42,6 +45,7 @@ export function HomeScreen({
           contentContainerStyle={{ flexGrow: 1, gap: theme.space.md, paddingBottom: theme.space.sm }}
           style={{ flex: 1 }}
         >
+          {showTalk ? (
           <Pressable
         accessibilityLabel={talkLabel}
         accessibilityRole="button"
@@ -66,6 +70,7 @@ export function HomeScreen({
           </Text>
         </View>
           </Pressable>
+          ) : null}
           <Pressable
         accessibilityLabel={chatLabel}
         accessibilityRole="button"

@@ -2,10 +2,12 @@ import { Text, View } from "react-native";
 import { t } from "../i18n";
 import { theme, typeStyles } from "../theme";
 import { DecorativeMark } from "./Presentation";
+import { TesterNotice } from "./TesterNotice";
 
 export function AiDisclosure() {
   const label = t("disclosure.persistent");
   return (
+    <>
     <View
       accessible
       accessibilityLabel={label}
@@ -29,5 +31,7 @@ export function AiDisclosure() {
         <Text style={[typeStyles.detail, { color: theme.colors.navy, fontWeight: "600" }]}>{label}</Text>
       </View>
     </View>
+    <TesterNotice />
+    </>
   );
 }

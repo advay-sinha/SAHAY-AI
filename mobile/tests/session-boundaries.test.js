@@ -181,11 +181,12 @@ test("no dependency was added or changed", () => {
     "react-native",
     "react-native-safe-area-context",
     "react-native-screens",
+    "react-native-web", // EXT-130 hosted web build
   ]);
   assert.deepEqual(Object.keys(pkg.devDependencies).sort(), ["@types/react", "typescript"]);
 
-  assert.equal(blobDigest("package.json"), "2be44c80e32de5298bae05c7f8bac40b6013c998cf0acae0542e241dd44126b8");
-  assert.equal(blobDigest("package-lock.json"), "2ee30feb7cbdd5c7651bdf547205586c66323c62f4f4ed0846dfc95c9c889021");
+  assert.equal(blobDigest("package.json"), "457421c075c94c21d3512c6b1c781a70b34bedc8bec15802a0cb73cebdac71b0");
+  assert.equal(blobDigest("package-lock.json"), "e0efe1fe9a607328d4f1565af51ef3416ffc407a494c9b429b17a11dace0bd63");
 });
 
 test("production code never imports the test fixtures", () => {

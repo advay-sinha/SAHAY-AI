@@ -50,5 +50,6 @@
   "error.body": "Please try again. You can also ask to speak to a person.",
   "error.retry": "Try again",
 
-  "disclosure.persistent": "AI assistant · a person reviews everything"
+  "disclosure.persistent": "AI assistant · a person reviews everything",
+  "disclosure.tester": "Test version · write only an invented story, never a real event"
 }
