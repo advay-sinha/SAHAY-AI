@@ -6,6 +6,11 @@ from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
+from backend.tests.test_vertical_slice import HAVE_DEPS
+
+if not HAVE_DEPS:
+    raise unittest.SkipTest("EXT-001 backend packages not installed (Tier 1 run)")
+
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.engine import make_url
 from sqlalchemy.schema import CreateTable

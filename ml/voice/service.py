@@ -127,6 +127,9 @@ class VoiceEngine:
         decode_audio = importlib.import_module("faster_whisper").decode_audio
         return decode_audio(io.BytesIO(body), sampling_rate=SAMPLE_RATE)
 
+    def transcribe(self, samples: Any, lang: str) -> Any:
+        return self._transcriber.transcribe(samples, lang)
+
 
 def fast_wav(body: bytes) -> Any:
     """16 kHz mono 16-bit PCM WAV read directly, skipping PyAV (about 80 ms per turn measured).
@@ -145,9 +148,6 @@ def fast_wav(body: bytes) -> Any:
         return None
     np = importlib.import_module("numpy")
     return np.frombuffer(frames, dtype="<i2").astype(np.float32) / 32768.0
-
-    def transcribe(self, samples: Any, lang: str) -> Any:
-        return self._transcriber.transcribe(samples, lang)
 
 
 def transcribe_request(engine: VoiceEngine, body: bytes, content_type: Optional[str],

@@ -65,6 +65,7 @@ class TestLatencyMetrics(SliceBase):
                 self.assertNotIn(key, str(f))
 
 
+@unittest.skipUnless(HAVE_DEPS, "EXT-001 backend packages not installed (Tier 1 run)")
 class TestRecorder(unittest.TestCase):
     def test_only_known_numeric_stages_are_written(self):
         from backend.app.services import latency

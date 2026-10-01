@@ -1,6 +1,7 @@
 """Executable coverage for the released legacy-to-head Alembic migration."""
 
 from contextlib import closing
+import importlib.util
 import json
 from pathlib import Path
 import sqlite3
@@ -10,8 +11,12 @@ import tempfile
 import unittest
 
 from backend.tests import disposable_sqlite_subprocess_env
+from backend.tests.test_vertical_slice import HAVE_DEPS
+
+HAVE_ALEMBIC = importlib.util.find_spec("alembic") is not None
 
 
+@unittest.skipUnless(HAVE_DEPS and HAVE_ALEMBIC, "EXT-001 backend packages not installed (Tier 1 run)")
 class TestLegacyMigrationToHead(unittest.TestCase):
     REPO = Path(__file__).resolve().parents[2]
     BACKEND = REPO / "backend"
