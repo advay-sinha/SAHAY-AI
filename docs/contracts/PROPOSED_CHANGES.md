@@ -273,3 +273,46 @@ Alternative:  The phone shows text only; fixed-script audio would have to be bun
 | Executive Web | Confirmed 2026-09-29, relayed by the project owner |
 | Mobile/Victim Experience | Confirmed 2026-09-29, relayed by the project owner |
 
+
+---
+
+## PC-13 — Hosted tester guard on `POST /sessions` — **PROPOSED (2026-10-01)**
+
+Decision EXT-130 (hosted tester deployment). Opt-in: with neither setting present, behaviour is
+exactly the frozen PC-09 contract, so local and demo builds are unchanged.
+
+```
+CONTRACT CHANGE PROPOSAL
+Contract:     POST /sessions   (CONTRACTS §4 REST, PC-09)
+Current:      {channel, consent, lang} → 201 CreateSessionResponse; anyone who can reach
+              the backend can create sessions without limit.
+Proposed:
+  A. Rate limit (backend setting SESSION_RATE_LIMIT_PER_HOUR, default 0 = off)
+     429 → {"detail": "too many sessions; try again later"} once a client IP exceeds the
+           limit in a rolling hour. The IP comes from the proxy's forwarded header.
+  B. Tester access code (backend setting TESTER_ACCESS_CODE, default empty = off)
+     Request header  X-Tester-Code: <code>
+     403 → {"detail": "access code required"} when the setting is on and the header is
+           missing or wrong (constant-time compare; the code is never logged or echoed).
+     Client: the tester types the code once on the language screen; it is held in memory
+             only, like the session token. It cannot be baked into the web build:
+             EXPO_PUBLIC_* values are readable by anyone who loads /victim.
+  Both use the frozen PC-10 error shape. The response body on success is unchanged.
+Reason:       The hosted backend is on a public URL. Without a guard anyone who finds it can
+              create unlimited sessions and fill the executive queue.
+Breaks:       Nothing when off; additive. Backend: api/sessions.py (+ settings, tests).
+              Mobile: restClient createSession (header), language screen input and two
+              strings for B only. Frontend: none (the console never creates sessions).
+              ML: none.
+Migration:    None. No stored data changes.
+Alternative:  Keep the URLs unshared and invite-only (current EXT-130 scope) and watch the
+              queue during test windows; tear down if it is abused.
+Recommendation: A now (backend only, no UI). B only if the URL leaks.
+```
+
+| Lead (D-11) | Confirmation |
+|---|---|
+| AI/ML and Safety | pending |
+| Backend | pending |
+| Executive Web | pending |
+| Mobile/Victim Experience | pending |
