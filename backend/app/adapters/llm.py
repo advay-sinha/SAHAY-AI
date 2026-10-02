@@ -97,7 +97,8 @@ class RemoteSpaceLLM:
                register: Optional[str] = None, source: Optional[str] = None) -> Optional[str]:
         if register not in LIVE_REGISTERS or not source:
             return None
-        return call_space(self.space_url, "phrase", [source, register, self.key], self._headers(), self.timeout_s)
+        text = call_space(self.space_url, "phrase", [source, register, self.key], self._headers(), self.timeout_s)
+        return text if isinstance(text, str) and text.strip() else None
 
 
 def call_space(space_url: str, api_name: str, data: list, headers: Dict[str, str],

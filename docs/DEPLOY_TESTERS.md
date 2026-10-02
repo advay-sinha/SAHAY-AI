@@ -57,6 +57,40 @@ npx eas-cli build --platform android --profile preview
 
 `eas-cli` needs your own Expo login. Share the APK link only with invited testers. iPhone users use `/victim` in the browser.
 
+## 6. Hosted AI models (optional, EXT-132 / EXT-133)
+
+Without this the hosted demo uses approved text and shows no AI signal. With it, English
+questions are reworded live by Qwen and officers see the advisory MuRIL signal.
+Needs a Hugging Face account at least 30 days old with a verified email (free ZeroGPU:
+2 Spaces, 5 GPU-minutes per day; when the quota runs out every turn falls back safely).
+
+1. Log in: `hf auth login` (in the `sahay-ml-models` environment).
+2. Upload the classifier checkpoint to a **private** model repository (never public: its
+   training data licences are pending, EXT-133):
+   `hf upload <you>/sahay-signals <training root>/task7b/checkpoints/C-seed-13 . --private`
+3. Create a Space: SDK **Gradio**, hardware **ZeroGPU**, visibility **Private** if offered
+   (otherwise Public: both endpoints refuse to answer without the key). Upload the folder:
+   `hf upload <you>/sahay-models hf-space . --repo-type space`
+4. In the Space settings add:
+   - secret `SAHAY_SPACE_KEY`: a random value of 32+ characters
+   - secret `HF_TOKEN`: a read token that can read `<you>/sahay-signals`
+   - variable `SAHAY_SIGNALS_REPO`: `<you>/sahay-signals`
+5. In Render add:
+
+| Variable | Value |
+|---|---|
+| `LLM_PROVIDER` | `remote` |
+| `SIGNALS_PROVIDER` | `remote` |
+| `LLM_REMOTE_URL` | `https://<you>-sahay-models.hf.space` |
+| `LLM_API_KEY` | an HF token that can access the Space (secret) |
+| `LLM_REMOTE_KEY` | the same value as `SAHAY_SPACE_KEY` (secret) |
+| `LLM_TIMEOUT_SECONDS` | `5` (the GPU queue adds delay; past this the approved text is used) |
+
+6. Check: start a session, write in English, and confirm in the console that the AI signal panel
+   appears. If the Space is asleep, the first calls fall back while it wakes.
+
+Teardown also deletes the Space and the `sahay-signals` repository.
+
 ## Tester briefing
 
 Give every tester this, outside the app:
