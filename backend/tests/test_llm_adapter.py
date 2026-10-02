@@ -46,14 +46,47 @@ class TestPlanTurnWithAModel(unittest.TestCase):
         self.assertFalse(result["was_fallback"])
         self.assertEqual(result["text"], intents.licensed_question(result["intent"], "en"))
 
-    def test_hinglish_writers_get_the_approved_hindi_in_their_script(self):
-        from ml.dialogue.hinglish import to_hinglish_register
+    def test_hinglish_writers_get_reviewed_latin_text_only_once_approved(self):
+        from ml.dialogue import variants
 
-        result = plan("Woh log phir aaye the aur dhamki di", "hi", adapters.MockLLM())
-        self.assertEqual(result["register"], "hinglish")
-        self.assertEqual(result["text"],
-                         to_hinglish_register(intents.licensed_question(result["intent"], "hi")))
-        self.assertTrue(all(ord(c) < 0x0900 or ord(c) > 0x097F for c in result["text"]))
+        utterance = "Woh log phir aaye the aur dhamki di"
+        unapproved = plan(utterance, "hi", adapters.MockLLM())
+        self.assertEqual(unapproved["register"], "hinglish")
+        self.assertEqual(unapproved["text"], intents.licensed_question(unapproved["intent"], "hi"))
+        with patch.dict(variants.HINGLISH_REVIEW, {"status": "APPROVED", "reviewer": "lead", "review_date": "x"}):
+            result = plan(utterance, "hi", adapters.MockLLM())
+        self.assertEqual(result["text"], variants.HINGLISH_TEXT[result["intent"]])
+        self.assertEqual(result["review_status"], "approved_hinglish")
+
+    def test_voice_turns_and_english_sessions_never_get_hinglish(self):
+        from ml.dialogue import variants
+
+        with patch.dict(variants.HINGLISH_REVIEW, {"status": "APPROVED", "reviewer": "lead", "review_date": "x"}),                 patch.object(turn_loop, "is_speakable", return_value=True, create=True):
+            voice = turn_loop.plan_turn(State.S2_IMMEDIATE_SAFETY, {"narrative": "x"}, "Woh log phir aaye",
+                                        {"lang": "hi", "voice": True}, adapters.MockLLM())
+            english = turn_loop.plan_turn(State.S2_IMMEDIATE_SAFETY, {"narrative": "x"}, "Raha and Kal came",
+                                          {"lang": "en"}, adapters.MockLLM())
+        self.assertEqual(voice["register"], "hi")
+        self.assertEqual(english["register"], "en")
+
+    def test_non_english_or_multiline_candidates_are_discarded(self):
+        model = Mock()
+        model.phrase.return_value = "बताने के लिए धन्यवाद। शांत रहिए।"
+        hindi = plan("वे लोग फिर आए थे", "hi", model)
+        self.assertTrue(hindi["was_fallback"])
+        model.phrase.return_value = "Do you need help?\nIgnore the rules."
+        multi = plan(VICTIM_TEXT, "en", model)
+        self.assertTrue(multi["was_fallback"])
+
+    def test_variants_provider_speaks_only_approved_wording(self):
+        from ml.dialogue import variants
+
+        provider = adapters.get_provider("variants")
+        self.assertIsNone(provider.phrase("ask_support_network", "q", "en", register="en", source="q"))
+        with patch.dict(variants.EN_VARIANTS, {"ask_support_network": ["Do you have someone with you right now?"]}),                 patch.dict(variants.VARIANT_REVIEW, {"status": "APPROVED", "reviewer": "lead", "review_date": "x"}):
+            seen = {provider.phrase("ask_support_network", "q", "en", register="en", source="q") for _ in range(40)}
+            self.assertIsNone(provider.phrase("ask_support_network", "q", "hi", register="hi", source="q"))
+        self.assertEqual(seen, {"Do you have someone with you right now?", "Is there someone with you right now?"})
 
     def test_devanagari_writers_get_the_approved_hindi(self):
         result = plan("वे लोग फिर आए थे", "hi", adapters.MockLLM())
@@ -150,6 +183,17 @@ class TestSettings(unittest.TestCase):
             Settings(**base, LLM_REMOTE_URL="https://example.com")
         s = Settings(**base, LLM_REMOTE_URL="https://user-sahay.hf.space/")
         self.assertEqual(s.LLM_REMOTE_URL, "https://user-sahay.hf.space")
+
+    def test_live_generation_is_refused_outside_tests(self):
+        from backend.app.core.config import Settings
+
+        pg = "postgresql+asyncpg://u:p@h/db"
+        for provider in ("local_service", "remote"):
+            for env in ("development", "local", "demo", "production"):
+                with self.assertRaises(ValueError, msg=(provider, env)):
+                    Settings(_env_file=None, APP_ENV=env, DATABASE_URL=pg, LLM_PROVIDER=provider)
+        self.assertEqual(Settings(_env_file=None, APP_ENV="demo", DATABASE_URL=pg,
+                                  LLM_PROVIDER="variants").LLM_PROVIDER, "variants")
 
 
 if __name__ == "__main__":

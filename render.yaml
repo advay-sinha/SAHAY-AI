@@ -30,8 +30,8 @@ services:
         value: mock
       - key: TTS_PROVIDER
         value: none
-      # EXT-132/133: set both to "remote" (and the LLM_REMOTE_* secrets) only after the
-      # model Space exists; see docs/DEPLOY_TESTERS.md section 6.
+      # EXT-132/133: LLM_PROVIDER may be "variants" (reviewed wordings, no model at runtime);
+      # SIGNALS_PROVIDER "remote" only after the signal Space exists (DEPLOY_TESTERS.md section 6).
       - key: SIGNALS_PROVIDER
         value: mock
       - key: ASSESSMENT_RUNNER

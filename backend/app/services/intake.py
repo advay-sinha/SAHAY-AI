@@ -289,6 +289,21 @@ async def _upsert_crisis_alert(db: AsyncSession, case: Case, turn_id: str) -> bo
     return False
 
 
+def session_register(lang: Optional[str], texts: List[str]) -> str:
+    """The reply register for a session, sticky across turns.
+
+    Hinglish only in a Hindi session, and only when most of the person's turns so far
+    are Hindi written in Latin script; a single short or ambiguous turn never flips it.
+    """
+    from ml.nlp.langid import identify
+
+    if lang != "hi":
+        return lang if lang in ("hi", "en") else "hi"
+    seen = [identify(t)["lang"] for t in texts if t and t.strip()]
+    roman, devanagari = seen.count("hinglish"), seen.count("hi")
+    return "hinglish" if roman > devanagari and roman >= 1 else "hi"
+
+
 async def _crisis_without_analysis(db: AsyncSession, session: Session, case: Case, consent: str,
                                    turn_id: str, out: "Outbound") -> None:
     """Crisis language where consent to AI analysis was not given.
@@ -386,6 +401,8 @@ async def submit_turn(
     victims = [t for t in _turn_dicts(turns) if t["speaker"] == "victim"]
     slots = dialogue_slots(victims, extract(victims))
     flags: Dict[str, Any] = {
+        "register": session_register(lang, [t["text"] for t in victims]),
+        "voice": asr is not None,
         "lang": lang if lang in ("hi", "en") else "hi",
         "crisis": pre["crisis"],
         "consent": False if consent == CONSENT_DECLINED else None,
@@ -396,6 +413,7 @@ async def submit_turn(
     assistant_text: Optional[str] = None
     intent = ""
     fixed = False
+    plan: Dict[str, Any] = {}
     previous_state = session.state
     try:
         provider = get_provider(get_settings().LLM_PROVIDER)
@@ -428,7 +446,11 @@ async def submit_turn(
     if assistant_text:
         reply = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq + 1, speaker="assistant",
                      text=assistant_text, lang=flags["lang"], state=next_state, intent=intent,
-                     was_fallback=True, review_status="approved_fixed_script" if fixed else "draft",
+                     # Where the words came from, for the audit (2026-10-02 safety review).
+                     was_fallback=bool(plan.get("was_fallback", True)),
+                     guardrail_reason=str(plan.get("guardrail_reason") or "")[:120],
+                     review_status=("approved_fixed_script" if fixed
+                                    else str(plan.get("review_status") or "approved_text")),
                      created_at=audit.now())
         db.add(reply)
         await db.flush()

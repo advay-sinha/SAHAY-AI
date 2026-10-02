@@ -12,7 +12,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, field_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
@@ -121,7 +121,7 @@ class Settings(BaseSettings):
     JWT_EXPIRY_MINUTES: int = 480
 
     # Adapters. The complete dialogue must run with LLM_PROVIDER=mock.
-    LLM_PROVIDER: Literal["mock", "local_service", "remote"] = "mock"
+    LLM_PROVIDER: Literal["mock", "variants", "local_service", "remote"] = "mock"
     LLM_MODEL: str = ""
     # Remote only: a Hugging Face token for the project's Space (a secret, never logged).
     LLM_API_KEY: str = ""
@@ -175,6 +175,13 @@ class Settings(BaseSettings):
         if url.scheme != "http" or url.hostname not in ("127.0.0.1", "::1") or url.path not in ("", "/"):
             raise ValueError("ASR_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
         return value.rstrip("/")
+
+    @model_validator(mode="after")
+    def _no_live_generation_outside_tests(self) -> "Settings":
+        # 2026-10-02 dialogue safety review: live model text cannot be made safe by checks.
+        if self.LLM_PROVIDER in ("local_service", "remote") and self.APP_ENV != "test":
+            raise ValueError("live LLM phrasing is refused outside tests; use LLM_PROVIDER=variants or mock")
+        return self
 
     @field_validator("LLM_SERVICE_URL", "SIGNALS_SERVICE_URL")
     @classmethod

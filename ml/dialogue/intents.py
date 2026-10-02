@@ -11,9 +11,10 @@ LLM_PROVIDER=mock.
 REVIEW STATUS
 -------------
 English licensed questions are transcribed verbatim from docs/dialogue/STATES.md.
-Hindi strings are DRAFT and have NOT been reviewed. `is_speakable()` refuses any
-string whose review status is not APPROVED, so unreviewed text cannot reach TTS.
-Clearing this TODO is a `type:dialogue` change owned by Team A / A2, due Day 3.
+English and Hindi were approved by the project lead on 2026-10-01. `is_speakable()`
+refuses any language whose status is not APPROVED, so unreviewed text cannot reach a
+victim. Alternative wordings (English variants, the Hinglish register) live in
+dialogue/variants.py under their own review status.
 """
 
 from typing import Dict, Optional

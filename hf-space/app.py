@@ -1,13 +1,13 @@
-"""SAHAY-AI model Space (EXT-132, EXT-133): guardrailed phrasing and advisory signals.
+"""SAHAY-AI model Space (EXT-133, PC-14): advisory signals for officers.
 
-Runs on Hugging Face ZeroGPU. Both endpoints refuse to answer without the shared key
+Runs on Hugging Face ZeroGPU. The endpoint refuses to answer without the shared key
 (Space secret SAHAY_SPACE_KEY), so a public Space cannot be used by anyone else. Inputs and
-outputs are never logged. The SAHAY backend treats every reply as untrusted: it validates
-phrasing and checks its meaning, rebuilds signals from an allowlist, and falls back to
-approved text on any failure, timeout or exhausted GPU quota.
+outputs are never logged. The SAHAY backend treats every reply as untrusted and rebuilds it
+from an allowlist. There is no text-generation endpoint: after the 2026-10-02 dialogue
+safety review no model writes text to a victim at runtime.
 
-sahay_prompt.py is an exact copy of ml/llm/prompt.py; the network and constants below mirror
-ml/shadow/model.py and ml/shadow/service.py (ml/tests/test_hf_space.py checks both).
+The network and constants below mirror ml/shadow/model.py and ml/shadow/service.py
+(ml/tests/test_hf_space.py checks them).
 """
 
 import hmac
@@ -19,15 +19,7 @@ import spaces
 import torch
 from huggingface_hub import snapshot_download
 from safetensors.torch import load_file
-from transformers import AutoModel, AutoModelForCausalLM, AutoTokenizer
-
-from sahay_prompt import REGISTERS, build_messages, clean_output
-
-QWEN_ID = "Qwen/Qwen3-4B-Instruct-2507"
-QWEN_REVISION = "cdbee75f17c01a7cc42f958dc650907174af0554"
-MAX_NEW_TOKENS = 64
-SAMPLING = {"do_sample": True, "temperature": 0.7, "top_p": 0.8, "top_k": 20}
-MAX_SOURCE_CHARS = 400
+from transformers import AutoModel, AutoTokenizer
 
 LABELS = (
     "crisis_self_harm",
@@ -48,11 +40,7 @@ CHECKPOINT_STATUS = "rejected_for_product_integration"
 KEY = os.environ.get("SAHAY_SPACE_KEY", "")
 SIGNALS_REPO = os.environ.get("SAHAY_SIGNALS_REPO", "")
 
-# --- models load at module level, as ZeroGPU requires --------------------------------------------
-
-tokenizer = AutoTokenizer.from_pretrained(QWEN_ID, revision=QWEN_REVISION)
-llm = AutoModelForCausalLM.from_pretrained(QWEN_ID, revision=QWEN_REVISION, dtype=torch.bfloat16)
-llm.to("cuda").eval()
+# --- the model loads at module level, as ZeroGPU requires ----------------------------------------
 
 
 class ShadowNet(torch.nn.Module):
@@ -89,27 +77,6 @@ def authorised(key) -> bool:
     return bool(KEY) and isinstance(key, str) and hmac.compare_digest(key.encode(), KEY.encode())
 
 
-# --- phrasing ----------------------------------------------------------------------------------------
-
-
-@spaces.GPU(duration=20)
-def _generate(messages) -> str:
-    prompt = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = tokenizer(prompt, return_tensors="pt").to("cuda")
-    with torch.inference_mode():
-        out = llm.generate(**inputs, max_new_tokens=MAX_NEW_TOKENS, pad_token_id=tokenizer.eos_token_id, **SAMPLING)
-    return tokenizer.decode(out[0][inputs["input_ids"].shape[1]:], skip_special_tokens=True)
-
-
-def phrase(source, register, key) -> str:
-    """One reworded sentence, or "" (the backend then uses its approved sentence)."""
-    if not authorised(key) or register not in REGISTERS:
-        return ""
-    if not isinstance(source, str) or not source.strip() or len(source) > MAX_SOURCE_CHARS:
-        return ""
-    return clean_output(_generate(build_messages(source, register))) or ""
-
-
 # --- advisory signals --------------------------------------------------------------------------------
 
 
@@ -143,11 +110,7 @@ def signals(texts, key) -> dict:
 with gr.Blocks(title="SAHAY-AI models") as demo:
     gr.Markdown("SAHAY-AI model service (prototype, fictional data only). API use requires the shared key.")
     with gr.Row():
-        source = gr.Textbox(label="Approved sentence")
-        register = gr.Textbox(label="Register", value="en")
         key = gr.Textbox(label="Key", type="password")
-    reworded = gr.Textbox(label="Reworded")
-    gr.Button("Reword").click(phrase, [source, register, key], reworded, api_name="phrase")
     texts = gr.JSON(label="Victim turns (list of strings)")
     reading = gr.JSON(label="Advisory signal")
     gr.Button("Signals").click(signals, [texts, key], reading, api_name="signals")

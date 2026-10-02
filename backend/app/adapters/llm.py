@@ -10,11 +10,15 @@ pre-written sentence is used.
 
 Providers:
   mock            returns None: every turn uses its pre-written sentence (default)
-  local_service   the ML-owned loopback phrasing service (see docs/LOCAL_SETUP.md)
-  remote          the project's Hugging Face Space (hosted demo), HTTPS with a token
+  variants        a lead-approved English variant (ml/dialogue/variants.py); no model
+                  at runtime. This is the only non-mock provider allowed outside tests.
+  local_service   live model generation through the loopback service: TESTS ONLY
+  remote          live model generation through the project's Space: TESTS ONLY
 
-Live rewording is English only. In the first measured trial Hindi rewordings
-drifted in meaning and took 7-13 s; Hindi and Hinglish use approved text.
+The 2026-10-02 dialogue safety review found that live generation cannot be made safe
+by checks: 74 of 79 adversarial rewordings passed the validator and the meaning check,
+because no lexicon can rule out what a model adds. Settings refuse the live providers
+outside APP_ENV=test.
 """
 
 import json
@@ -46,6 +50,20 @@ class MockLLM:
     def phrase(self, intent: str, licensed_question: Optional[str], lang: str, *,
                register: Optional[str] = None, source: Optional[str] = None) -> Optional[str]:
         return None
+
+
+class VariantsLLM:
+    """A reviewed English variant for the intent; None until the lead approves them."""
+
+    name = "variants"
+
+    def phrase(self, intent: str, licensed_question: Optional[str], lang: str, *,
+               register: Optional[str] = None, source: Optional[str] = None) -> Optional[str]:
+        if lang != "en" or register != "en":
+            return None
+        from ml.dialogue.variants import english_variant
+
+        return english_variant(intent)
 
 
 def _post_json(url: str, payload: Dict[str, Any], timeout_s: float,
@@ -137,6 +155,8 @@ def call_space(space_url: str, api_name: str, data: list, headers: Dict[str, str
 def get_provider(name: str) -> LLMProvider:
     if name == "mock":
         return MockLLM()
+    if name == "variants":
+        return VariantsLLM()
     from ..core.config import get_settings
 
     settings = get_settings()

@@ -1,11 +1,10 @@
-"""The hosted model Space must stay identical to the laptop code it mirrors (EXT-132, EXT-133)."""
+"""The hosted model Space must stay identical to the laptop code it mirrors (EXT-133)."""
 
 import ast
 import unittest
 from pathlib import Path
 
 from ml.eval.schema import DETECTOR_CATEGORIES
-from ml.runtime import phrase_service
 from ml.shadow import model as shadow_model
 from ml.shadow import service as shadow_service
 
@@ -26,16 +25,11 @@ def _constants() -> dict:
 
 
 class TestSpaceMirrorsTheLaptopCode(unittest.TestCase):
-    def test_the_prompt_is_an_exact_copy(self):
-        read = lambda p: p.read_text(encoding="utf-8").replace("\r\n", "\n")  # noqa: E731
-        self.assertEqual(read(SPACE / "sahay_prompt.py"), read(REPO / "ml" / "llm" / "prompt.py"))
-
-    def test_model_pins_and_generation_settings_match(self):
-        c = _constants()
-        self.assertEqual(c["QWEN_REVISION"], phrase_service.MODEL_REVISION)
-        self.assertEqual(c["SAMPLING"], phrase_service.SAMPLING)
-        self.assertEqual(c["MAX_NEW_TOKENS"], phrase_service.MAX_NEW_TOKENS)
-        self.assertEqual(c["MAX_SOURCE_CHARS"], phrase_service.MAX_SOURCE_CHARS)
+    def test_no_text_generation_endpoint(self):
+        text = (SPACE / "app.py").read_text(encoding="utf-8")
+        self.assertNotIn("AutoModelForCausalLM", text)
+        self.assertNotIn('api_name="phrase"', text)
+        self.assertFalse((SPACE / "sahay_prompt.py").exists())
 
     def test_classifier_labels_threshold_and_shown_labels_match(self):
         c = _constants()
@@ -52,7 +46,7 @@ class TestSpaceMirrorsTheLaptopCode(unittest.TestCase):
         self.assertNotIn("logging", text)
         self.assertNotRegex(text, r"hf_[A-Za-z0-9]{8,}")
         self.assertIn("hmac.compare_digest", text)
-        self.assertEqual(text.count("if not authorised(key)"), 2)
+        self.assertEqual(text.count("if not authorised(key)"), 1)
 
 
 if __name__ == "__main__":

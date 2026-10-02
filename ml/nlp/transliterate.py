@@ -12,7 +12,8 @@ into realistic romanised Hindi (Hinglish) for training data augmentation and mat
   "ladka", and "ढ़" -> "dh", as in "padhai").
 
 It is a heuristic. Real people spell the same word several ways ("nahi", "nhi", "nahin"),
-and this produces one of them. It is never used on anything a victim sees.
+and this produces one of them. Its output reaches a victim only as the pinned, reviewed strings in
+ml/dialogue/variants.py (HINGLISH_TEXT), never directly.
 """
 
 import re

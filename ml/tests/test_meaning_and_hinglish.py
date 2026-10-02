@@ -33,6 +33,11 @@ class TestMeaning(unittest.TestCase):
         self.assertFalse(keeps_meaning("Do you need medical help right now?", intents.ASK_MEDICAL_NEED))
         self.assertTrue(keeps_meaning("Does anyone there need medical help now?", intents.ASK_MEDICAL_NEED))
         self.assertFalse(keeps_meaning("Anything", "unknown_intent"))
+        # Whole-word matching (2026-10-02 safety review): no stem inside another word.
+        self.assertFalse(keeps_meaning("Is this the first time, and do you have a lawyer?",
+                                       intents.ASK_EXISTING_ACTION))
+        self.assertFalse(keeps_meaning("Whose fault was it, and when did this happen?", intents.ASK_WHO_AND_WHEN))
+        self.assertFalse(keeps_meaning("There is no need to say more.", intents.ACKNOWLEDGE))
 
     def test_measured_faithful_rewordings_are_accepted(self):
         for text, intent in (
@@ -61,3 +66,35 @@ class TestHinglishRegister(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestReviewedWordings(unittest.TestCase):
+    def test_pinned_hinglish_equals_the_transliterated_approved_hindi(self):
+        from ml.dialogue import variants
+
+        for intent, pinned in variants.HINGLISH_TEXT.items():
+            source = intents.licensed_question(intent, "hi") or intents.fallback_text(intent, "hi")
+            self.assertEqual(to_hinglish_register(source), pinned, intent)
+        self.assertEqual(set(variants.HINGLISH_TEXT), set(intents.REPHRASABLE_INTENTS))
+
+    def test_every_reviewed_wording_passes_the_checks(self):
+        from ml.dialogue import variants
+
+        for intent, text in variants.HINGLISH_TEXT.items():
+            self.assertTrue(validate(text, intent, "hi")["ok"], text)
+        for intent, texts in variants.EN_VARIANTS.items():
+            for text in texts:
+                self.assertTrue(validate(text, intent, "en")["ok"], text)
+                self.assertTrue(keeps_meaning(text, intent), text)
+
+    def test_nothing_unapproved_is_offered(self):
+        from unittest.mock import patch
+
+        from ml.dialogue import variants
+
+        with patch.dict(variants.VARIANT_REVIEW, {"status": "DRAFT_UNREVIEWED"}), \
+                patch.dict(variants.HINGLISH_REVIEW, {"status": "DRAFT_UNREVIEWED"}):
+            self.assertIsNone(variants.english_variant(intents.ASK_MEDICAL_NEED))
+            self.assertIsNone(variants.hinglish_text(intents.ASK_MEDICAL_NEED))
+        with patch.dict(variants.HINGLISH_REVIEW, {"status": "APPROVED", "reviewer": "", "review_date": ""}):
+            self.assertIsNone(variants.hinglish_text(intents.ASK_MEDICAL_NEED), "approval needs a named reviewer")

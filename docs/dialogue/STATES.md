@@ -35,14 +35,16 @@ The assistant is a **bounded intake instrument, not a chatbot**. A deterministic
   - The officer writes this text, so it does **not** pass through the AI output validator or the state machine. No AI may generate, rephrase or send it.
   - The assistant stays muted. An officer message never restarts intake, and it never carries a score, band or alert.
 
-## How a licensed sentence is worded (EXT-132)
+## How a licensed sentence is worded (EXT-132, safety review 2026-10-02)
 
-The state machine still chooses the intent; only the wording varies.
+The state machine still chooses the intent; only the wording varies, and **no model writes text to a victim at runtime**. The 2026-10-02 dialogue safety review showed that checks cannot make live generation safe: 74 of 79 adversarial rewordings passed the validator and the meaning check, because no lexicon can rule out what a model adds.
 
-- **English:** a local language model (Qwen3-4B-Instruct) may reword the approved sentence. It receives only that sentence and a register label, never the person's words. Its output is spoken only if it passes `guardrails.validate` and a deterministic meaning check (`ml/llm/meaning.py`: every required concept kept, no other intent's anchor) within the time limit; otherwise the approved sentence is used. The model's sentence is never repaired.
+- **English:** the approved sentence, or a lead-approved variant from `ml/dialogue/variants.py` (generated offline by Qwen3-4B-Instruct, filtered by `guardrails.validate` and `ml/llm/meaning.py`, then reviewed). Variants are spoken only while `VARIANT_REVIEW` is APPROVED with a named reviewer, and are validated again at runtime.
 - **Hindi in Devanagari:** the approved Hindi sentence, unchanged.
-- **Hindi in Latin script (Hinglish):** the approved Hindi sentence transliterated deterministically (`ml/dialogue/hinglish.py`), so the reply matches the person's script with no change of meaning.
+- **Hindi in Latin script (Hinglish), text only:** the pinned, reviewed Latin-script form of the approved Hindi (`HINGLISH_TEXT`), only while `HINGLISH_REVIEW` is APPROVED. The register is decided from the majority of the person's turns in a Hindi session, never from one turn, and never for voice.
+- **Live model providers** (`local_service`, `remote`) are refused by configuration outside tests.
 - **Fixed scripts** (S0, S9, SX, SH) are never reworded or transliterated.
+- Each assistant turn records where its words came from (`review_status`: approved_text, approved_variant, approved_hinglish, approved_fixed_script).
 
 ## Writing rules for every utterance
 

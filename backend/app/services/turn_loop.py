@@ -19,8 +19,8 @@ import time
 from typing import Any, Dict, Mapping, Optional
 
 from ml.dialogue import next as dialogue_next
-from ml.dialogue.hinglish import to_hinglish_register
 from ml.dialogue.intents import is_speakable
+from ml.dialogue.variants import hinglish_text
 from ml.guardrails import crisis_check, validate
 from ml.llm.meaning import keeps_meaning
 from ml.llm.prompt import register_for
@@ -118,15 +118,20 @@ def plan_turn(
 
     fallback = decision["fallback_text"]
 
-    # Register: the person's own script decides it, deterministically (langid),
-    # never a model. Hinglish replies are the approved Hindi sentence transliterated,
-    # so the meaning cannot drift; if that fails validation, the Devanagari is used.
-    register = register_for(decision["lang"], identify(utterance or "")["lang"])
+    # Register: the person's own script decides it, deterministically, never a model.
+    # The caller passes a session-level register (sticky across turns); a direct call
+    # falls back to this utterance alone. Hinglish is only for a Hindi session and only
+    # on text: a voice reply in Latin script would be read badly by the Hindi voice.
+    register = flags.get("register") or register_for(decision["lang"], identify(utterance or "")["lang"])
+    if register == "hinglish" and (decision["lang"] != "hi" or flags.get("voice")):
+        register = decision["lang"]
     result["register"] = register
-    if register == "hinglish" and fallback:
-        roman = to_hinglish_register(fallback)
-        if validate(roman, decision["intent"], decision["lang"])["ok"]:
+    result["review_status"] = "approved_text"
+    if register == "hinglish":
+        roman = hinglish_text(decision["intent"])  # reviewed, pinned text only
+        if roman and validate(roman, decision["intent"], decision["lang"])["ok"]:
             fallback = roman
+            result["review_status"] = "approved_hinglish"
 
     # 4. LLM phrasing is optional. With LLM_PROVIDER=mock this returns None and
     #    the fallback is used, which is the default demo path. The model receives
@@ -138,6 +143,13 @@ def plan_turn(
                                register=register, source=decision["licensed_question"] or fallback)
     t4 = time.perf_counter()
     timings["llm_phrasing"] = round(1000 * (t4 - t3), 3)
+
+    # Alternative wordings are English only: discard anything else here, at the safety
+    # layer, whatever a provider returns. Reject multi-line or control characters outright.
+    if candidate is not None and (decision["lang"] != "en" or register != "en"
+                                  or not isinstance(candidate, str)
+                                  or any(ord(c) < 32 for c in candidate)):
+        candidate = None
 
     if candidate is None:
         result["text"] = fallback
@@ -155,6 +167,8 @@ def plan_turn(
     if verdict["ok"]:
         result["text"] = verdict["safe_text"]
         result["was_fallback"] = False
+        result["review_status"] = ("approved_variant" if getattr(llm, "name", "") == "variants"
+                                   else "model_generated")
     else:
         result["text"] = fallback
         result["guardrail_reason"] = verdict["reason"]

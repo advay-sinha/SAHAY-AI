@@ -23,6 +23,7 @@ OVERRIDES: Dict[str, str] = {
     "एफ़आईआर": "FIR",
     "वह": "woh",
     "इसमें": "isme",
+    "यह": "yeh",
     "जरूरत": "zaroorat",
     "ज़रूरत": "zaroorat",
 }
