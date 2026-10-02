@@ -11,9 +11,12 @@
  */
 
 const { resolveApiBaseUrl } = require("../net/apiConfig");
+const { createConversation } = require("../net/conversation");
 const { createSession, fetchTimeline } = require("../net/restClient");
 
 const IDLE_TIMELINE = Object.freeze({ status: "idle", payload: null });
+const IDLE_CONVERSATION = Object.freeze({ status: "idle", events: Object.freeze([]), sessionStatus: null });
+const OPEN_WAIT_MS = 30000;
 
 function publicSession(session) {
   return Object.freeze({
@@ -26,7 +29,7 @@ function publicSession(session) {
   });
 }
 
-function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
+function createSessionStore({ apiUrl, fetchImpl, timeoutMs, socketFactory = null }) {
   const config = resolveApiBaseUrl(apiUrl);
   const listeners = new Set();
 
@@ -36,11 +39,13 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
   let creationTicket = 0;
   let timelineTicket = 0;
   let timelineAbort = null;
+  let conversation = null;
   let snapshot = Object.freeze({
     configured: config.ok,
     session: null,
     creation: Object.freeze({ status: "idle", consent: null, lang: null, attempt: 0 }),
     timeline: IDLE_TIMELINE,
+    conversation: IDLE_CONVERSATION,
   });
 
   function update(patch) {
@@ -67,7 +72,57 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
     }
   }
 
+  function closeConversation() {
+    if (conversation !== null) conversation.close();
+    conversation = null;
+  }
+
+  /** Opens the one socket for the current session. Idempotent. */
+  function ensureConversation() {
+    const session = snapshot.session;
+    if (conversation !== null || session === null || credential === null) return conversation;
+    if (!config.ok || socketFactory === null) return null;
+    const sessionEpoch = epoch;
+    conversation = createConversation({
+      baseUrl: config.baseUrl,
+      sessionId: session.session_id,
+      token: credential,
+      lang: session.lang,
+      socketFactory,
+      onChange: (state) => {
+        if (sessionEpoch === epoch) update({ conversation: state });
+      },
+    });
+    conversation.connect();
+    return conversation;
+  }
+
+  /** Resolves true once the socket is open, false if it closes or the wait runs out. */
+  function whenOpen() {
+    return new Promise((resolve) => {
+      if (snapshot.conversation.status === "open") {
+        resolve(true);
+        return;
+      }
+      let unsubscribe = () => {};
+      const timer = setTimeout(() => {
+        unsubscribe();
+        resolve(false);
+      }, OPEN_WAIT_MS);
+      const listener = () => {
+        const { status } = snapshot.conversation;
+        if (status !== "open" && status !== "closed") return;
+        clearTimeout(timer);
+        unsubscribe();
+        resolve(status === "open");
+      };
+      listeners.add(listener);
+      unsubscribe = () => listeners.delete(listener);
+    });
+  }
+
   function dropSession(timelineStatus) {
+    closeConversation();
     abortTimeline();
     epoch += 1;
     creationTicket += 1;
@@ -77,6 +132,7 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
       session: null,
       creation: Object.freeze({ status: "idle", consent: null, lang: null, attempt: 0 }),
       timeline: Object.freeze({ status: timelineStatus, payload: null }),
+      conversation: IDLE_CONVERSATION,
     });
   }
 
@@ -108,7 +164,7 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
     return { ok: true, session };
   }
 
-  return {
+  const api = {
     subscribe(listener) {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -146,6 +202,42 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
 
     clearSession() {
       dropSession("idle");
+    },
+
+    /** Opens the conversation socket for the current session. */
+    connectConversation() {
+      ensureConversation();
+    },
+
+    /**
+     * One text turn. Rejects with no session or no connection. A declined
+     * session may still write: the server keeps the words for a person and
+     * runs no AI analysis on them.
+     */
+    async sendChat(text) {
+      if (snapshot.session === null) throw new Error("unavailable");
+      const live = ensureConversation();
+      if (live === null || !(await whenOpen())) throw new Error("offline");
+      await live.sendChat(text);
+    },
+
+    /**
+     * "Talk to a person", from any screen. With no session yet, asking for a
+     * person is taken as declining the AI: a declined session is created, so
+     * no AI analysis runs and the case routes straight to a human.
+     */
+    async requestHuman(lang) {
+      if (snapshot.session === null) {
+        const started = snapshot.creation.status === "idle"
+          ? await api.startSession("declined", lang === "en" ? "en" : "hi")
+          : snapshot.creation.status === "failed"
+            ? await api.retrySessionCreation()
+            : { ok: false };
+        if (!started.ok) throw new Error("unavailable");
+      }
+      const live = ensureConversation();
+      if (live === null || !(await whenOpen())) throw new Error("offline");
+      await live.requestHuman();
     },
 
     /** Loads the current session's one case. Takes no case identifier. */
@@ -207,6 +299,7 @@ function createSessionStore({ apiUrl, fetchImpl, timeoutMs }) {
       if (snapshot.timeline.status === "loading") setTimeline("idle");
     },
   };
+  return api;
 }
 
 /** Maps the stored timeline onto the existing MyRequests presentation states. */

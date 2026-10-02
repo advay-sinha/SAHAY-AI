@@ -7,6 +7,7 @@
 
 import { createContext, useContext, useState, useSyncExternalStore, type ReactNode } from "react";
 import { configuredApiUrl } from "../net/apiConfig";
+import type { SocketFactory } from "../net/conversation";
 import type { FetchLike } from "../net/restClient";
 import { createSessionStore, type SessionSnapshot, type SessionStore } from "./sessionStore";
 
@@ -14,9 +15,12 @@ const SessionContext = createContext<SessionStore | null>(null);
 
 const platformFetch: FetchLike = (url, init) => fetch(url, init);
 
+// The one place the platform socket is constructed; the store owns the URL.
+const platformSocket: SocketFactory = (url) => new WebSocket(url);
+
 export function SessionProvider({ children }: { children: ReactNode }) {
   const [store] = useState(() =>
-    createSessionStore({ apiUrl: configuredApiUrl(), fetchImpl: platformFetch }),
+    createSessionStore({ apiUrl: configuredApiUrl(), fetchImpl: platformFetch, socketFactory: platformSocket }),
   );
 
   return <SessionContext.Provider value={store}>{children}</SessionContext.Provider>;

@@ -3,7 +3,7 @@
 Pure module: standard library only, no I/O. Text is a constant here; the
 pre-synthesised WAV files live under DATA_ROOT and are referenced by name only.
 
-STATUS: NOT WRITTEN.
+STATUS: DRAFTED, IN REVIEW (2026-10-01). Not speakable until approved.
 ------------------------------------------------------------------
 docs/dialogue/STATES.md records these as outstanding, owned by Team A / A2 and
 due before Day 3. They are never model-generated. SX additionally requires a
@@ -57,10 +57,66 @@ def _blank(state: State, lang: str) -> ScriptRecord:
     return ScriptRecord(state=state, lang=lang)
 
 
+#: Drafted 2026-10-01 from published guidance (sources and rationale:
+#: docs/dialogue/FIXED_SCRIPTS_SOURCES.md). IN_REVIEW is not speakable: text_for()
+#: still returns None until a record is APPROVED with a named reviewer and date.
+DRAFT_TEXT: Dict[str, str] = {
+    "S0:en": (
+        "I am SAHAY, an AI assistant, not a person. "
+        "A human support officer can read everything you share here, and you can ask "
+        "to talk to a person at any time. "
+        "When you are ready, tell me what happened, in your own words; you can share as "
+        "much or as little as you want."
+    ),
+    "S0:hi": (
+        "मैं सहाय हूँ, एक एआई सहायक, कोई इंसान नहीं। "
+        "आप यहाँ जो भी बताएँ, उसे सहायता अधिकारी पढ़ सकते हैं, और जब भी चाहें, "
+        "किसी व्यक्ति से बात करने के लिए कहिए। "
+        "जब आप तैयार हों, अपने शब्दों में बताइए कि क्या हुआ; आप जितना चाहें, उतना ही बताइए।"
+    ),
+    "S9:en": (
+        "Thank you. What you shared has been saved. "
+        "A human support officer can review it, and you can see its status under "
+        "My requests, where your reference number is shown. "
+        "You can ask to talk to a person at any time."
+    ),
+    "S9:hi": (
+        "धन्यवाद, आपकी बात सहेज ली गई है। "
+        "सहायता अधिकारी इसे देख सकते हैं, और \"मेरे अनुरोध\" में इसकी स्थिति देखी जा "
+        "सकती है, जहाँ आपकी संदर्भ संख्या दी गई है। "
+        "जब भी चाहें, किसी व्यक्ति से बात करने के लिए कहिए।"
+    ),
+    "SX:en": (
+        "Thank you for telling me. "
+        "I am connecting you to a person right now. "
+        "Please stay in this conversation."
+    ),
+    "SX:hi": (
+        "आपने मुझे यह बताया, इसके लिए धन्यवाद। "
+        "आपको अभी एक व्यक्ति से जोड़ा जा रहा है। "
+        "कृपया इस बातचीत में बने रहिए।"
+    ),
+    "SH:en": (
+        "I am connecting you to a person now. "
+        "Please stay in this conversation; they can see everything you share here."
+    ),
+    "SH:hi": (
+        "आपको अभी एक व्यक्ति से जोड़ा जा रहा है। "
+        "कृपया इस बातचीत में बने रहिए; आप यहाँ जो भी बताएँ, वह उन्हें दिखेगा।"
+    ),
+}
+
+
+def _draft(state: State, lang: str) -> ScriptRecord:
+    key = f"{state.value}:{lang}"
+    text = DRAFT_TEXT.get(key)
+    return ScriptRecord(state=state, lang=lang, text=text, status=IN_REVIEW if text else NOT_WRITTEN)
+
+
 #: (state, lang) -> ScriptRecord. Populating a record is a `type:dialogue`
 #: change: two reviewers, STATES.md updated in the same commit.
 SCRIPTS: Dict[str, ScriptRecord] = {
-    f"{state.value}:{lang}": _blank(state, lang)
+    f"{state.value}:{lang}": _draft(state, lang)
     for state in (State.S0_OPENING, State.S9_CLOSING, State.SX_CRISIS, State.SH_HUMAN_HANDOFF)
     for lang in ("hi", "en")
 }
@@ -73,8 +129,10 @@ REQUIRED_CONTENT: Dict[State, str] = {
         "to speak in their own words. No question."
     ),
     State.S9_CLOSING: (
-        "Confirms the account is recorded. Gives the reference number. States what "
-        "happens next. No promise of any outcome, timeline, arrest or compensation."
+        "Confirms the account is saved. Points to where the reference number is shown "
+        "(it is not read aloud). States what happens next. No promise of any outcome, "
+        "timeline, arrest, callback or compensation, and no wording that implies an "
+        "official complaint or FIR has been registered."
     ),
     State.SX_CRISIS: (
         "Acknowledges. States plainly that a person will speak with them now. Asks "
@@ -82,8 +140,8 @@ REQUIRED_CONTENT: Dict[State, str] = {
         "Requires counsellor or psychology faculty review before Day 8."
     ),
     State.SH_HUMAN_HANDOFF: (
-        "Confirms the transfer to a person and asks them to stay on the line. "
-        "No advice, no assessment."
+        "Confirms the transfer to a person and asks them to stay in the conversation "
+        "(not in a physical place). No advice, no assessment, no wait time."
     ),
 }
 
@@ -93,9 +151,17 @@ def record_for(state: State, lang: str) -> Optional[ScriptRecord]:
 
 
 def text_for(state: State, lang: str) -> Optional[str]:
-    """Return approved fixed-script text, or None if it may not be spoken."""
+    """Return approved fixed-script text, or None if it may not be spoken.
+
+    The scripts go live as a set: none is spoken in a language until SX in
+    that language is approved, so ordinary turns can never get a spoken reply
+    while a crisis turn would get silence.
+    """
     record = record_for(state, lang)
     if record is None or not record.speakable:
+        return None
+    crisis = record_for(State.SX_CRISIS, lang)
+    if crisis is None or not crisis.speakable:
         return None
     return record.text
 

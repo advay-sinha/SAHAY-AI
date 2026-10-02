@@ -28,6 +28,13 @@
       "eas": {
         "projectId": "2741a887-133a-4df5-83fd-813af28aa075"
       }
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "single"
+    },
+    "experiments": {
+      "baseUrl": "/victim"
     }
   }
 }

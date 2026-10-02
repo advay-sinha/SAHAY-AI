@@ -22,7 +22,8 @@ export interface ChatSendController {
 
 export interface DisplayMessage {
   id: string;
-  labelKey: "chat.assistant" | "chat.human_officer";
+  /** null for the person's own confirmed words, which carry no label. */
+  labelKey: "chat.assistant" | "chat.human_officer" | null;
   text: string;
 }
 

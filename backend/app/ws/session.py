@@ -76,6 +76,12 @@ async def session_socket(websocket: WebSocket, session_id: str, token: str = Que
     conn = hub.subscribe(Connection(connection_id=str(uuid4()), session_id=session_id, role=role,
                                     send=_send, close=_close))
     hub.send_to(conn, "session.status", snapshot)
+    if role == ROLE_VICTIM:
+        # The opening fixed script, once, now that someone can hear it.
+        async with session_factory()() as db:
+            opening = await intake.open_conversation(db, session_id)
+            await db.commit()
+        publish(session_id, case_id, opening)
 
     try:
         while True:

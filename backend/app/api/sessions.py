@@ -24,13 +24,14 @@ from ..core.config import get_settings
 from ..core.db import get_session
 from ..core.enums import AUDIO_CHANNELS, AUDIO_MAX_BYTES, AUDIO_MEDIA_TYPES
 from ..core.errors import (BadRequest, Conflict, Forbidden, NotFound, PayloadTooLarge, ServiceUnavailable,
-                           UnsupportedMediaType)
+                           TooManyRequests, UnsupportedMediaType)
 from ..core.security import create_token
 from ..schemas.contracts import (AudioUploadResponse, CreateSessionRequest, CreateSessionResponse,
                                  EndSessionResponse)
 from ..services import audit, intake, latency
 from ..services.consent import CONSENT_GRANTED, session_capabilities
 from ..services.events import publish
+from ..services.rate_limit import session_limiter
 from ..ws.events import ROLE_VICTIM
 
 router = APIRouter(prefix="/sessions", tags=["sessions"])
@@ -40,8 +41,11 @@ AI_DISCLOSURE = intake.AI_DISCLOSURE
 
 @router.post("", response_model=CreateSessionResponse, status_code=status.HTTP_201_CREATED)
 async def create_session(
-    body: CreateSessionRequest, db: AsyncSession = Depends(get_session)
+    body: CreateSessionRequest, request: Request, db: AsyncSession = Depends(get_session)
 ) -> CreateSessionResponse:
+    client = request.client.host if request.client else "unknown"
+    if not session_limiter.allow(client, get_settings().SESSION_RATE_LIMIT_PER_HOUR):
+        raise TooManyRequests("too many sessions; try again later")
     session, case, out = await intake.create_session(db, body.channel, body.consent, body.lang)
     await db.commit()
     publish(session.id, case.id, out)

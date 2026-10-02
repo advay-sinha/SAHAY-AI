@@ -87,7 +87,7 @@ In `dimension.update`, a dimension that is unavailable (for example D4 on a type
 
 ```
 POST /auth/login                          {username, password} → {token, role, display_name}
-POST /sessions                            {channel, consent, lang} → CreateSessionResponse (below)
+POST /sessions                            {channel, consent, lang} → CreateSessionResponse (below); 429 when rate-limited (PC-13)
 POST /sessions/{id}/audio?lang=hi|en      whole-utterance voice turn (PC-11) → AudioUploadResponse (below)
 GET  /sessions/{id}/turns/{turn_id}/audio assistant-turn audio (PC-12) → audio/wav, or 404 (below)
 POST /sessions/{id}/end                   → {case_id, reference_no}
@@ -209,6 +209,19 @@ GET /sessions/{id}/turns/{turn_id}/audio    victim session token for that sessio
   They are never synthesised.
 - **Other assistant turns** exist only for text that passed `guardrails.validate` or is language-approved fallback text. They may be spoken once by the configured offline voice (`TTS_PROVIDER`: `none` by default), then cached.
 - No new event, field or enum. The response carries audio only: no text, score, band or emotion.
+
+### Session creation limit — PC-13 (lead decision 2026-10-01)
+
+```
+POST /sessions
+  429 →     the client address created SESSION_RATE_LIMIT_PER_HOUR sessions in the last hour.
+            Body follows §9: {"detail": "too many sessions; try again later"}.
+```
+
+- **Off by default** (`SESSION_RATE_LIMIT_PER_HOUR=0`): the endpoint behaves exactly as PC-09. Hosted tester builds (EXT-130) turn it on.
+- The key is the client address the server sees (the forwarded address behind a proxy). It is never logged or returned.
+- Request and success response are unchanged. Clients treat 429 like any other failed creation: show the error state with retry and the human control.
+- PC-13 B (tester access code header) is approved but not built; it is added only if the hosted URL leaks.
 
 ## 6. Database tables
 

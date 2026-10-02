@@ -39,6 +39,12 @@ class UnsupportedMediaType(DomainError):
     status_code = 415
 
 
+class TooManyRequests(DomainError):
+    """PC-13: a client created too many sessions in a rolling hour."""
+
+    status_code = 429
+
+
 class ServiceUnavailable(DomainError):
     """A local dependency (for example speech recognition) is not reachable."""
 

@@ -28,6 +28,7 @@ from .schemas.contracts import HealthResponse
 from .ws.session import router as ws_router
 
 settings = get_settings()
+settings.require_signing_key()
 
 # Before any request is served: the WebSocket handshake URL carries the JWT by
 # contract, and uvicorn would otherwise write it into the log.

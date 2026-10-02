@@ -1,4 +1,5 @@
 import { useRouter } from "expo-router";
+import { voiceEnabled } from "../src/net/features";
 import { HomeScreen } from "../src/screens/HomeScreen";
 
 export default function HomeRoute() {
@@ -10,6 +11,7 @@ export default function HomeRoute() {
       onOpenRequests={() => router.push("/requests")}
       onOpenTalk={() => router.push("/talk")}
       onRequestHuman={() => router.push("/handoff")}
+      showTalk={voiceEnabled()}
     />
   );
 }

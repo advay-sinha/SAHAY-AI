@@ -113,17 +113,17 @@ test("the requests route reads the session store and keeps handoff available", (
 
 test("the chat route cannot simulate successful delivery", () => {
   const source = read("app", "chat.tsx");
-  assert.match(source, /async function unavailableSend\(_text:\s*string\):\s*Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
-  assert.match(source, /onSend=\{unavailableSend\}/);
+  // Delivery is confirmed only by the store, which waits for the server's echo.
+  assert.match(source, /onSend=\{\(text\) => store\.sendChat\(text\)\}/);
   assert.match(source, /onRequestHuman=\{\(\)\s*=>\s*router\.push\(["']\/handoff["']\)\}/);
   assert.doesNotMatch(source, /Promise\.resolve|status=["']sent["']/);
 });
 
-test("the handoff route injects an unavailable callback rather than simulated success", () => {
+test("the handoff route sends a real request rather than simulated success", () => {
   const source = read("app", "handoff.tsx");
-  assert.match(source, /async function unavailableHumanRequest\(\): Promise<void>\s*\{\s*throw new Error\(\);\s*\}/);
-  assert.match(source, /<HandoffScreen\s+onRequestHuman=\{unavailableHumanRequest\}\s*\/>/);
-  assert.doesNotMatch(source, /initialState/);
+  assert.match(source, /onRequestHuman=\{\(\) => store\.requestHuman\(getLanguage\(\)\)\}/);
+  assert.match(source, /humanJoined=\{conversation\.sessionStatus\?\.human_joined === true\}/);
+  assert.doesNotMatch(source, /Promise\.resolve|initialState/);
 });
 
 test("the error route renders ErrorScreen and sends human contact only to handoff", () => {

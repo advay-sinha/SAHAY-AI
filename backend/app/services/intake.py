@@ -10,8 +10,10 @@ The reply path, in order (root CLAUDE.md invariants 1 and 2):
   5. commit, publish victim-safe + executive events
   6. schedule the assessment cycle          -- background; never awaited here
 
-Consent declined: turns are kept so a person can read them, but no AI analysis
-ever runs, and the dialogue routes straight to a human (SH).
+Consent declined: turns are kept so a person can read them, no AI analysis
+ever runs, and the dialogue routes straight to a human (SH). Only the keyword
+crisis pre-check still runs (lead decision 2026-10-02): on a match it alerts a
+person and requests takeover, with no score.
 
 Crisis: SX, crisis alert (critical), takeover requested, band Critical when
 scoring is permitted. Intake never resumes: SX is terminal in the policy.
@@ -28,6 +30,8 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ml.dialogue import next as dialogue_next
+from ml.dialogue.intents import STATE_INTENT
+from ml.dialogue.scripts import text_for as fixed_script_text
 from ml.dialogue.states import State
 from ml.guardrails import crisis_check
 from ml.nlp.extraction import dialogue_slots, extract
@@ -112,6 +116,66 @@ def transcript_payload(turn: Turn) -> Dict[str, Any]:
     }
 
 
+def assistant_payload(turn: Turn) -> Dict[str, Any]:
+    return {"turn_id": turn.id, "text": turn.text, "lang": turn.lang, "intent": turn.intent,
+            "audio": "prerecorded"}
+
+
+def officer_payload(turn: Turn) -> Dict[str, Any]:
+    return {"turn_id": turn.id, "text": turn.text, "lang": turn.lang, "ts": _iso(turn.created_at),
+            "origin": "human_officer"}
+
+
+async def _speak_fixed(db: AsyncSession, session: Session, case: Case, state: State,
+                       out: "Outbound") -> bool:
+    """Speak an approved fixed script verbatim, or record that none is approved.
+
+    Fixed scripts are never model-generated: the text comes only from an
+    APPROVED record in ml.dialogue.scripts. Without one, nothing is said.
+    """
+    turns = await _turns(db, session.id)
+    # The language the person last wrote in, as the turn path uses; else the session's.
+    own = [t.lang for t in turns if t.speaker == "victim" and t.lang in ("hi", "en")]
+    lang = own[-1] if own else (session.lang if session.lang in ("hi", "en") else "hi")
+    text = fixed_script_text(state, lang)
+    if not text:
+        await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": state.value})
+        return False
+    seq = max((t.seq for t in turns), default=0) + 1
+    reply = Turn(id=str(uuid4()), session_id=session.id, seq=seq, speaker="assistant", text=text,
+                 lang=lang, state=state.value, intent=STATE_INTENT[state], was_fallback=True,
+                 review_status="approved_fixed_script", created_at=audit.now())
+    db.add(reply)
+    await db.flush()
+    out.add("assistant.turn", assistant_payload(reply))
+    out.add("transcript.line", transcript_payload(reply))
+    return True
+
+
+async def open_conversation(db: AsyncSession, session_id: str) -> "Outbound":
+    """Speak the opening when the victim's socket first connects.
+
+    The opening cannot be spoken at session creation: no socket exists yet to
+    hear it. So it is spoken once, on the first victim connection to a session
+    with no turns: S0 for a granted session, SH for a declined one. Only an
+    approved fixed script is ever said; otherwise nothing is.
+    """
+    out = Outbound()
+    session = await get_session_row(db, session_id)
+    if session.ended_at is not None or await _turns(db, session_id):
+        return out
+    state = {State.S1_FREE_NARRATIVE.value: State.S0_OPENING,
+             State.SH_HUMAN_HANDOFF.value: State.SH_HUMAN_HANDOFF}.get(session.state)
+    if state is None:
+        return out
+    lang = session.lang if session.lang in ("hi", "en") else "hi"
+    if not fixed_script_text(state, lang):
+        return out  # unavailability was recorded at creation
+    case = await case_for_session(db, session_id)
+    await _speak_fixed(db, session, case, state, out)
+    return out
+
+
 # ---------------------------------------------------------------------------
 # Sessions
 # ---------------------------------------------------------------------------
@@ -157,10 +221,15 @@ async def create_session(
     await audit.record(db, f"consent.{consent}", case_id=case.id)
     await audit.timeline(db, case.id, "request_received")
 
-    # S0 is a fixed script. It is not approved, so it is NOT spoken: fail
-    # closed, record why, and move to listening. The AI disclosure is still
-    # delivered — by the client from `ai_disclosure`, not by an unreviewed script.
-    await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "S0"})
+    # S0 (or SH when consent is declined) is a fixed script. It is spoken on
+    # the victim's first socket connection (open_conversation), and only from
+    # an approved record; until then nothing is said and the reason is
+    # recorded here. The AI disclosure is always delivered by the client from
+    # `ai_disclosure` as well.
+    lang_ok = lang if lang in ("hi", "en") else "hi"
+    opening = State.SH_HUMAN_HANDOFF if consent == CONSENT_DECLINED else State.S0_OPENING
+    if not fixed_script_text(opening, lang_ok):
+        await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "S0"})
     if consent == CONSENT_DECLINED:
         session.state = State.SH_HUMAN_HANDOFF.value
         await audit.record(db, "routed_to_human", case_id=case.id, detail={"reason": "consent_declined"})
@@ -219,6 +288,30 @@ async def _upsert_crisis_alert(db: AsyncSession, case: Case, turn_id: str) -> bo
     return False
 
 
+async def _crisis_without_analysis(db: AsyncSession, session: Session, case: Case, consent: str,
+                                   turn_id: str, out: "Outbound") -> None:
+    """Crisis language where consent to AI analysis was not given.
+
+    Raises the crisis alert and the takeover request, which put the case at
+    the top of the queue. No band is set: scoring is not permitted. SX is
+    said once on entering it, from an approved record only.
+    """
+    raised = await _upsert_crisis_alert(db, case, turn_id)
+    if case.takeover_requested_at is None:
+        case.takeover_requested_at = audit.now()
+        await audit.record(db, "takeover.requested", case_id=case.id,
+                           detail={"reason": "crisis_precheck", "turn_id": turn_id})
+    case.needs_human = True
+    if raised:
+        await audit.record(db, "alert.raised", case_id=case.id,
+                           detail={"type": "crisis", "severity": "critical", "turn_id": turn_id})
+        out.add("alert.safety", {"alert_type": "crisis", "severity": "critical",
+                                 "evidence_turn_ids": [turn_id], "requires_ack": True})
+    if session.state != State.SX_CRISIS.value:
+        session.state = State.SX_CRISIS.value
+        await _speak_fixed(db, session, case, State.SX_CRISIS, out)
+
+
 async def submit_turn(
     db: AsyncSession,
     session_id: str,
@@ -271,10 +364,15 @@ async def submit_turn(
     turns.append(victim)
     out.add("transcript.line", transcript_payload(victim))
 
-    # Consent and a completed human takeover both mute every AI path. The
-    # victim turn remains available to the officer under the existing
-    # retention rules, but nothing below this boundary may inspect it.
+    # Consent not granted, or a completed human takeover, mutes every AI path:
+    # no assessment, scoring, recommendation, extraction or dialogue below.
+    # One exception without a human present: the synchronous crisis pre-check
+    # (invariant 2; project lead decision 2026-10-02), a keyword match that
+    # raises an alert for a person. It is not AI analysis and produces no score.
+    # After a takeover the officer is already reading, so nothing runs.
     if consent != CONSENT_GRANTED or session.human_joined:
+        if not session.human_joined and crisis_check(text)["crisis"]:
+            await _crisis_without_analysis(db, session, case, consent, victim.id, out)
         case.updated_at = audit.now()
         out.add("session.status", status_payload(session, consent))
         return out
@@ -296,12 +394,20 @@ async def submit_turn(
     # 3-4. policy, then text only if it may be spoken
     assistant_text: Optional[str] = None
     intent = ""
+    fixed = False
+    previous_state = session.state
     try:
         plan = plan_turn(session.state, slots, text, flags, get_provider(get_settings().LLM_PROVIDER))
         timings.update({k: v for k, v in (plan.get("timings_ms") or {}).items() if k != "safety_precheck"})
         next_state = plan["next_state"]
         intent = plan["intent"]
         assistant_text = plan["text"]
+        fixed = bool(plan.get("fixed_script"))
+        # A fixed script is said once, on entering its state. While SX, SH or
+        # S9 holds, later turns are recorded for the officer and get silence,
+        # never the same script again.
+        if fixed and previous_state == next_state:
+            assistant_text = None
     except FixedScriptUnavailable:
         decision = dialogue_next(session.state, slots, text, flags)
         next_state, intent = decision["next_state"], decision["intent"]
@@ -315,7 +421,8 @@ async def submit_turn(
     if assistant_text:
         reply = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq + 1, speaker="assistant",
                      text=assistant_text, lang=flags["lang"], state=next_state, intent=intent,
-                     was_fallback=True, review_status="draft", created_at=audit.now())
+                     was_fallback=True, review_status="approved_fixed_script" if fixed else "draft",
+                     created_at=audit.now())
         db.add(reply)
         await db.flush()
         out.add("assistant.turn", {"turn_id": reply.id, "text": reply.text, "lang": reply.lang,
@@ -353,26 +460,34 @@ async def request_human(db: AsyncSession, session_id: str) -> Outbound:
     session = await get_session_row(db, session_id)
     case = await case_for_session(db, session_id)
     consent = await consent_for(db, session_id)
-    if session.state != State.SX_CRISIS.value:
+    previous = session.state
+    if previous != State.SX_CRISIS.value:
         session.state = State.SH_HUMAN_HANDOFF.value
     case.needs_human = True
     await audit.record(db, "human.requested", case_id=case.id, dedupe_key=f"human.requested:{case.id}")
-    # SH is a fixed script and is not approved: nothing is spoken.
-    await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "SH"})
+    # SH is spoken once, on entering handoff; never over the crisis script,
+    # and never after the session ended (no officer can reach it then).
+    if session.ended_at is None and previous not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value):
+        await _speak_fixed(db, session, case, State.SH_HUMAN_HANDOFF, out)
     out.add("session.status", status_payload(session, consent))
     return out
 
 
 async def end_session(db: AsyncSession, session_id: str) -> Tuple[Case, Outbound]:
-    """End the session. Idempotent. S9 is not approved, so nothing is spoken."""
+    """End the session. Idempotent. S9 is spoken only from an approved record."""
     out = Outbound()
     session = await get_session_row(db, session_id)
     case = await case_for_session(db, session_id)
     consent = await consent_for(db, session_id)
     if session.ended_at is None:
+        # S9 closes an ordinary intake once; it is not said over a crisis or
+        # a handoff, and not repeated if the dialogue already reached it.
+        shared = any(t.speaker == "victim" for t in await _turns(db, session_id))
+        if shared and session.state not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value,
+                                            State.S9_CLOSING.value):
+            await _speak_fixed(db, session, case, State.S9_CLOSING, out)
         session.ended_at = audit.now()
         await audit.record(db, "session.ended", case_id=case.id)
-        await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": "S9"})
     row = await audit.timeline(db, case.id, "under_review")
     if row is not None:
         out.add("timeline.update", audit.timeline_payload(row))

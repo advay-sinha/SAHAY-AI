@@ -73,6 +73,36 @@ class TestEnvExampleIsValid(unittest.TestCase):
 
 
 @unittest.skipUnless(HAVE_SETTINGS, "pydantic-settings not installed (Tier 1 run)")
+class TestSigningKeyGuard(unittest.TestCase):
+    PG = "postgresql+asyncpg://u:p@h/db"
+
+    def settings(self, **values):
+        from backend.app.core.config import Settings
+
+        return Settings(_env_file=None, DATABASE_URL=self.PG, **values)
+
+    def test_default_key_is_refused_outside_tests(self):
+        from backend.app.core.config import SecretKeyConfigurationError
+
+        for env in ("development", "local", "demo", "production"):
+            with self.assertRaises(SecretKeyConfigurationError, msg=env):
+                self.settings(APP_ENV=env).require_signing_key()
+
+    def test_short_key_is_refused_and_not_echoed(self):
+        from backend.app.core.config import SecretKeyConfigurationError
+
+        with self.assertRaises(SecretKeyConfigurationError) as caught:
+            self.settings(APP_ENV="demo", SECRET_KEY="short-secret-value").require_signing_key()
+        self.assertNotIn("short-secret-value", str(caught.exception))
+
+    def test_random_key_is_accepted(self):
+        self.settings(APP_ENV="demo", SECRET_KEY="k" * 32).require_signing_key()
+
+    def test_test_environment_keeps_the_default(self):
+        self.settings(APP_ENV="test").require_signing_key()
+
+
+@unittest.skipUnless(HAVE_SETTINGS, "pydantic-settings not installed (Tier 1 run)")
 class TestPathsAnchorToRepoRoot(unittest.TestCase):
     def test_relative_sqlite_url_resolves_under_repo_runtime(self):
         from backend.app.core.config import Settings

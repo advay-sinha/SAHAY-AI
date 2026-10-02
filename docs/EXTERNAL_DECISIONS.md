@@ -34,7 +34,7 @@ Claude reads this file before any install, download, API use or service addition
 | EXT-107 | External LLM API and key | PROPOSED | P2 optional |
 | EXT-108 | Official policy document corpus | PROPOSED | P2 |
 | EXT-109 | Docker and Docker Compose | PROPOSED | After local full-flow gate |
-| EXT-110 | PostgreSQL and pgvector | PROPOSED | Packaging/production hardening |
+| EXT-110 | PostgreSQL and pgvector | PostgreSQL APPROVED 2026-10-01 for the EXT-130 tester deployment only (Supabase free); pgvector still PROPOSED | Packaging/production hardening |
 | EXT-111 | Redis and RQ | PROPOSED | Load/resilience hardening |
 | EXT-112 | CI/CD | PROPOSED | Repository hardening |
 
@@ -587,3 +587,54 @@ Measured:        Warm latency 323–374 ms for a 1.6 s clip on the RTX 4060 (con
                  budget ≤ 0.6 s); silence returns no_speech in 134 ms without Whisper.
 Decision maker:  Project owner, 2026-09-27 (M11 approval).
 ```
+
+```text
+Date:            2026-10-01
+ID:              EXT-130 — hosted tester deployment (fictional data only)
+Items:           - Render, one Python 3.11 web service running backend/ from the
+                   repository root (free tier; Starter only if the owner chooses it)
+                 - Vercel Hobby, one static site: executive console at / and the
+                   Expo web export of the victim app at /victim
+                 - Supabase free PostgreSQL (PostgreSQL only; no pgvector, storage
+                   or auth products), through the asyncpg path merged in PR #15
+                 - Expo EAS Build free tier, existing `preview` profile, Android APK
+                   only; eas-cli run by the owner under the owner's Expo account
+                 - npm react-native-web 0.21.3 (chosen by `expo install` for Expo
+                   SDK 54), pinned exactly in mobile/package.json
+Decision:        APPROVED
+Scope:           Invited testers only (team members and faculty). Fictional
+                 scenarios only; no real victim, no real account of harm. Text chat
+                 only in the cloud: LLM_PROVIDER=mock, ASR_PROVIDER=mock with the
+                 microphone hidden, TTS_PROVIDER=none. No victim audio is uploaded
+                 to or stored by any hosted service. Every secret (SECRET_KEY,
+                 DATABASE_URL, SEED_PASSWORD) lives only in the provider dashboards
+                 or a local .env, never in Git or chat. Voice stays on the laptop.
+Reason:          Check deployability and let testers use both interfaces from
+                 their own phones and laptops, including iPhone users through the
+                 web build.
+Licence/cost:    Free tiers (owner to confirm current terms). Known limits: Render
+                 free sleeps when idle and drops open WebSockets; Vercel Hobby is
+                 non-commercial; Supabase free pauses after inactivity.
+Location:        Render, Vercel and Supabase accounts owned by the project lead;
+                 APK distributed directly to Android testers.
+Fallback:        The laptop demo stack (scripts/start-*.ps1) remains the reference.
+Teardown:        Delete the Render service, Vercel project and Supabase database
+                 when the test window ends; rotate SECRET_KEY and seed passwords.
+Not approved:    Docker, CI/CD, Redis, pgvector, an external LLM, cloud ASR/TTS,
+                 public promotion of the URLs, or any real victim use.
+Decision maker:  Project lead (advay-sinha), 2026-10-01, in session.
+```
+
+```text
+Date:            2026-10-01
+ID:              EXT-131 — web research for fixed-script wording (no new dependency)
+Decision:        APPROVED by the project lead, in session.
+Scope:           Read-only web search and fetch of public guidance to draft S0, S9, SX
+                 and SH: PIB releases (NHAA 14566, Tele-MANAS 14416), WHO AI-for-health
+                 ethics guidance, SAMHSA trauma-informed principles, the 988 Lifeline
+                 Suicide Safety Policy and Samaritans guidance. Nothing is downloaded
+                 into the repository; sources are cited in
+                 docs/dialogue/FIXED_SCRIPTS_SOURCES.md. No runtime network access.
+Decision maker:  Project lead (advay-sinha), 2026-10-01.
+```
+

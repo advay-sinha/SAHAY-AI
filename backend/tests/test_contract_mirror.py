@@ -23,6 +23,7 @@ import re
 import unittest
 
 from backend.app.ws.events import EXECUTIVE_ONLY, VICTIM_ALLOWED
+from backend.tests.test_vertical_slice import HAVE_DEPS
 
 REPO_ROOT = pathlib.Path(__file__).resolve().parents[2]
 CONTRACTS_MD = REPO_ROOT / "docs" / "contracts" / "CONTRACTS.md"
@@ -297,6 +298,7 @@ class TestAudioUploadMirror(unittest.TestCase):
         self.assertEqual(AudioUploadResponse.model_config.get("extra"), "forbid")
 
 
+@unittest.skipUnless(HAVE_DEPS, "EXT-001 backend packages not installed (Tier 1 run)")
 class TestTurnAudioMirror(unittest.TestCase):
     """PC-12: the route, CONTRACTS.md and the mobile request builder agree."""
 

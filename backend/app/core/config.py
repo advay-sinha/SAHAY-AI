@@ -28,6 +28,14 @@ class DatabaseConfigurationError(ValueError):
     """Fixed-message database configuration failure that never carries a URL."""
 
 
+_DEFAULT_SECRET_KEY = "change-me-in-.env"
+_MIN_SECRET_KEY_LENGTH = 32
+
+
+class SecretKeyConfigurationError(ValueError):
+    """The JWT signing key is the committed default or too short to trust."""
+
+
 def normalize_database_url(value: str, *, app_env: str) -> str:
     """Return an async SQLAlchemy URL without rebuilding credential fields.
 
@@ -104,7 +112,11 @@ class Settings(BaseSettings):
     FRONTEND_ORIGIN: str = "http://localhost:5173"
     MOBILE_API_URL: str = "http://localhost:8000"
 
-    SECRET_KEY: str = "change-me-in-.env"
+    SECRET_KEY: str = _DEFAULT_SECRET_KEY
+
+    # PC-13 A: new victim sessions per client address per rolling hour. 0 = off
+    # (the frozen PC-09 behaviour); hosted tester builds set it (render.yaml).
+    SESSION_RATE_LIMIT_PER_HOUR: int = Field(default=0, ge=0, le=10000)
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_MINUTES: int = 480
 
@@ -164,6 +176,19 @@ class Settings(BaseSettings):
         url = make_url(self.database_url())
         if url.get_backend_name() == "sqlite" and url.database != ":memory:":
             Path(url.database).parent.mkdir(parents=True, exist_ok=True)
+
+    def require_signing_key(self) -> None:
+        """Refuse to serve outside tests with a guessable JWT key.
+
+        The role claim in the token is what the fan-out trusts, so a known key
+        would let anyone mint an executive token. Never echoes the value.
+        """
+        if self.APP_ENV == "test":
+            return
+        if self.SECRET_KEY == _DEFAULT_SECRET_KEY or len(self.SECRET_KEY) < _MIN_SECRET_KEY_LENGTH:
+            raise SecretKeyConfigurationError(
+                f"SECRET_KEY must be set to a random value of at least {_MIN_SECRET_KEY_LENGTH} characters"
+            )
 
     def database_url(self, *, for_migration: bool = False) -> str:
         raw = self.MIGRATION_DATABASE_URL if for_migration and self.MIGRATION_DATABASE_URL else self.DATABASE_URL

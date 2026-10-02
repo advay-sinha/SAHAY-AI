@@ -111,7 +111,10 @@ function selectDisplayMessages(values, consent, aiPermitted) {
   const selected = [];
   for (const value of values) {
     const event = validateVictimEvent(value);
-    if (event?.type === "assistant.turn") {
+    if (event?.type === "transcript.line" && event.speaker === "victim") {
+      // The server's echo of the person's own words, in conversation order.
+      selected.push({ id: `victim:${event.turn_id}`, labelKey: null, text: event.text });
+    } else if (event?.type === "assistant.turn") {
       if (consent === "granted" && aiPermitted === true) {
         selected.push({
           id: `assistant:${event.turn_id}`,
