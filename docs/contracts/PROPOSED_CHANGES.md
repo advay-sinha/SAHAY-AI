@@ -276,7 +276,7 @@ Alternative:  The phone shows text only; fixed-script audio would have to be bun
 
 ---
 
-## PC-13 — Hosted tester guard on `POST /sessions` — **PROPOSED (2026-10-01)**
+## PC-13 — Hosted tester guard on `POST /sessions` — **APPROVED (2026-10-01); A applied, B not built**
 
 Decision EXT-130 (hosted tester deployment). Opt-in: with neither setting present, behaviour is
 exactly the frozen PC-09 contract, so local and demo builds are unchanged.
@@ -312,7 +312,9 @@ Recommendation: A now (backend only, no UI). B only if the URL leaks.
 
 | Lead (D-11) | Confirmation |
 |---|---|
-| AI/ML and Safety | pending |
-| Backend | pending |
-| Executive Web | pending |
-| Mobile/Victim Experience | pending |
+| AI/ML and Safety | Confirmed 2026-10-01, relayed by the project lead |
+| Backend | Confirmed 2026-10-01, relayed by the project lead |
+| Executive Web | Confirmed 2026-10-01, relayed by the project lead |
+| Mobile/Victim Experience | Confirmed 2026-10-01, relayed by the project lead |
+
+Applied to `CONTRACTS.md` §4: option A (rate limit). Option B (access code) stays unbuilt, per the recommendation, until the hosted URL leaks.

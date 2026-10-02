@@ -113,6 +113,10 @@ class Settings(BaseSettings):
     MOBILE_API_URL: str = "http://localhost:8000"
 
     SECRET_KEY: str = _DEFAULT_SECRET_KEY
+
+    # PC-13 A: new victim sessions per client address per rolling hour. 0 = off
+    # (the frozen PC-09 behaviour); hosted tester builds set it (render.yaml).
+    SESSION_RATE_LIMIT_PER_HOUR: int = Field(default=0, ge=0, le=10000)
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRY_MINUTES: int = 480
 
