@@ -26,8 +26,8 @@ NOT_WRITTEN = "NOT_WRITTEN"
 
 #: Per-language review status of the intent text below.
 REVIEW_STATUS: Dict[str, str] = {
-    "en": DRAFT_UNREVIEWED,
-    "hi": DRAFT_UNREVIEWED,
+    "en": APPROVED,
+    "hi": APPROVED,
 }
 
 SUPPORTED_LANGS = ("hi", "en")
