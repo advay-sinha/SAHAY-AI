@@ -638,3 +638,36 @@ Scope:           Read-only web search and fetch of public guidance to draft S0, 
 Decision maker:  Project lead (advay-sinha), 2026-10-01.
 ```
 
+
+```text
+Date:            2026-10-02
+ID:              EXT-132 — guardrailed LLM phrasing and MuRIL officer signals
+Items:           1. Qwen/Qwen3-4B-Instruct-2507 @ cdbee75f17c01a7cc42f958dc650907174af0554
+                    (3 safetensors files, 8,044,981,600 bytes), Apache-2.0
+                 2. bitsandbytes 0.50.2 (MIT), into the existing sahay-ml-models env,
+                    for 4-bit loading on the 8 GB laptop GPU
+                 3. User-level environment variables so no cache or temp file lands
+                    on C: (0.4 GB free): HF_HOME, HF_HUB_CACHE, TORCH_HOME,
+                    PIP_CACHE_DIR, TMP, TEMP, all under D:
+                 4. One Hugging Face ZeroGPU Gradio Space (free tier: 2 Spaces,
+                    5 GPU-minutes per day), private if the free tier allows, running
+                    the phrasing model and the MuRIL signals; packages: gradio,
+                    spaces, torch, transformers
+                 5. One private Hugging Face model repository for the fine-tuned
+                    MuRIL checkpoints. They inherit their training-data terms
+                    (EmoInHindi, GoEmotions, Reddit-derived sets): private only,
+                    never public
+                 6. Runtime HTTPS calls from the hosted backend to that Space with an
+                    HF token held only as a Render secret
+Decision:        APPROVED
+Scope:           Live phrasing of the state machine's licensed question by Qwen, always
+                 through guardrails.validate with the pre-written fallback on any
+                 failure, timeout or exhausted quota. MuRIL signals are advisory and
+                 console-only: they may add an officer alert, never trigger or suppress
+                 SX, never lower anything, never reach the victim. Rules stay
+                 authoritative. Fictional test text only reaches Hugging Face; real
+                 use would require self-hosting. Weights and caches stay outside Git.
+Licence/cost:    Free. ZeroGPU quota exhaustion falls back to pre-written text.
+Fallback:        LLM_PROVIDER=mock and no signals: the current behaviour.
+Decision maker:  Project lead (advay-sinha), 2026-10-02, in session.
+```
