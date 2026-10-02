@@ -34,7 +34,7 @@ EN_VARIANTS: Dict[str, List[str]] = {
     ],
 }
 
-VARIANT_REVIEW: Dict[str, str] = {"status": DRAFT_UNREVIEWED, "reviewer": "", "review_date": ""}
+VARIANT_REVIEW: Dict[str, str] = {"status": APPROVED, "reviewer": "advay-sinha", "review_date": "2026-10-02"}
 
 #: intent -> the approved Hindi sentence in Latin script, for people who write Hindi that way.
 HINGLISH_TEXT: Dict[str, str] = {
@@ -51,7 +51,7 @@ HINGLISH_TEXT: Dict[str, str] = {
     _intents.ASK_WHO_AND_WHEN: "Isme kaun shaamil tha, aur yeh kab hua?",
 }
 
-HINGLISH_REVIEW: Dict[str, str] = {"status": DRAFT_UNREVIEWED, "reviewer": "", "review_date": ""}
+HINGLISH_REVIEW: Dict[str, str] = {"status": APPROVED, "reviewer": "advay-sinha", "review_date": "2026-10-02"}
 
 
 def _approved(record: Dict[str, str]) -> bool:
