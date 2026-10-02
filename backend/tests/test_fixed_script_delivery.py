@@ -151,6 +151,24 @@ class TestApprovedFixedScripts(SliceBase):
             frames = drain(ws, timeout=1.0)
         self.assertEqual(self.assistant_texts(frames), [])
 
+    def test_declined_crisis_speaks_sx_once_and_alerts_without_a_band(self):
+        s = self.new_session(consent="declined", lang="en")
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            ws.send_json({"type": "chat.message", "text": "I want to die.", "lang": "en"})
+            first = recv_until(ws, "session.status") + drain(ws)
+            ws.send_json({"type": "chat.message", "text": "Is anyone there?", "lang": "en"})
+            later = recv_until(ws, "session.status") + drain(ws)
+        self.assertEqual(self.assistant_texts(first), [fixed_scripts.DRAFT_TEXT["SX:en"]])
+        self.assertEqual(self.assistant_texts(later), [])
+        for frame in first + later:
+            self.assertNotEqual(frame["type"], "alert.safety", "alerts never reach the victim")
+        p = self.packet(s["case_id"])
+        self.assertEqual([(a["alert_type"], a["severity"]) for a in p["alerts"]], [("crisis", "critical")])
+        self.assertTrue(p["header"]["takeover_requested"])
+        self.assertIsNone(p["header"]["band"])
+
     def test_handoff_follows_the_language_the_person_writes_in(self):
         s = self.new_session(lang="en")
         with self.client.websocket_connect(s["connect"]) as ws:

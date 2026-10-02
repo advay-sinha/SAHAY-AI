@@ -58,7 +58,7 @@ Fixed: repeated SX/SH/S9 on later turns (B1); SH after the session ended (B2); S
 **Raised for a lead decision (pre-existing, outside these scripts):**
 
 - `assistant.turn` carries `intent: "crisis_script"` to the victim client, which labels a crisis detection on the victim's device (frozen CONTRACTS.md §1; needs a proposal).
-- With consent declined, `submit_turn` returns before the crisis pre-check, so suicidal words after declining raise no alert, Critical band or takeover. Invariant 2 says the pre-check runs before dialogue policy; whether a lexical pre-check counts as "AI analysis" under declined consent needs deciding.
+- ~~With consent declined, the crisis pre-check never ran.~~ **Decided 2026-10-02 by the project lead:** the keyword pre-check runs on declined and pending sessions too. A match raises the crisis alert and the takeover request and says SX once; no assessment, score, band, extraction or dialogue runs. After an officer has taken over, nothing runs (the officer is reading).
 
 ## Sources
 

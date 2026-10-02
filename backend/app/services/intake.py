@@ -10,8 +10,10 @@ The reply path, in order (root CLAUDE.md invariants 1 and 2):
   5. commit, publish victim-safe + executive events
   6. schedule the assessment cycle          -- background; never awaited here
 
-Consent declined: turns are kept so a person can read them, but no AI analysis
-ever runs, and the dialogue routes straight to a human (SH).
+Consent declined: turns are kept so a person can read them, no AI analysis
+ever runs, and the dialogue routes straight to a human (SH). Only the keyword
+crisis pre-check still runs (lead decision 2026-10-02): on a match it alerts a
+person and requests takeover, with no score.
 
 Crisis: SX, crisis alert (critical), takeover requested, band Critical when
 scoring is permitted. Intake never resumes: SX is terminal in the policy.
@@ -286,6 +288,30 @@ async def _upsert_crisis_alert(db: AsyncSession, case: Case, turn_id: str) -> bo
     return False
 
 
+async def _crisis_without_analysis(db: AsyncSession, session: Session, case: Case, consent: str,
+                                   turn_id: str, out: "Outbound") -> None:
+    """Crisis language where consent to AI analysis was not given.
+
+    Raises the crisis alert and the takeover request, which put the case at
+    the top of the queue. No band is set: scoring is not permitted. SX is
+    said once on entering it, from an approved record only.
+    """
+    raised = await _upsert_crisis_alert(db, case, turn_id)
+    if case.takeover_requested_at is None:
+        case.takeover_requested_at = audit.now()
+        await audit.record(db, "takeover.requested", case_id=case.id,
+                           detail={"reason": "crisis_precheck", "turn_id": turn_id})
+    case.needs_human = True
+    if raised:
+        await audit.record(db, "alert.raised", case_id=case.id,
+                           detail={"type": "crisis", "severity": "critical", "turn_id": turn_id})
+        out.add("alert.safety", {"alert_type": "crisis", "severity": "critical",
+                                 "evidence_turn_ids": [turn_id], "requires_ack": True})
+    if session.state != State.SX_CRISIS.value:
+        session.state = State.SX_CRISIS.value
+        await _speak_fixed(db, session, case, State.SX_CRISIS, out)
+
+
 async def submit_turn(
     db: AsyncSession,
     session_id: str,
@@ -338,10 +364,15 @@ async def submit_turn(
     turns.append(victim)
     out.add("transcript.line", transcript_payload(victim))
 
-    # Consent and a completed human takeover both mute every AI path. The
-    # victim turn remains available to the officer under the existing
-    # retention rules, but nothing below this boundary may inspect it.
+    # Consent not granted, or a completed human takeover, mutes every AI path:
+    # no assessment, scoring, recommendation, extraction or dialogue below.
+    # One exception without a human present: the synchronous crisis pre-check
+    # (invariant 2; project lead decision 2026-10-02), a keyword match that
+    # raises an alert for a person. It is not AI analysis and produces no score.
+    # After a takeover the officer is already reading, so nothing runs.
     if consent != CONSENT_GRANTED or session.human_joined:
+        if not session.human_joined and crisis_check(text)["crisis"]:
+            await _crisis_without_analysis(db, session, case, consent, victim.id, out)
         case.updated_at = audit.now()
         out.add("session.status", status_payload(session, consent))
         return out

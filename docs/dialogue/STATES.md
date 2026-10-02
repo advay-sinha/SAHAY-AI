@@ -29,6 +29,7 @@ The assistant is a **bounded intake instrument, not a chatbot**. A deterministic
 - Target **8–12 turns** total. This is a first contact, not an interview.
 - The **chat channel uses the identical state machine**; text turns skip ASR and TTS.
 - Only **SX** may interrupt the flow, and only from the fast safety pre-check — never from the full assessment pipeline, and never from a model decision.
+- The keyword pre-check also runs when consent was declined (project lead decision 2026-10-02). A match alerts a person and requests takeover; no assessment, score or dialogue runs. It does not run after an officer has taken over.
 - **Officer messages in SH (PC-07, lead decision 2026-09-11).**
   - After a verified takeover, the claiming officer may write to the complainant: `POST /cases/{id}/messages`, delivered as `officer.message` with origin `human_officer`.
   - The officer writes this text, so it does **not** pass through the AI output validator or the state machine. No AI may generate, rephrase or send it.

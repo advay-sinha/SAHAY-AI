@@ -58,14 +58,19 @@ class TestP0SafetyHardening(DecisionBase):
                                 ),
                             )
                         )
+                        # crisis_check is the one exception (lead decision
+                        # 2026-10-02, invariant 2); it is spied on below and
+                        # must find nothing in this ordinary turn.
                         for name in (
-                            "crisis_check",
                             "extract",
                             "dialogue_slots",
                             "dialogue_next",
                             "plan_turn",
                         )
                     }
+                    crisis = stack.enter_context(
+                        patch.object(intake, "crisis_check", wraps=intake.crisis_check)
+                    )
                     provider = stack.enter_context(
                         patch.object(
                             intake,
@@ -81,6 +86,7 @@ class TestP0SafetyHardening(DecisionBase):
                     out = self.submit_and_publish(
                         session, "Fictional consent-gate test turn."
                     )
+                crisis.assert_called_once()
 
                 self.assertFalse(out.schedule_assessment)
                 self.assertEqual(
@@ -111,26 +117,64 @@ class TestP0SafetyHardening(DecisionBase):
                     [(0,)],
                 )
 
-    def test_declined_crisis_like_text_creates_no_ai_artifact_or_event(self):
+    def test_declined_crisis_text_alerts_a_person_without_any_ai_analysis(self):
+        # Lead decision 2026-10-02 (invariant 2): with consent declined, the
+        # keyword crisis pre-check still runs and alerts a person. Nothing else
+        # does: no assessment, recommendation, extraction, dialogue or band.
         from backend.app.services import intake
         from backend.app.ws.hub import hub
 
         session = self.new_session(consent="declined", lang="en")
         with (
             patch.object(intake, "crisis_check", wraps=intake.crisis_check) as crisis,
+            patch.object(intake, "extract", wraps=intake.extract) as extract,
+            patch.object(intake, "plan_turn", wraps=intake.plan_turn) as dialogue,
             patch.object(hub, "publish", wraps=hub.publish) as published,
         ):
             out = self.submit_and_publish(
                 session, "Fictional test speaker says: I want to die."
             )
 
-        crisis.assert_not_called()
+        crisis.assert_called_once()
+        extract.assert_not_called()
+        dialogue.assert_not_called()
+        self.assertFalse(out.schedule_assessment)
+        published_types = [call.args[1] for call in published.call_args_list]
+        self.assertEqual(
+            [t for t in published_types if t in ANALYSIS_EVENT_TYPES], ["alert.safety"]
+        )
+        for table in ("assessments", "recommendations"):
+            self.assertEqual(
+                self.db(
+                    f"SELECT count(*) FROM {table} WHERE case_id=?", session["case_id"]
+                ),
+                [(0,)],
+            )
+        self.assertEqual(
+            self.db("SELECT type, severity FROM alerts WHERE case_id=?", session["case_id"]),
+            [("crisis", "critical")],
+        )
+        self.assertEqual(
+            self.db("SELECT band FROM cases WHERE id=?", session["case_id"]), [(None,)]
+        )
+        self.assertEqual(
+            self.db("SELECT takeover_requested_at IS NOT NULL FROM cases WHERE id=?",
+                    session["case_id"]),
+            [(1,)],
+        )
+
+    def test_declined_ordinary_text_creates_no_ai_artifact_or_event(self):
+        from backend.app.ws.hub import hub
+
+        session = self.new_session(consent="declined", lang="en")
+        with patch.object(hub, "publish", wraps=hub.publish) as published:
+            out = self.submit_and_publish(
+                session, "Fictional test speaker says: they cut off our water."
+            )
+
         self.assertFalse(out.schedule_assessment)
         self.assertFalse(
-            any(
-                call.args[1] in ANALYSIS_EVENT_TYPES
-                for call in published.call_args_list
-            )
+            any(call.args[1] in ANALYSIS_EVENT_TYPES for call in published.call_args_list)
         )
         for table in ("alerts", "assessments", "recommendations"):
             self.assertEqual(
