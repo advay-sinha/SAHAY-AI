@@ -19,9 +19,9 @@ The assistant is a **bounded intake instrument, not a chatbot**. A deterministic
 | **S6 SUPPORT NETWORK** | Isolation, boycott, displacement | Is there someone with you right now? | isolation, displacement, support_person |
 | **S7 EXISTING ACTION** | Case status | Has a complaint or FIR been filed — do you have legal help? | fir_status, legal_help |
 | **S8 WHAT THEY WANT** | Their stated need is a first-class field | What help are you looking for right now? | requested_support |
-| **S9 CLOSING** | Fixed script, pre-recorded. Confirms the account is recorded, gives the reference number, states what happens next. **No promises of outcome** | — | — |
+| **S9 CLOSING** | Fixed script, pre-recorded. Confirms the account is saved, points to where the reference number is shown (not read aloud), states what happens next. **No promises of outcome**, and no wording that implies an official complaint or FIR was registered | — | — |
 | **SX CRISIS INTERRUPT** | Reachable from any state, unconditionally. Fixed pre-approved script. Raises Critical, requests immediate human takeover. **Does not return to intake** | — | — |
-| **SH HUMAN HANDOFF** | Reachable from any state on request or escalation. Confirms transfer, holds the session for the executive | — | — |
+| **SH HUMAN HANDOFF** | Reachable from any state on request or escalation. Fixed script: confirms the transfer and asks the person to stay in the conversation. Holds the session for the executive | — | — |
 
 ## Rules
 
@@ -40,9 +40,14 @@ One sentence. Plain words. One question, and only the one the state licenses.
 
 **Never:** advice (legal, medical, procedural), diagnosis, promises about outcomes / timelines / arrest / compensation, requests for graphic or forensic detail, asking a victim "why", blaming or testing the account, or minimising comfort language ("calm down", "don't worry", "be strong", "I understand how you feel", "at least…") in either language.
 
-## Fixed scripts — TODO before Day 3
+## Fixed scripts
 
-`S0`, `S9` and `SX` must be written in Hindi and English, reviewed, and pre-synthesised to WAV. They are **never model-generated**.
+`S0`, `S9`, `SX` and `SH` are written in Hindi and English, reviewed, and spoken verbatim. They are **never model-generated** at runtime.
+
+- **Length.** The one-sentence rule is for generated turns. A fixed script may run to three sentences, because each carries several required facts.
+- **Said once.** A fixed script is spoken once, on entering its state. While SX, SH or S9 holds, later turns are recorded for the officer and get silence, never the script again (SX-6). SH is not spoken after the session has ended, and S9 is not spoken when the person shared nothing.
+- **Live as a set.** No fixed script is speakable in a language until SX in that language is approved, so an ordinary turn can never get a spoken reply while a crisis turn would get silence.
+- **"Stay" means the conversation.** SX and SH ask the person to stay in the conversation, never in a physical place.
 
 **`SX` must be read by a counsellor or psychology faculty member before Day 8, and that review named in the deck.** It acknowledges, states plainly that a person will speak with them now, and asks them to stay. Nothing else — no advice, no assessment, no questions.
 

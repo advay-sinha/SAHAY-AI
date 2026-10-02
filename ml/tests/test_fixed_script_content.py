@@ -42,7 +42,7 @@ class TestFixedScriptContent(unittest.TestCase):
         self.assertIn("AI assistant, not a person", DRAFT_TEXT["S0:en"])
         self.assertIn("talk to a person at any time", DRAFT_TEXT["S0:en"])
         self.assertIn("एआई सहायक", DRAFT_TEXT["S0:hi"])
-        self.assertIn("कभी भी", DRAFT_TEXT["S0:hi"])
+        self.assertIn("जब भी चाहें", DRAFT_TEXT["S0:hi"])
 
     def test_crisis_script_stays_minimal(self):
         # Acknowledge, connect to a person, ask them to stay. Nothing else.
@@ -59,6 +59,20 @@ class TestFixedScriptContent(unittest.TestCase):
         for key, record in SCRIPTS.items():
             if record.status != "APPROVED":
                 self.assertFalse(record.speakable, msg=key)
+
+    def test_scripts_go_live_only_with_the_crisis_script(self):
+        from unittest.mock import patch
+
+        from ml.dialogue.scripts import fixed_scripts
+
+        opening = fixed_scripts.SCRIPTS["S0:en"]
+        with patch.object(opening, "status", "APPROVED"):
+            self.assertTrue(opening.speakable)
+            self.assertIsNone(fixed_scripts.text_for(State.S0_OPENING, "en"),
+                              "S0 must stay silent while SX is not approved")
+            crisis = fixed_scripts.SCRIPTS["SX:en"]
+            with patch.object(crisis, "status", "APPROVED"):
+                self.assertEqual(fixed_scripts.text_for(State.S0_OPENING, "en"), opening.text)
 
     def test_states_cover_every_fixed_script(self):
         self.assertEqual(

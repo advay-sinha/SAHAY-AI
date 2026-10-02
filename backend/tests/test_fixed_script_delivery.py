@@ -93,11 +93,75 @@ class TestApprovedFixedScripts(SliceBase):
         with self.client.websocket_connect(s["connect"]) as ws:
             recv_until(ws, "session.status")
             drain(ws)
-            self.say(ws, TURNS[0])
+            ws.send_json({"type": "chat.message", "text": "They cut off our water.", "lang": "en"})
+            recv_until(ws, "session.status")
             drain(ws)
             self.assertEqual(self.client.post(f"/sessions/{s['session_id']}/end", headers=vh).status_code, 200)
             frames = drain(ws, timeout=1.0)
         self.assertEqual(self.assistant_texts(frames), [fixed_scripts.DRAFT_TEXT["S9:en"]])
+
+    def test_sx_holds_silently_on_every_later_turn(self):
+        s = self.new_session(lang="hi")
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            self.say(ws, CRISIS_TURN)
+            drain(ws)
+            later = []
+            for text in ("Koi hai?", "Koi nahi aa raha."):
+                later += self.say(ws, text) + drain(ws)
+        self.assertEqual(self.assistant_texts(later), [])
+        victim = [t["text"] for t in self.packet(s["case_id"])["transcript"] if t["speaker"] == "victim"]
+        self.assertEqual(victim[-2:], ["Koi hai?", "Koi nahi aa raha."], "later turns still reach the officer")
+
+    def test_sh_holds_silently_on_every_later_turn(self):
+        s = self.new_session(lang="en")
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            ws.send_json({"type": "request_human"})
+            recv_until(ws, "session.status")
+            drain(ws)
+            later = []
+            for text in ("Hello?", "Is anyone there?"):
+                later += self.say(ws, text) + drain(ws)
+        self.assertEqual(self.assistant_texts(later), [])
+
+    def test_no_handoff_script_after_the_session_ended(self):
+        s = self.new_session(lang="en")
+        vh = {"Authorization": f"Bearer {s['session_token']}"}
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            self.say(ws, TURNS[0])
+            drain(ws)
+            self.client.post(f"/sessions/{s['session_id']}/end", headers=vh)
+            drain(ws, timeout=1.0)
+            ws.send_json({"type": "request_human"})
+            frames = recv_until(ws, "session.status") + drain(ws)
+        self.assertEqual(self.assistant_texts(frames), [])
+
+    def test_no_closing_when_nothing_was_shared(self):
+        s = self.new_session(lang="en")
+        vh = {"Authorization": f"Bearer {s['session_token']}"}
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            self.client.post(f"/sessions/{s['session_id']}/end", headers=vh)
+            frames = drain(ws, timeout=1.0)
+        self.assertEqual(self.assistant_texts(frames), [])
+
+    def test_handoff_follows_the_language_the_person_writes_in(self):
+        s = self.new_session(lang="en")
+        with self.client.websocket_connect(s["connect"]) as ws:
+            recv_until(ws, "session.status")
+            drain(ws)
+            ws.send_json({"type": "chat.message", "text": TURNS[0], "lang": "hi"})
+            recv_until(ws, "session.status")
+            drain(ws)
+            ws.send_json({"type": "request_human"})
+            frames = recv_until(ws, "session.status") + drain(ws)
+        self.assertEqual(self.assistant_texts(frames), [fixed_scripts.DRAFT_TEXT["SH:hi"]])
 
 
 @unittest.skipUnless(HAVE_DEPS, "EXT-001 backend packages not installed (Tier 1 run)")

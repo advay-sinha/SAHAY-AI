@@ -131,12 +131,15 @@ async def _speak_fixed(db: AsyncSession, session: Session, case: Case, state: St
     Fixed scripts are never model-generated: the text comes only from an
     APPROVED record in ml.dialogue.scripts. Without one, nothing is said.
     """
-    lang = session.lang if session.lang in ("hi", "en") else "hi"
+    turns = await _turns(db, session.id)
+    # The language the person last wrote in, as the turn path uses; else the session's.
+    own = [t.lang for t in turns if t.speaker == "victim" and t.lang in ("hi", "en")]
+    lang = own[-1] if own else (session.lang if session.lang in ("hi", "en") else "hi")
     text = fixed_script_text(state, lang)
     if not text:
         await audit.record(db, "fixed_script.unavailable", case_id=case.id, detail={"state": state.value})
         return False
-    seq = max((t.seq for t in await _turns(db, session.id)), default=0) + 1
+    seq = max((t.seq for t in turns), default=0) + 1
     reply = Turn(id=str(uuid4()), session_id=session.id, seq=seq, speaker="assistant", text=text,
                  lang=lang, state=state.value, intent=STATE_INTENT[state], was_fallback=True,
                  review_status="approved_fixed_script", created_at=audit.now())
@@ -360,12 +363,20 @@ async def submit_turn(
     # 3-4. policy, then text only if it may be spoken
     assistant_text: Optional[str] = None
     intent = ""
+    fixed = False
+    previous_state = session.state
     try:
         plan = plan_turn(session.state, slots, text, flags, get_provider(get_settings().LLM_PROVIDER))
         timings.update({k: v for k, v in (plan.get("timings_ms") or {}).items() if k != "safety_precheck"})
         next_state = plan["next_state"]
         intent = plan["intent"]
         assistant_text = plan["text"]
+        fixed = bool(plan.get("fixed_script"))
+        # A fixed script is said once, on entering its state. While SX, SH or
+        # S9 holds, later turns are recorded for the officer and get silence,
+        # never the same script again.
+        if fixed and previous_state == next_state:
+            assistant_text = None
     except FixedScriptUnavailable:
         decision = dialogue_next(session.state, slots, text, flags)
         next_state, intent = decision["next_state"], decision["intent"]
@@ -379,7 +390,8 @@ async def submit_turn(
     if assistant_text:
         reply = Turn(id=str(uuid4()), session_id=session_id, seq=next_seq + 1, speaker="assistant",
                      text=assistant_text, lang=flags["lang"], state=next_state, intent=intent,
-                     was_fallback=True, review_status="draft", created_at=audit.now())
+                     was_fallback=True, review_status="approved_fixed_script" if fixed else "draft",
+                     created_at=audit.now())
         db.add(reply)
         await db.flush()
         out.add("assistant.turn", {"turn_id": reply.id, "text": reply.text, "lang": reply.lang,
@@ -422,8 +434,9 @@ async def request_human(db: AsyncSession, session_id: str) -> Outbound:
         session.state = State.SH_HUMAN_HANDOFF.value
     case.needs_human = True
     await audit.record(db, "human.requested", case_id=case.id, dedupe_key=f"human.requested:{case.id}")
-    # SH is spoken once, on entering handoff; never over the crisis script.
-    if previous not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value):
+    # SH is spoken once, on entering handoff; never over the crisis script,
+    # and never after the session ended (no officer can reach it then).
+    if session.ended_at is None and previous not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value):
         await _speak_fixed(db, session, case, State.SH_HUMAN_HANDOFF, out)
     out.add("session.status", status_payload(session, consent))
     return out
@@ -438,7 +451,9 @@ async def end_session(db: AsyncSession, session_id: str) -> Tuple[Case, Outbound
     if session.ended_at is None:
         # S9 closes an ordinary intake once; it is not said over a crisis or
         # a handoff, and not repeated if the dialogue already reached it.
-        if session.state not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value, State.S9_CLOSING.value):
+        shared = any(t.speaker == "victim" for t in await _turns(db, session_id))
+        if shared and session.state not in (State.SX_CRISIS.value, State.SH_HUMAN_HANDOFF.value,
+                                            State.S9_CLOSING.value):
             await _speak_fixed(db, session, case, State.S9_CLOSING, out)
         session.ended_at = audit.now()
         await audit.record(db, "session.ended", case_id=case.id)
