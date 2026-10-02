@@ -1,6 +1,6 @@
 """Rewrite a safetensors checkpoint into small shards. Standard library only.
 
-    python -m ml.llm.reshard <source_dir> <target_dir> [--max-mb 512]
+    python -m ml.runtime.reshard <source_dir> <target_dir> [--max-mb 512]
 
 Why: on Windows, mapping one 4 GB shard reserves commit for the whole file, and a
 small page file refuses it (os error 1455). Small shards load one at a time within
@@ -12,7 +12,6 @@ files are copied unchanged. Nothing is downloaded and the source is not modified
 import argparse
 import hashlib
 import json
-import shutil
 import struct
 import sys
 from pathlib import Path
@@ -119,12 +118,12 @@ def reshard(source: Path, target: Path, max_mb: int = 512) -> Dict[str, object]:
     for item in source.iterdir():
         if item.is_file() and item.suffix != ".safetensors" and item.name != "model.safetensors.index.json" \
                 and (item.suffix in COPY_SUFFIXES or item.name in COPY_SUFFIXES):
-            shutil.copy2(item, target / item.name)
+            (target / item.name).write_bytes(item.read_bytes())
     return {"shards": len(groups), "tensors": len(tensors), "bytes": total, "verified": True}
 
 
 def main(argv=None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m ml.llm.reshard")
+    parser = argparse.ArgumentParser(prog="python -m ml.runtime.reshard")
     parser.add_argument("source")
     parser.add_argument("target")
     parser.add_argument("--max-mb", type=int, default=512)

@@ -119,3 +119,25 @@ Use separate Git worktrees for AI/ML, backend and frontend/mobile if work happen
 ## Deferred infrastructure
 
 The previous Docker/CI specification is retained in `docs/deferred/` for later use. Do not activate it automatically.
+
+## Guardrailed phrasing service (EXT-132, optional)
+
+The assistant runs fully with `LLM_PROVIDER=mock`. To have English questions reworded live by
+Qwen3-4B-Instruct-2507 on the laptop GPU:
+
+1. The model sits under the models root, rewritten once into 512 MB shards so it loads within
+   a small Windows page file:
+   `python -m ml.runtime.reshard <models root>\qwen3_4b_instruct_2507 <models root>\qwen3_4b_instruct_2507_r512`
+2. Start the service in the `sahay-ml-models` environment, with `SAHAY_MODELS_ROOT` set:
+   `python -m ml.runtime.phrase_service` (loopback only, port 8766; loads in about 40 s).
+3. In `.env`: `LLM_PROVIDER=local_service` (and optionally `LLM_TIMEOUT_SECONDS`, default 2.5).
+
+What reaches the person:
+
+| They write in | Reply |
+|---|---|
+| English | Qwen's rewording if it passes the validator and the meaning check within the time limit; otherwise the approved sentence |
+| Hindi (Devanagari) | The approved Hindi sentence |
+| Hindi in Latin script (Hinglish) | The approved Hindi sentence, transliterated deterministically |
+
+The model never sees what the person wrote: only the approved sentence and the register.

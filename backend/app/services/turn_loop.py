@@ -19,8 +19,12 @@ import time
 from typing import Any, Dict, Mapping, Optional
 
 from ml.dialogue import next as dialogue_next
+from ml.dialogue.hinglish import to_hinglish_register
 from ml.dialogue.intents import is_speakable
 from ml.guardrails import crisis_check, validate
+from ml.llm.meaning import keeps_meaning
+from ml.llm.prompt import register_for
+from ml.nlp.langid import identify
 
 from ..adapters.llm import LLMProvider
 
@@ -114,12 +118,24 @@ def plan_turn(
 
     fallback = decision["fallback_text"]
 
+    # Register: the person's own script decides it, deterministically (langid),
+    # never a model. Hinglish replies are the approved Hindi sentence transliterated,
+    # so the meaning cannot drift; if that fails validation, the Devanagari is used.
+    register = register_for(decision["lang"], identify(utterance or "")["lang"])
+    result["register"] = register
+    if register == "hinglish" and fallback:
+        roman = to_hinglish_register(fallback)
+        if validate(roman, decision["intent"], decision["lang"])["ok"]:
+            fallback = roman
+
     # 4. LLM phrasing is optional. With LLM_PROVIDER=mock this returns None and
-    #    the fallback is used, which is the default demo path.
+    #    the fallback is used, which is the default demo path. The model receives
+    #    only the approved sentence and the register, never the person's words.
     candidate = None
     t3 = time.perf_counter()
     if llm is not None and decision["rephrasable"]:
-        candidate = llm.phrase(decision["intent"], decision["licensed_question"], decision["lang"])
+        candidate = llm.phrase(decision["intent"], decision["licensed_question"], decision["lang"],
+                               register=register, source=decision["licensed_question"] or fallback)
     t4 = time.perf_counter()
     timings["llm_phrasing"] = round(1000 * (t4 - t3), 3)
 
@@ -132,11 +148,15 @@ def plan_turn(
     #    pre-written fallback, never a repaired version of the model's sentence.
     verdict = validate(candidate, decision["intent"], decision["lang"])
     timings["output_validator"] = round(1000 * (time.perf_counter() - t4), 3)
+    # 6. The validator catches unsafe content, not a changed meaning. English
+    #    rewordings must also keep every required concept of their intent.
+    if verdict["ok"] and decision["lang"] == "en" and not keeps_meaning(verdict["safe_text"], decision["intent"]):
+        verdict = {"ok": False, "reason": "meaning_changed", "safe_text": None}
     if verdict["ok"]:
         result["text"] = verdict["safe_text"]
         result["was_fallback"] = False
     else:
-        result["text"] = verdict["safe_text"] or fallback
+        result["text"] = fallback
         result["guardrail_reason"] = verdict["reason"]
 
     return result

@@ -121,9 +121,16 @@ class Settings(BaseSettings):
     JWT_EXPIRY_MINUTES: int = 480
 
     # Adapters. The complete dialogue must run with LLM_PROVIDER=mock.
-    LLM_PROVIDER: Literal["mock", "external"] = "mock"
+    LLM_PROVIDER: Literal["mock", "local_service", "remote"] = "mock"
     LLM_MODEL: str = ""
+    # Remote only: a Hugging Face token for the project's Space (a secret, never logged).
     LLM_API_KEY: str = ""
+    # EXT-132. local_service: the loopback phrasing service. remote: the project's HF Space.
+    LLM_SERVICE_URL: str = "http://127.0.0.1:8766"
+    LLM_REMOTE_URL: str = ""
+    LLM_REMOTE_KEY: str = ""
+    # Past this the pre-written sentence is used; English rewording measured 1.9 s median.
+    LLM_TIMEOUT_SECONDS: float = Field(default=2.5, gt=0, le=15)
     # Speech recognition (EXT-120, PC-11). "mock" needs nothing running; "local_service" calls the
     # ML-owned speech-to-text process, which listens on the loopback interface only.
     ASR_PROVIDER: Literal["mock", "local_service"] = "mock"
@@ -163,6 +170,26 @@ class Settings(BaseSettings):
         url = urlparse(value)
         if url.scheme != "http" or url.hostname not in ("127.0.0.1", "::1") or url.path not in ("", "/"):
             raise ValueError("ASR_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
+        return value.rstrip("/")
+
+    @field_validator("LLM_SERVICE_URL")
+    @classmethod
+    def _loopback_llm(cls, value: str) -> str:
+        from urllib.parse import urlparse
+        url = urlparse(value)
+        if url.scheme != "http" or url.hostname not in ("127.0.0.1", "::1") or url.path not in ("", "/"):
+            raise ValueError("LLM_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
+        return value.rstrip("/")
+
+    @field_validator("LLM_REMOTE_URL")
+    @classmethod
+    def _space_url(cls, value: str) -> str:
+        if not value:
+            return value
+        from urllib.parse import urlparse
+        url = urlparse(value)
+        if url.scheme != "https" or not (url.hostname or "").endswith(".hf.space") or url.path not in ("", "/"):
+            raise ValueError("LLM_REMOTE_URL must be https://<space>.hf.space")
         return value.rstrip("/")
 
     @field_validator("AUDIO_STORAGE_PATH", "FIXED_AUDIO_ROOT")

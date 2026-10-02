@@ -66,6 +66,7 @@ class TestEnvExampleIsValid(unittest.TestCase):
         for key in (
             "SECRET_KEY",
             "LLM_API_KEY",
+            "LLM_REMOTE_KEY",
             "SUPABASE_PROJECT_REF",
             "REMOTE_DEMO_SEED_CONFIRMATION",
         ):

@@ -1,6 +1,6 @@
 """Local phrasing service: 127.0.0.1 only (EXT-132).
 
-    python -m ml.llm.service [--port 8766] [--models-root D:\\...\\models]
+    python -m ml.runtime.phrase_service [--port 8766] [--models-root <models root>]
 
 Run in the private ``sahay-ml-models`` environment. The backend's LLM adapter
 (``LLM_PROVIDER=local_service``) calls it.
@@ -21,6 +21,7 @@ Guarantees:
 """
 
 import argparse
+import importlib
 import json
 import os
 import sys
@@ -29,12 +30,12 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any, List, Mapping, Optional
 
-from .prompt import PROMPT_VERSION, REGISTERS, build_messages, clean_output
+from ..llm.prompt import PROMPT_VERSION, REGISTERS, build_messages, clean_output
 
 SERVICE_VERSION = "phrase-service-1.0"
 DEFAULT_PORT = 8766
 LOOPBACK_HOSTS = ("127.0.0.1", "::1")
-#: The pinned checkpoint rewritten into 512 MB shards by ml.llm.reshard (same tensors, hash-checked),
+#: The pinned checkpoint rewritten into 512 MB shards by ml.runtime.reshard (same tensors, hash-checked),
 #: so it loads within a small Windows page file.
 MODEL_DIR = "qwen3_4b_instruct_2507_r512"
 MODEL_REVISION = "cdbee75f17c01a7cc42f958dc650907174af0554"
@@ -86,8 +87,10 @@ class PhraseEngine:
         self.device = "injected" if generate is not None else "unloaded"
 
     def load(self) -> None:
-        import torch
-        from transformers import AutoModelForCausalLM, AutoTokenizer
+        # Loaded lazily, like the rest of ml/runtime: importing this module loads no Torch.
+        torch = importlib.import_module("torch")
+        transformers = importlib.import_module("transformers")
+        AutoModelForCausalLM, AutoTokenizer = transformers.AutoModelForCausalLM, transformers.AutoTokenizer
 
         root = self._models_root or os.environ.get("SAHAY_MODELS_ROOT", "")
         if not root:
@@ -95,9 +98,7 @@ class PhraseEngine:
         path = os.path.join(root, MODEL_DIR)
         tokenizer = AutoTokenizer.from_pretrained(path, local_files_only=True)
         if torch.cuda.is_available():
-            from transformers import BitsAndBytesConfig
-
-            quant = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+            quant = transformers.BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
                                        bnb_4bit_compute_dtype=torch.float16)
             model = AutoModelForCausalLM.from_pretrained(path, local_files_only=True,
                                                          quantization_config=quant, device_map="cuda:0")
@@ -172,13 +173,13 @@ def make_handler(engine: PhraseEngine) -> type:
 
 
 def main(argv: Optional[List[str]] = None) -> int:
-    parser = argparse.ArgumentParser(prog="python -m ml.llm.service", description=__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(prog="python -m ml.runtime.phrase_service", description=__doc__.split("\n")[0])
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
     parser.add_argument("--models-root", default=None)
     args = parser.parse_args(argv)
     host = check_bind_host(args.host)
-    from ..runtime.offline import apply_offline_env, network_blocked
+    from .offline import apply_offline_env, network_blocked
 
     engine = PhraseEngine(models_root=args.models_root)
     apply_offline_env()

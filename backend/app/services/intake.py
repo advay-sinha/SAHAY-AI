@@ -19,6 +19,7 @@ Crisis: SX, crisis alert (critical), takeover requested, band Critical when
 scoring is permitted. Intake never resumes: SX is terminal in the policy.
 """
 
+import asyncio
 import hashlib
 import time
 from dataclasses import dataclass, field
@@ -397,7 +398,13 @@ async def submit_turn(
     fixed = False
     previous_state = session.state
     try:
-        plan = plan_turn(session.state, slots, text, flags, get_provider(get_settings().LLM_PROVIDER))
+        provider = get_provider(get_settings().LLM_PROVIDER)
+        if provider.name == "mock":
+            plan = plan_turn(session.state, slots, text, flags, provider)
+        else:
+            # A model call can take seconds; run it off the event loop so other
+            # sessions keep moving. plan_turn touches no database state.
+            plan = await asyncio.to_thread(plan_turn, session.state, slots, text, flags, provider)
         timings.update({k: v for k, v in (plan.get("timings_ms") or {}).items() if k != "safety_precheck"})
         next_state = plan["next_state"]
         intent = plan["intent"]

@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from ml.llm import prompt
-from ml.llm.reshard import read_header, reshard
+from ml.runtime.reshard import read_header, reshard
 
 
 class TestPrompt(unittest.TestCase):

@@ -14,7 +14,7 @@ import re
 import unicodedata
 from typing import Dict, List, Optional
 
-PROMPT_VERSION = "phrase-v1"
+PROMPT_VERSION = "phrase-v2"
 REGISTERS = ("hi", "en", "hinglish")
 MAX_OUTPUT_CHARS = 220
 
@@ -33,7 +33,9 @@ _SYSTEM = (
     "Rules:\n"
     "- Output exactly one sentence and nothing else: no greeting, no quotes, no explanation.\n"
     "- Keep exactly the same meaning as the source sentence. Do not add or remove any request.\n"
-    "- If the source is a question, output one question. If it is not, output no question.\n"
+    "- If the source is a question, output one question with exactly one question mark. If the "
+    "source asks two things, keep both in that one sentence, joined with 'and' or a dash. If the "
+    "source is not a question, output no question.\n"
     "- Plain, gentle, respectful words. Short.\n"
     "- Never give advice, promises, opinions, diagnosis or comfort phrases such as "
     "'don't worry' or 'stay strong'.\n"
