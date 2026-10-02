@@ -35,6 +35,15 @@ The assistant is a **bounded intake instrument, not a chatbot**. A deterministic
   - The officer writes this text, so it does **not** pass through the AI output validator or the state machine. No AI may generate, rephrase or send it.
   - The assistant stays muted. An officer message never restarts intake, and it never carries a score, band or alert.
 
+## How a licensed sentence is worded (EXT-132)
+
+The state machine still chooses the intent; only the wording varies.
+
+- **English:** a local language model (Qwen3-4B-Instruct) may reword the approved sentence. It receives only that sentence and a register label, never the person's words. Its output is spoken only if it passes `guardrails.validate` and a deterministic meaning check (`ml/llm/meaning.py`: every required concept kept, no other intent's anchor) within the time limit; otherwise the approved sentence is used. The model's sentence is never repaired.
+- **Hindi in Devanagari:** the approved Hindi sentence, unchanged.
+- **Hindi in Latin script (Hinglish):** the approved Hindi sentence transliterated deterministically (`ml/dialogue/hinglish.py`), so the reply matches the person's script with no change of meaning.
+- **Fixed scripts** (S0, S9, SX, SH) are never reworded or transliterated.
+
 ## Writing rules for every utterance
 
 One sentence. Plain words. One question, and only the one the state licenses.
