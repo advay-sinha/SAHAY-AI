@@ -137,12 +137,12 @@ class TestIntentDiscipline(unittest.TestCase):
                        intents.CRISIS_SCRIPT, intents.HANDOFF_SCRIPT):
             self.assertNotIn(intent, intents.REPHRASABLE_INTENTS, msg=intent)
 
-    def test_unreviewed_text_is_not_marked_speakable(self):
+    def test_approved_text_is_speakable_and_unknown_languages_are_not(self):
+        # Intent text approved by the project lead on 2026-10-01 (en and hi).
         for lang in intents.SUPPORTED_LANGS:
-            self.assertFalse(
-                intents.is_speakable(lang),
-                msg="Review status was changed without a type:dialogue review",
-            )
+            self.assertEqual(intents.REVIEW_STATUS[lang], intents.APPROVED)
+            self.assertTrue(intents.is_speakable(lang))
+        self.assertFalse(intents.is_speakable("ta"))
 
 
 if __name__ == "__main__":
