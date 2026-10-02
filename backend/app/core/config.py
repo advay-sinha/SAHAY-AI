@@ -131,6 +131,10 @@ class Settings(BaseSettings):
     LLM_REMOTE_KEY: str = ""
     # Past this the pre-written sentence is used; English rewording measured 1.9 s median.
     LLM_TIMEOUT_SECONDS: float = Field(default=2.5, gt=0, le=15)
+    # EXT-133 / PC-14: advisory model signals for officers, from the background cycle.
+    SIGNALS_PROVIDER: Literal["mock", "local_service", "remote"] = "mock"
+    SIGNALS_SERVICE_URL: str = "http://127.0.0.1:8767"
+    SIGNALS_TIMEOUT_SECONDS: float = Field(default=10.0, gt=0, le=60)
     # Speech recognition (EXT-120, PC-11). "mock" needs nothing running; "local_service" calls the
     # ML-owned speech-to-text process, which listens on the loopback interface only.
     ASR_PROVIDER: Literal["mock", "local_service"] = "mock"
@@ -172,13 +176,13 @@ class Settings(BaseSettings):
             raise ValueError("ASR_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
         return value.rstrip("/")
 
-    @field_validator("LLM_SERVICE_URL")
+    @field_validator("LLM_SERVICE_URL", "SIGNALS_SERVICE_URL")
     @classmethod
     def _loopback_llm(cls, value: str) -> str:
         from urllib.parse import urlparse
         url = urlparse(value)
         if url.scheme != "http" or url.hostname not in ("127.0.0.1", "::1") or url.path not in ("", "/"):
-            raise ValueError("LLM_SERVICE_URL must be http://127.0.0.1:<port> or http://[::1]:<port>")
+            raise ValueError("model service URLs must be http://127.0.0.1:<port> or http://[::1]:<port>")
         return value.rstrip("/")
 
     @field_validator("LLM_REMOTE_URL")

@@ -1,5 +1,6 @@
 """Guardrailed phrasing (EXT-132): adapters, register, meaning check, fallbacks."""
 
+import importlib.util
 import json
 import threading
 import time
@@ -11,6 +12,8 @@ from backend.app.adapters import llm as adapters
 from backend.app.services import turn_loop
 from ml.dialogue import intents
 from ml.dialogue.states import State
+
+HAVE_SETTINGS = importlib.util.find_spec("pydantic_settings") is not None
 
 VICTIM_TEXT = "Fictional test: they came to my house again yesterday."
 
@@ -127,11 +130,13 @@ class TestProviders(unittest.TestCase):
         self.assertEqual(body, {"data": ["q", "en", "shared-key"]})
         self.assertEqual(auth, "Bearer hf_test_token")
 
+    @unittest.skipUnless(HAVE_SETTINGS, "pydantic-settings not installed (Tier 1 run)")
     def test_unknown_provider_is_refused(self):
         with self.assertRaises(ValueError):
             adapters.get_provider("external")
 
 
+@unittest.skipUnless(HAVE_SETTINGS, "pydantic-settings not installed (Tier 1 run)")
 class TestSettings(unittest.TestCase):
     def test_service_url_is_loopback_and_space_url_is_https_hf_space(self):
         from backend.app.core.config import Settings

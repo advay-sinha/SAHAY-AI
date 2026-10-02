@@ -141,3 +141,16 @@ What reaches the person:
 | Hindi in Latin script (Hinglish) | The approved Hindi sentence, transliterated deterministically |
 
 The model never sees what the person wrote: only the approved sentence and the register.
+
+## Advisory model signals for officers (EXT-133, PC-14, optional)
+
+1. In the `sahay-ml-models` environment, with `SAHAY_TRAINING_ROOT` set to the private training
+   root: `python -m ml.shadow.service` (loopback only, port 8767; loads in about 50 s).
+2. In `.env`: `SIGNALS_PROVIDER=local_service`.
+
+Each background assessment cycle then asks the service for its reading of the person's words.
+Officers see it in the case page as "AI signal (advisory, experimental)": crisis/self-harm,
+coercion and legal urgency only. When the model fires on crisis language the rules did not catch,
+the panel asks the officer to read the transcript. It never changes the band, alerts, routing or
+anything the person hears, and the victim app never receives it. Measured comparison:
+`ml/eval/results/rules-plus-model-2026-10-02.md`.

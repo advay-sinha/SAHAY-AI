@@ -160,6 +160,21 @@ export interface SafeSignalFlag {
   suggested_question: string;
 }
 
+/** PC-14: advisory, uncalibrated model signals. Officers only; never decisive. */
+export type ModelSignalLabel = "crisis_self_harm" | "communication_safety_coercion" | "legal_urgency";
+
+export interface ModelSignal {
+  status: "loaded" | "unavailable" | "failed";
+  model: string;
+  checkpoint_status: string;
+  advisory: true;
+  uncalibrated: true;
+  flag: boolean;
+  labels: Partial<Record<ModelSignalLabel, { probability: number; fired: boolean }>>;
+  cycle?: number;
+  trigger_turn_id?: string;
+}
+
 export interface EscalationPacket {
   case_id: string;
   band: Band | null;
@@ -185,7 +200,8 @@ export type ExecutiveEvent =
   | ({ type: "case.structured" } & CaseStructured)
   | ({ type: "action.recommended" } & ActionRecommended)
   | ({ type: "safesignal.flag" } & SafeSignalFlag)
-  | ({ type: "escalation.packet" } & EscalationPacket);
+  | ({ type: "escalation.packet" } & EscalationPacket)
+  | ({ type: "model.signal" } & ModelSignal);
 
 export type SocketEvent = VictimEvent | ExecutiveEvent;
 
@@ -205,6 +221,7 @@ export const EXECUTIVE_ONLY_EVENTS = [
   "action.recommended",
   "safesignal.flag",
   "escalation.packet",
+  "model.signal",
 ] as const;
 
 /* -------------------------------------------------------------------------

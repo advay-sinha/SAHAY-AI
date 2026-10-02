@@ -134,6 +134,8 @@ class Assessment(TimestampMixin, Base):
     # unavailable for the channel, and the weight denominator applied.
     scoring_version: Mapped[str] = mapped_column(String(32), default="")
     normalization: Mapped[dict] = mapped_column(JSON, default=dict)
+    # PC-14: advisory, uncalibrated model signals for officers; null when none ran.
+    model_signals: Mapped[Optional[dict]] = mapped_column(JSON, nullable=True)
 
 
 class Alert(TimestampMixin, Base):

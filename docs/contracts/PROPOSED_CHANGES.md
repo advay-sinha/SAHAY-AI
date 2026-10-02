@@ -318,3 +318,38 @@ Recommendation: A now (backend only, no UI). B only if the URL leaks.
 | Mobile/Victim Experience | Confirmed 2026-10-01, relayed by the project lead |
 
 Applied to `CONTRACTS.md` §4: option A (rate limit). Option B (access code) stays unbuilt, per the recommendation, until the hosted URL leaks.
+
+---
+
+## PC-14 — Advisory model signals for officers — **APPROVED (2026-10-02)**
+
+Decision EXT-133.
+
+```
+CONTRACT CHANGE PROPOSAL
+Contract:     assessments table; GET /cases/{id} packet; executive WebSocket events
+Current:      no model output reaches the backend or the console.
+Proposed:
+  table       assessments.model_signals JSON, nullable (null when no signal service ran)
+  packet      "model_signals": the latest cycle's value, or null
+  event       "model.signal" (executive and supervisor only; never victim)
+  shape       {status: "loaded"|"unavailable"|"failed", model: "experimental_shadow_classifier",
+               checkpoint_status: <str>, advisory: true, uncalibrated: true,
+               labels: {<label>: {probability: float, fired: bool}} for
+                 crisis_self_harm, communication_safety_coercion, legal_urgency only,
+               flag: bool  -- true when the model fired crisis_self_harm and the rules
+                            did not; the console asks the officer to review}
+Reason:       Rules plus models: a model may add caution for a human to check, never remove it.
+Breaks:       Nothing; additive. Backend: migration, worker, packet, events allowlist.
+              Frontend: types, a read-only panel. Mobile: none (the victim never receives it).
+Migration:    One nullable column; old rows stay null.
+Alternative:  Signals shown only in the local ML demonstration (current state).
+```
+
+| Lead (D-11) | Confirmation |
+|---|---|
+| AI/ML and Safety | Confirmed 2026-10-02, relayed by the project lead |
+| Backend | Confirmed 2026-10-02, relayed by the project lead |
+| Executive Web | Confirmed 2026-10-02, relayed by the project lead |
+| Mobile/Victim Experience | Confirmed 2026-10-02, relayed by the project lead |
+

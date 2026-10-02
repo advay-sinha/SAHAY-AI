@@ -431,9 +431,18 @@ class TestShadowFirewall(unittest.TestCase):
                 continue
             self.assertIsNone(pattern.search(path.read_text(encoding="utf-8")), rel)
 
+    #: EXT-133 / PC-14 (project lead, 2026-10-02): the officer console may name the model whose
+    #: advisory signal it shows, in these files only. Module paths and the training root stay
+    #: forbidden everywhere, and the victim app may never name the model at all.
+    PC14_FILES = frozenset({
+        "backend/app/adapters/signals.py",
+        "frontend/src/console/logic.test.ts",
+        "docs/contracts/PROPOSED_CHANGES.md",
+    })
+
     def test_no_product_code_references_the_shadow_model(self):
-        pattern = re.compile(r"ml\.shadow|ml/shadow|ml\.training|ml/training|experimental_shadow_classifier|"
-                             r"SAHAY_TRAINING_ROOT")
+        paths_pattern = re.compile(r"ml\.shadow|ml/shadow|ml\.training|ml/training|SAHAY_TRAINING_ROOT")
+        model_name = re.compile(r"experimental_shadow_classifier")
         offenders = []
         for base in ("backend", "frontend", "mobile", "docs/contracts"):
             root = REPO / base
@@ -443,10 +452,14 @@ class TestShadowFirewall(unittest.TestCase):
                 if not path.is_file() or set(path.parts) & {"node_modules", ".venv", "venv", "dist", "build", ".expo",
                                                             "__pycache__"}:
                     continue
-                if path.suffix in (".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".toml") and \
-                        pattern.search(path.read_text(encoding="utf-8", errors="ignore")):
-                    offenders.append(path.relative_to(REPO).as_posix())
+                if path.suffix not in (".py", ".ts", ".tsx", ".js", ".jsx", ".json", ".md", ".toml"):
+                    continue
+                rel = path.relative_to(REPO).as_posix()
+                text = path.read_text(encoding="utf-8", errors="ignore")
+                if paths_pattern.search(text) or (model_name.search(text) and rel not in self.PC14_FILES):
+                    offenders.append(rel)
         self.assertEqual(offenders, [])
+        self.assertFalse(any(f.startswith("mobile/") for f in self.PC14_FILES))
 
     def test_the_source_label_firewall_is_unchanged(self):
         from ml.data import label_firewall as fw

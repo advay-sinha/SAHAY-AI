@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import { AlertsPanel } from "../components/case/AlertsPanel";
 import { AssessmentPanel } from "../components/case/AssessmentPanel";
 import { DecisionControls } from "../components/case/DecisionControls";
+import { ModelSignalsPanel } from "../components/case/ModelSignalsPanel";
 import { RecommendationsPanel } from "../components/case/RecommendationsPanel";
 import { StructuredPanel } from "../components/case/StructuredPanel";
 import { TranscriptPanel } from "../components/case/TranscriptPanel";
@@ -157,6 +158,7 @@ export function CasePage() {
               setNotice(await run(() => api.acknowledge(caseId, id)));
               setBusyAlert(null);
             }} />
+          <ModelSignalsPanel signal={packet.model_signals ?? null} transcript={packet.transcript} onEvidence={showEvidence} />
           <AssessmentPanel assessment={packet.assessment} onEvidence={showEvidence} />
           <Trajectory points={packet.trajectory} transcript={packet.transcript} onEvidence={showEvidence} />
           <RecommendationsPanel packet={packet} canDecide={gate.ok} blockedReason={gate.ok ? null : gate.reason}

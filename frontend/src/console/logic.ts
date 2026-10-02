@@ -8,7 +8,7 @@
  *   - evidence links only ever point at turns that exist.
  */
 
-import type { Band, DecisionKind } from "../types/contracts";
+import type { Band, DecisionKind, ModelSignal, ModelSignalLabel } from "../types/contracts";
 import type {
   CasePacket,
   PacketAssessment,
@@ -265,3 +265,29 @@ export function filterAuditDetail(detail: Record<string, unknown>): Record<strin
   }
   return safe;
 }
+
+/* PC-14: advisory model signals ------------------------------------------- */
+
+export const MODEL_SIGNAL_NAMES: Record<ModelSignalLabel, string> = {
+  crisis_self_harm: "Crisis / self-harm language",
+  communication_safety_coercion: "Coercion / communication safety",
+  legal_urgency: "Legal urgency",
+};
+
+export interface ModelSignalRow {
+  label: ModelSignalLabel;
+  name: string;
+  percent: number;
+  fired: boolean;
+}
+
+/** Rows for the advisory panel, in fixed order; nothing unless the model loaded. */
+export function modelSignalRows(signal: ModelSignal | null | undefined): ModelSignalRow[] {
+  if (!signal || signal.status !== "loaded") return [];
+  return (Object.keys(MODEL_SIGNAL_NAMES) as ModelSignalLabel[]).flatMap((label) => {
+    const item = signal.labels[label];
+    if (!item) return [];
+    return [{ label, name: MODEL_SIGNAL_NAMES[label], percent: Math.round(item.probability * 100), fired: item.fired }];
+  });
+}
+

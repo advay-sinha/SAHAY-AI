@@ -18,7 +18,7 @@ assessing but do not replace the officer's band -- except to escalate to
 Critical on a hard safety override, which always wins.
 """
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 from uuid import uuid4
 
 from sqlalchemy import select
@@ -27,6 +27,8 @@ from sqlalchemy.exc import IntegrityError
 from ml.assessment import assess
 
 from ..adapters.assessment_runner import runner
+from ..adapters.signals import get_signal_provider, victim_texts, with_flag
+from ..core.config import get_settings
 from ..adapters.retrieval import KeywordRetriever
 from ..core.db import session_factory
 from ..models import (
@@ -104,7 +106,17 @@ async def run_cycle(case_id: str) -> None:
 
     result = await runner.in_thread(
         lambda: assess(turn_dicts, True, crisis_fired, channel=channel))
-    await _complete_cycle(case_id, session_id, cycle, trigger, result)
+    # PC-14: an advisory model reading for officers. Off the reply path, never
+    # decisive, and a failure only means no signal is shown.
+    signal = None
+    provider = get_signal_provider(get_settings().SIGNALS_PROVIDER)
+    if provider.name != "mock":
+        texts = victim_texts(turn_dicts)
+        try:
+            signal = with_flag(await runner.in_thread(lambda: provider.signals(texts)), crisis_fired)
+        except Exception:
+            signal = None
+    await _complete_cycle(case_id, session_id, cycle, trigger, result, signal)
 
 
 def _ai_blocked(case: Case, session: Session, consent: str) -> bool:
@@ -122,6 +134,7 @@ async def _complete_cycle(
     cycle: int,
     trigger: str,
     result: Dict[str, Any],
+    signal: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Commit and publish one computed result unless human takeover won.
 
@@ -161,7 +174,7 @@ async def _complete_cycle(
                         abstention_reasons=result["abstention_reasons"], cause=result["cause"],
                         uncertainty=result["uncertainty"], pipeline_version=result["pipeline_version"],
                         scoring_version=result["scoring_version"], normalization=result["normalization"],
-                        created_at=audit.now(),
+                        model_signals=signal, created_at=audit.now(),
                     ))
             except IntegrityError:
                 return  # another worker got here first; nothing to do
@@ -183,6 +196,8 @@ async def _complete_cycle(
 
             if cycle == 1:
                 await audit.timeline(db, case_id, "under_review")
+            if signal is not None:
+                events.append(("model.signal", {**signal, "cycle": cycle, "trigger_turn_id": trigger}))
 
             # --- alerts: one per (case, type) ---------------------------
             existing = {a.type: a for a in (await db.execute(

@@ -21,7 +21,7 @@ class TestLegacyMigrationToHead(unittest.TestCase):
     REPO = Path(__file__).resolve().parents[2]
     BACKEND = REPO / "backend"
     PRE_HEAD = "4abeb4233bf7"
-    HEAD = "8c1e5a7d3f20"  # PC-11 turns.asr_quality
+    HEAD = "5f3a9c2e7b14"  # PC-14 assessments.model_signals
 
     def alembic(self, env, *arguments):
         return subprocess.run(

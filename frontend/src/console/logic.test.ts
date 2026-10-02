@@ -12,6 +12,7 @@ import { describe, expect, it } from "vitest";
 
 import type { CasePacket, PacketAssessment, PacketTurn, QueueItem, TrajectoryPoint } from "../types/packet";
 import {
+  modelSignalRows,
   assessmentView,
   canAct,
   canMessage,
@@ -249,6 +250,30 @@ describe("audit and alerts formatting", () => {
       action_id: "act-1",
       band: "High"
     });
+  });
+});
+
+describe("advisory model signals (PC-14)", () => {
+  const base = {
+    status: "loaded" as const, model: "experimental_shadow_classifier",
+    checkpoint_status: "rejected_for_product_integration", advisory: true as const,
+    uncalibrated: true as const, flag: false,
+  };
+
+  it("lists only known labels, in fixed order, as whole percentages", () => {
+    const rows = modelSignalRows({ ...base, labels: {
+      legal_urgency: { probability: 0.7034, fired: true },
+      crisis_self_harm: { probability: 0.0569, fired: false },
+    } });
+    expect(rows.map((r) => [r.label, r.percent, r.fired])).toEqual([
+      ["crisis_self_harm", 6, false],
+      ["legal_urgency", 70, true],
+    ]);
+  });
+
+  it("shows nothing when the model did not load or no signal ran", () => {
+    expect(modelSignalRows({ ...base, status: "failed", labels: {} })).toEqual([]);
+    expect(modelSignalRows(null)).toEqual([]);
   });
 });
 

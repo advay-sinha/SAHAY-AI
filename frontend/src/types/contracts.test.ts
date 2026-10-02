@@ -33,13 +33,14 @@ describe("event allowlists", () => {
     ]);
   });
 
-  it("has exactly the six executive-only events from CONTRACTS.md section 3", () => {
+  it("has exactly the seven executive-only events from CONTRACTS.md section 3", () => {
     expect([...EXECUTIVE_ONLY_EVENTS].sort()).toEqual([
       "action.recommended",
       "alert.safety",
       "case.structured",
       "dimension.update",
       "escalation.packet",
+      "model.signal", // PC-14, lead decision 2026-10-02
       "safesignal.flag",
     ]);
   });

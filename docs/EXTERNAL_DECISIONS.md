@@ -671,3 +671,29 @@ Licence/cost:    Free. ZeroGPU quota exhaustion falls back to pre-written text.
 Fallback:        LLM_PROVIDER=mock and no signals: the current behaviour.
 Decision maker:  Project lead (advay-sinha), 2026-10-02, in session.
 ```
+
+```text
+Date:            2026-10-02
+ID:              EXT-133 — MuRIL officer signals: override of EXT-119 / EXT-129 limits
+Decision:        APPROVED by the project lead, knowingly overriding, for this use only:
+                 - EXT-119 "does not authorize backend, frontend or mobile integration"
+                   and "uploading ... trained weights";
+                 - EXT-129 "external upload" refusal and the D-9b product gates.
+Scope:           The task7b experimental shadow classifier (MuRIL encoder, checkpoint
+                 C-seed-13, status rejected_for_product_integration) may run beside the
+                 backend and show advisory, uncalibrated signals to officers only, for
+                 the three labels that passed their measured gates: crisis_self_harm,
+                 communication_safety_coercion, legal_urgency. The five other labels are
+                 not shown (three had no positive training support). Signals never reach
+                 the victim, never trigger or suppress SX, never change the band, SVI,
+                 routing, alerts or wording. Its checkpoint may be uploaded to one
+                 PRIVATE Hugging Face model repository for the hosted demo Space.
+Licence risk:    Accepted by the project lead. The weights derive from datasets still
+                 licence_pending (Reddit Suicide Detection, Dreaddit, EmoInHindi,
+                 Hinglish hate speech). The repository must stay private, never public,
+                 never redistributed, and be deleted at teardown.
+Reason:          Officers see a multilingual model's reading beside the rules, and the
+                 model can flag crisis language the lexicons miss (rules plus models,
+                 where a model can add caution but never remove it).
+Decision maker:  Project lead (advay-sinha), 2026-10-02, in session.
+```

@@ -75,7 +75,13 @@ action.recommended {action_id, action_type, rationale, policy_citations[], confi
 safesignal.flag    {direction, delta, suggested_question}
 escalation.packet  {case_id, band, alerts[{alert_type, severity, evidence_turn_ids[], requires_ack}],
                     summary, ready:true}
+model.signal       {status:"loaded"|"unavailable"|"failed", model, checkpoint_status,
+                    advisory:true, uncalibrated:true, flag:bool, cycle, trigger_turn_id,
+                    labels:{crisis_self_harm|communication_safety_coercion|legal_urgency:
+                            {probability, fired}}}                                   (PC-14)
 ```
+
+**`model.signal` (PC-14, lead decision 2026-10-02).** An experimental classifier's reading of the victim's turns, computed in the background cycle. Advisory and uncalibrated: it never changes routing, the band, the SVI, alerts, the crisis interrupt or victim-facing text. `flag` is true when it fired on crisis language the rules did not catch, and asks the officer to review. The packet carries the latest value as `model_signals` (null when no signal ran, or when consent was declined).
 
 **Envelope rule (PC-02).** Every text frame is `{"type": <event name>, ...payload}`. The envelope's `type` is always the event name, and payload content can never overwrite it. The server builds frames as `{**payload, "type": event}`. An alert's kind is therefore `alert_type`, never `type`.
 

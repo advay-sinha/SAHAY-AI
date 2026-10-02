@@ -41,6 +41,8 @@ EXECUTIVE_ONLY: FrozenSet[str] = frozenset(
         "action.recommended",
         "safesignal.flag",
         "escalation.packet",
+        # PC-14 (lead decision 2026-10-02): advisory model signals, officers only.
+        "model.signal",
     }
 )
 

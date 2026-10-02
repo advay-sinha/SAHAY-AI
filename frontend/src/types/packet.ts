@@ -3,7 +3,7 @@
  * These mirror backend/app/services/packet.py, not the frozen event contract.
  */
 
-import type { AlertSeverity, AlertType, Band, DecisionKind, DimensionId } from "./contracts";
+import type { AlertSeverity, AlertType, Band, DecisionKind, DimensionId, ModelSignal } from "./contracts";
 
 export interface QueueAlert {
   alert_type: AlertType;
@@ -180,6 +180,8 @@ export interface CasePacket {
   decisions: HumanDecision[];
   overrides: OverrideRecord[];
   uncertainty: Record<string, unknown>;
+  /** PC-14: advisory, uncalibrated model signals; null when none ran. */
+  model_signals: ModelSignal | null;
   disclaimer: string;
 }
 
